@@ -72,6 +72,8 @@ def parse_arguments():
     parser.add_argument('-s', '--sleep_time', help='Time to sleep between fuzz cases (float)', type=float, default=0)
     # stub out calls to input() and related test handling
     parser.add_argument('-t', '--testing', help='For use by test suite to stub calls to input() and perform related test handling', action='store_true')
+    parser.add_argument("--server",help="Act like a server instead of a client (uses target_host as the bind address)",action='store_true')
+
 
     return parser.parse_args()
 
