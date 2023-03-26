@@ -197,6 +197,9 @@ class MutinyPrep(object):
             # Guess at right port based, confirm to user
             src_port = packet.sport
             dst_port = packet.dport
+
+            print('heres src',src_port)
+            print('heres dst',dst_port)
             # If port1 == port2, then it can't be the same ip/MAC, so go based on that
             if src_port == dst_port:
                 print("Source and destination ports are the same, using MAC addresses to differentiate server and client.")

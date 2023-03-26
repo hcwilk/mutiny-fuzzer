@@ -92,6 +92,8 @@ if __name__ == '__main__':
         signal.signal(signal.SIGINT, sigint_handler)
 
     fuzzer = Mutiny(args) 
+
+    print("here are the arguments",args)
     # set the radamasa path
     fuzzer.radamsa = RADAMSA
     # set debug flag on fuzzer

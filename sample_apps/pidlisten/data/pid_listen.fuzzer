@@ -14,7 +14,7 @@ shouldPerformTestRun 1
 # Protocol (udp or tcp)
 proto tcp
 # Port number to connect to
-port 9999
+port 5000
 # Port number to connect from
 sourcePort -1
 # Source IP to connect from
