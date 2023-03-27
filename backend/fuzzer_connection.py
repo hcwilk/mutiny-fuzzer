@@ -108,7 +108,8 @@ class FuzzerConnection(object):
         self.connection = socket.socket(self.socket_family, socket.SOCK_STREAM)
         self._bind_to_interface()
 
-        self.connection.connect(self.addr)
+        if not self.server:
+            self.connection.connect(self.addr)
 
     def _connect_to_udp_socket(self):
         self.connection = socket.socket(self.socket_family, socket.SOCK_DGRAM)
@@ -185,7 +186,7 @@ class FuzzerConnection(object):
                 # Only support right now for tcp or udp, but bind source port address to something
                 # specific if requested
                 if self.host != "" or self.host != "0.0.0.0":
-                    self.connection.bind((self.host, self.source_port))
+                    self.connection.bind((self.host, self.target_port))
                 else:
                     # User only specified a port, not an IP
                     self.connection.bind(('0.0.0.0', self.target_port))
