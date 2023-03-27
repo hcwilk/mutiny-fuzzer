@@ -89,6 +89,7 @@ class MockTarget(object):
 
 
     def send_packet(self, data):
+        print('hitting as server, heres data',data)
         if self.communication_conn.type == socket.SOCK_STREAM:
             self.communication_conn.send(data)
         else:
@@ -97,37 +98,44 @@ class MockTarget(object):
 
 
 class MockClient(object):
-    def __init__(self, proto, server_addr, server_port):
+    def __init__(self, proto, client_addr, client_port, target_addr, target_port):
         self.proto = proto
-        self.server_addr = server_addr
-        self.server_port = server_port
+        self.client_addr = client_addr
+        self.client_port = client_port
+        self.target_addr = target_addr
+        self.target_port = target_port
 
     def connect(self):
         if self.proto == 'tcp':
-            socket_family = socket.AF_INET if '.' in self.server_addr else socket.AF_INET6
-            self.communication_conn = socket.socket(socket_family, socket.SOCK_STREAM)
-            self.communication_conn.connect((self.server_addr, self.server_port))
+            socket_family = socket.AF_INET if '.' in self.client_addr else socket.AF_INET6
+            self.connection_conn = socket.socket(socket_family, socket.SOCK_STREAM)
+            self.connection_conn.bind((self.client_addr, self.client_port))
+
+            print('attempting to connect to ' + self.target_addr + ' on port ' + str(self.target_port))
+
+            self.connection_conn.connect((self.target_addr, self.target_port))
+            print('connected!')
         elif self.proto == 'tls':
-            socket_family = socket.AF_INET if '.' in self.server_addr else socket.AF_INET6
+            socket_family = socket.AF_INET if '.' in self.client_addr else socket.AF_INET6
             self.communication_conn = socket.socket(socket_family, socket.SOCK_STREAM)
             context = ssl.create_default_context()
             context.check_hostname = False
             context.verify_mode = ssl.CERT_NONE
-            self.communication_conn.connect((self.server_addr, self.server_port))
-            self.communication_conn = context.wrap_socket(self.communication_conn, server_hostname=self.server_addr)
+            self.communication_conn.connect((self.client_addr, self.client_port))
+            self.communication_conn = context.wrap_socket(self.communication_conn, server_hostname=self.client_addr)
         elif self.proto == 'udp':
-            socket_family = socket.AF_INET if '.' in self.server_addr else socket.AF_INET6
+            socket_family = socket.AF_INET if '.' in self.client_addr else socket.AF_INET6
             self.communication_conn = socket.socket(socket_family, socket.SOCK_DGRAM)
         else:
             proto_num = 0x300 if self.proto == 'L2raw' else PROTO[self.proto]
             self.communication_conn = socket.socket(socket.AF_PACKET, socket.SOCK_RAW, proto_num)
 
     def send_packet(self, data):
-        if self.communication_conn.type == socket.SOCK_STREAM:
-            self.communication_conn.send(data)
+        if self.connection_conn.type == socket.SOCK_STREAM:
+            self.connection_conn.send(data)
             print('sending!')
         else:
-            self.communication_conn.sendto(data, (self.server_addr, self.server_port))
+            self.connection_conn.sendto(data, (self.client_addr, self.client_port))
 
     def receive_packet(self, packet_len):
         if self.communication_conn.type == socket.SOCK_STREAM or self.communication_conn.type == socket.SOCK_RAW:

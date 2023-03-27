@@ -38,6 +38,8 @@ class FuzzerConnection(object):
         self.addr = None
         self.testing = testing
         self.server = server
+        self.incoming_buffer = []
+
         if self.proto != "L2raw" and self.proto != 'tls' and self.proto not in PROTO:
             print_error(f'Unknown protocol: {self.proto}')
             sys.exit(-1)
@@ -72,11 +74,20 @@ class FuzzerConnection(object):
 
 
     def receive_packet(self, bytes_to_read: int, timeout: float):
+
+        self.connection = self.list_connection.accept()[0] if self.server else self.connection
+
         read_buf_size = 4096
         self.connection.settimeout(timeout)
 
+
+
+
         if self.connection.type == socket.SOCK_STREAM or self.connection.type == socket.SOCK_DGRAM or self.connection.type == socket.SOCK_RAW:
             response = bytearray(self.connection.recv(read_buf_size))
+            print('this is reponse',response)
+            self.incoming_buffer.append(response)
+
         else:
             response, self.addr = bytearray(self.connection.recvfrom(read_buf_size))
         
@@ -105,11 +116,16 @@ class FuzzerConnection(object):
 
     def _connect_to_tcp_socket(self):
         # create, bind, and connect to socket
-        self.connection = socket.socket(self.socket_family, socket.SOCK_STREAM)
-        self._bind_to_interface()
-
-        if not self.server:
+        if self.server:
+            self.list_connection = socket.socket(self.socket_family, socket.SOCK_STREAM)
+            self._bind_to_interface()
+            self.list_connection.listen()
+            print("listening on " + self.host + " on port " + str(self.target_port))
+        else:
+            self.connection = socket.socket(self.socket_family, socket.SOCK_STREAM)
+            self._bind_to_interface()
             self.connection.connect(self.addr)
+        
 
     def _connect_to_udp_socket(self):
         self.connection = socket.socket(self.socket_family, socket.SOCK_DGRAM)
@@ -186,13 +202,14 @@ class FuzzerConnection(object):
                 # Only support right now for tcp or udp, but bind source port address to something
                 # specific if requested
                 if self.host != "" or self.host != "0.0.0.0":
-                    self.connection.bind((self.host, self.target_port))
+                    print('binding to ' + self.host + " to port " + str(self.target_port))
+                    self.list_connection.bind((self.host, self.target_port))
                 else:
                     # User only specified a port, not an IP
-                    self.connection.bind(('0.0.0.0', self.target_port))
+                    self.list_connection.bind(('0.0.0.0', self.target_port))
             elif self.host != "" and self.host != "0.0.0.0":
                 # No port was specified, so 0 should auto-select
-                self.connection.bind((self.host, 0))
+                self.list_connection.bind((self.host, 0))
         else:
             if self.source_port != -1:
                 # Only support right now for tcp or udp, but bind source port address to something
