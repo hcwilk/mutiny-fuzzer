@@ -180,6 +180,7 @@ class FuzzerConnection(object):
         if self.proto == 'L2raw':
             self.connection.bind(self.addr)
         elif self.server:
+            print('binding as a server!')
             if self.source_port != -1:
                 # Only support right now for tcp or udp, but bind source port address to something
                 # specific if requested
