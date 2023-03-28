@@ -197,9 +197,6 @@ class MutinyPrep(object):
             # Guess at right port based, confirm to user
             src_port = packet.sport
             dst_port = packet.dport
-
-            print('heres src',src_port)
-            print('heres dst',dst_port)
             # If port1 == port2, then it can't be the same ip/MAC, so go based on that
             if src_port == dst_port:
                 print("Source and destination ports are the same, using MAC addresses to differentiate server and client.")
@@ -329,6 +326,8 @@ class MutinyPrep(object):
             self.fuzzer_data.target_port = self.default_port
             self.fuzzer_data.failure_threshold = 3
             self.fuzzer_data.failure_timeout = 5
+            self.fuzzer_data.server = False
+    
         else:
             # ask how many times we should repeat a failed test, as in one causing a crash
             self.fuzzer_data.failure_threshold = failure_threshold if failure_threshold else prompt_int("\nHow many times should a test case causing a crash or error be repeated?", default_response=3)

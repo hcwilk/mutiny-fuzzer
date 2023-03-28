@@ -101,5 +101,6 @@ if __name__ == '__main__':
     # load any of the users custom processors
     fuzzer.import_custom_processors()
     # begin fuzzing 
+    print('begin fuzzing')
     fuzzer.fuzz()
 

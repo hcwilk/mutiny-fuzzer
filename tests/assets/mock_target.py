@@ -81,7 +81,6 @@ class MockTarget(object):
 
 
     def receive_packet(self, packet_len):
-        print('I am receiving the packet',packet_len)
         if self.communication_conn.type == socket.SOCK_STREAM  or self.communication_conn.type == socket.SOCK_RAW:
             self.incoming_buffer.append(bytearray(self.communication_conn.recv(packet_len)))
         else:
@@ -90,7 +89,6 @@ class MockTarget(object):
 
 
     def send_packet(self, data):
-        print('hitting as server, heres data',data)
         if self.communication_conn.type == socket.SOCK_STREAM:
             self.communication_conn.send(data)
         else:
@@ -112,11 +110,7 @@ class MockClient(object):
             socket_family = socket.AF_INET if '.' in self.client_addr else socket.AF_INET6
             self.communication_conn = socket.socket(socket_family, socket.SOCK_STREAM)
             self.communication_conn.bind((self.client_addr, self.client_port))
-
-            print('attempting to connect to ' + self.target_addr + ' on port ' + str(self.target_port))
-
             self.communication_conn.connect((self.target_addr, self.target_port))
-            print('connected!')
         elif self.proto == 'tls':
             socket_family = socket.AF_INET if '.' in self.client_addr else socket.AF_INET6
             self.communication_conn = socket.socket(socket_family, socket.SOCK_STREAM)
@@ -135,7 +129,6 @@ class MockClient(object):
     def send_packet(self, data):
         if self.communication_conn.type == socket.SOCK_STREAM:
             self.communication_conn.send(data)
-            print('sending!')
         else:
             self.communication_conn.sendto(data, (self.client_addr, self.client_port))
 
@@ -143,8 +136,9 @@ class MockClient(object):
         if self.communication_conn.type == socket.SOCK_STREAM or self.communication_conn.type == socket.SOCK_RAW:
             response = self.communication_conn.recv(packet_len)
             self.incoming_buffer.append(bytearray(response))
-            print('heres int eh coming buffer',self.incoming_buffer)
             return response
         else:
             response, addr = self.communication_conn.recvfrom(packet_len)
+            self.incoming_buffer.append(bytearray(response))
+
             return response

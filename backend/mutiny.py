@@ -283,19 +283,21 @@ class Mutiny(object):
             pass
 
         # create a connection to the target process
-        self.connection = FuzzerConnection(self.fuzzer_data.proto, self.target_host, self.fuzzer_data.target_port, self.fuzzer_data.source_ip, self.fuzzer_data.source_port)
-
+        self.connection = FuzzerConnection(self.fuzzer_data.proto, self.target_host, self.fuzzer_data.target_port, self.fuzzer_data.source_ip, self.fuzzer_data.source_port, self.server)
         message_num = 0   
         for message_num in range(0, len(self.fuzzer_data.message_collection.messages)):
+
             message = self.fuzzer_data.message_collection.messages[message_num]
+
+            print('message direction',message.is_outbound())
 
             # Go ahead and revert any fuzzing or messageprocessor changes before proceeding
             message.reset_altered_message()
 
             if message.is_outbound():
-                self._send_fuzz_session_message(message_num, message, seed)
+                self._send_fuzz_session_message(message_num, message, seed) if not self.server else self._receive_fuzz_session_message(message_num, message)
             else: 
-                self._receive_fuzz_session_message(message_num, message)
+                self._receive_fuzz_session_message(message_num, message) if not self.server else self._send_fuzz_session_message(message_num, message, seed)
 
             if self.logger != None:  
                 self.logger.set_highest_message_number(message_num)

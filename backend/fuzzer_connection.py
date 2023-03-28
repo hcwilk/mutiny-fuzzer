@@ -61,24 +61,30 @@ class FuzzerConnection(object):
             self._connect_to_raw_socket()
 
     def send_packet(self, data: bytearray, timeout: float):
-        print('trying to send')
-        self.connection = self.list_connection.accept()[0] if self.server else self.connection
 
+        print(not self.connection)
+
+        print('trying to send',data)
+        self.connection = self.list_connection.accept()[0] if (self.server and not self.connection) else self.connection
+        print('after connection')
         '''
         uses the connection to the target process and outbound data packet (byteArray), sends it out.
         If debug mode is enabled, we print out the raw bytes
         '''
         self.connection.settimeout(timeout)
         if self.connection.type == socket.SOCK_STREAM:
+            print('sending!')
             self.connection.send(data)
-            print('sending from server',data)
         else:
+            print('sending specific')
             self.connection.sendto(data, self.addr)
 
         print("\tSent %d byte packet" % (len(data)))
 
 
     def receive_packet(self, bytes_to_read: int, timeout: float):
+
+        print('waiting to receive')
 
         self.connection = self.list_connection.accept()[0] if self.server else self.connection
 
@@ -90,7 +96,6 @@ class FuzzerConnection(object):
 
         if self.connection.type == socket.SOCK_STREAM or self.connection.type == socket.SOCK_DGRAM or self.connection.type == socket.SOCK_RAW:
             response = bytearray(self.connection.recv(read_buf_size))
-            print('this is reponse',response)
             self.incoming_buffer.append(response)
 
         else:
@@ -128,7 +133,6 @@ class FuzzerConnection(object):
             self.list_connection = socket.socket(self.socket_family, socket.SOCK_STREAM)
             self._bind_to_interface()
             self.list_connection.listen()
-            print("listening on " + self.host + " on port " + str(self.target_port))
             
         else:
             self.connection = socket.socket(self.socket_family, socket.SOCK_STREAM)
@@ -206,13 +210,15 @@ class FuzzerConnection(object):
         if self.proto == 'L2raw':
             self.connection.bind(self.addr)
         elif self.server:
-            print('binding as a server!')
-            if self.source_port != -1:
+
+            if self.target_port != -1:
                 # Only support right now for tcp or udp, but bind source port address to something
                 # specific if requested
                 if self.host != "" or self.host != "0.0.0.0":
-                    print('binding to ' + self.host + " to port " + str(self.target_port))
+                    
                     self.list_connection.bind((self.host, self.target_port))
+                    print('listening on ',self.host + " on port " + str(self.target_port))
+
                 else:
                     # User only specified a port, not an IP
                     self.list_connection.bind(('0.0.0.0', self.target_port))
