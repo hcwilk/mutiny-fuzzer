@@ -39,6 +39,7 @@ class FuzzerConnection(object):
         self.testing = testing
         self.server = server
         self.incoming_buffer = []
+        self.connection = None
 
         if self.proto != "L2raw" and self.proto != 'tls' and self.proto not in PROTO:
             print_error(f'Unknown protocol: {self.proto}')
@@ -60,6 +61,9 @@ class FuzzerConnection(object):
             self._connect_to_raw_socket()
 
     def send_packet(self, data: bytearray, timeout: float):
+        print('trying to send')
+        self.connection = self.list_connection.accept()[0] if self.server else self.connection
+
         '''
         uses the connection to the target process and outbound data packet (byteArray), sends it out.
         If debug mode is enabled, we print out the raw bytes
@@ -67,6 +71,7 @@ class FuzzerConnection(object):
         self.connection.settimeout(timeout)
         if self.connection.type == socket.SOCK_STREAM:
             self.connection.send(data)
+            print('sending from server',data)
         else:
             self.connection.sendto(data, self.addr)
 
@@ -111,7 +116,10 @@ class FuzzerConnection(object):
 
     def close(self):
         # wrapper for socket.close()
-        self.connection.close()
+
+        
+        self.connection.close() if self.connection else self.list_connection.close()
+        
 
 
     def _connect_to_tcp_socket(self):
@@ -121,6 +129,7 @@ class FuzzerConnection(object):
             self._bind_to_interface()
             self.list_connection.listen()
             print("listening on " + self.host + " on port " + str(self.target_port))
+            
         else:
             self.connection = socket.socket(self.socket_family, socket.SOCK_STREAM)
             self._bind_to_interface()

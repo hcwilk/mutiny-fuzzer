@@ -81,6 +81,7 @@ class MockTarget(object):
 
 
     def receive_packet(self, packet_len):
+        print('I am receiving the packet',packet_len)
         if self.communication_conn.type == socket.SOCK_STREAM  or self.communication_conn.type == socket.SOCK_RAW:
             self.incoming_buffer.append(bytearray(self.communication_conn.recv(packet_len)))
         else:
@@ -104,16 +105,17 @@ class MockClient(object):
         self.client_port = client_port
         self.target_addr = target_addr
         self.target_port = target_port
+        self.incoming_buffer = []
 
     def connect(self):
         if self.proto == 'tcp':
             socket_family = socket.AF_INET if '.' in self.client_addr else socket.AF_INET6
-            self.connection_conn = socket.socket(socket_family, socket.SOCK_STREAM)
-            self.connection_conn.bind((self.client_addr, self.client_port))
+            self.communication_conn = socket.socket(socket_family, socket.SOCK_STREAM)
+            self.communication_conn.bind((self.client_addr, self.client_port))
 
             print('attempting to connect to ' + self.target_addr + ' on port ' + str(self.target_port))
 
-            self.connection_conn.connect((self.target_addr, self.target_port))
+            self.communication_conn.connect((self.target_addr, self.target_port))
             print('connected!')
         elif self.proto == 'tls':
             socket_family = socket.AF_INET if '.' in self.client_addr else socket.AF_INET6
@@ -131,15 +133,18 @@ class MockClient(object):
             self.communication_conn = socket.socket(socket.AF_PACKET, socket.SOCK_RAW, proto_num)
 
     def send_packet(self, data):
-        if self.connection_conn.type == socket.SOCK_STREAM:
-            self.connection_conn.send(data)
+        if self.communication_conn.type == socket.SOCK_STREAM:
+            self.communication_conn.send(data)
             print('sending!')
         else:
-            self.connection_conn.sendto(data, (self.client_addr, self.client_port))
+            self.communication_conn.sendto(data, (self.client_addr, self.client_port))
 
     def receive_packet(self, packet_len):
         if self.communication_conn.type == socket.SOCK_STREAM or self.communication_conn.type == socket.SOCK_RAW:
-            return self.communication_conn.recv(packet_len)
+            response = self.communication_conn.recv(packet_len)
+            self.incoming_buffer.append(bytearray(response))
+            print('heres int eh coming buffer',self.incoming_buffer)
+            return response
         else:
             response, addr = self.communication_conn.recvfrom(packet_len)
             return response
