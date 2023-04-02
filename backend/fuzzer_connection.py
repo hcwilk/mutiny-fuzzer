@@ -62,21 +62,15 @@ class FuzzerConnection(object):
 
     def send_packet(self, data: bytearray, timeout: float):
 
-        print(not self.connection)
-
-        print('trying to send',data)
         self.connection = self.list_connection.accept()[0] if (self.server and not self.connection) else self.connection
-        print('after connection')
         '''
         uses the connection to the target process and outbound data packet (byteArray), sends it out.
         If debug mode is enabled, we print out the raw bytes
         '''
         self.connection.settimeout(timeout)
         if self.connection.type == socket.SOCK_STREAM:
-            print('sending!')
             self.connection.send(data)
         else:
-            print('sending specific')
             self.connection.sendto(data, self.addr)
 
         print("\tSent %d byte packet" % (len(data)))
@@ -84,7 +78,6 @@ class FuzzerConnection(object):
 
     def receive_packet(self, bytes_to_read: int, timeout: float):
 
-        print('waiting to receive')
 
         self.connection = self.list_connection.accept()[0] if self.server else self.connection
 

@@ -28,7 +28,6 @@ class Mutiny(object):
 
     def __init__(self, args):
 
-        print('here are the args',args)
         self.fuzzer_data = FuzzerData()
         # read data in from .fuzzer file
         self.fuzzer_file_path = args.prepped_fuzz
