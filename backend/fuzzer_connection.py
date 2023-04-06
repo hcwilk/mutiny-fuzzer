@@ -126,7 +126,6 @@ class FuzzerConnection(object):
             self.list_connection = socket.socket(self.socket_family, socket.SOCK_STREAM)
             self._bind_to_interface()
             self.list_connection.listen()
-            print('listening on ', self.host, ' on port ',self.target_port)
             
         else:
             self.connection = socket.socket(self.socket_family, socket.SOCK_STREAM)
@@ -211,7 +210,7 @@ class FuzzerConnection(object):
                 if self.host != "" or self.host != "0.0.0.0":
                     
                     self.list_connection.bind((self.host, self.target_port))
-                    print('listening on ',self.host + " on port " + str(self.target_port))
+                    print('server is on ',self.host + " on port " + str(self.target_port))
 
                 else:
                     # User only specified a port, not an IP

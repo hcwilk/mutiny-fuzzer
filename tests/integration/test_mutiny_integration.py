@@ -23,62 +23,62 @@ class IntegrationSuite(object):
         self.total_tests = 0
 
 
-    # def test_1(self, target_port, proto, prepped_fuzzer_file):
-    #     '''
-    #     test details:
-    #         - prepped_fuzz: ./tests/assets/integration_test_1/<proto>_prepped.fuzzer
-    #         - target_host: 127.0.0.1
-    #         - sleep_time: 0
-    #         - range: 0-19
-    #         - loop: None
-    #         - dump_raw: 0
-    #         - quiet: False
-    #         - log_all: False
-    #         - processor_dir: ./tests/assets/integration_test_1/
-    #         - failure_threshold: 3
-    #         - failure_timeout: 5.0
-    #         - receive_timeout: 3.0
-    #         - should_perform_test_run 1
-    #         - port: 7772-7776, unique for each test to avoid 'Address already in use OSError'
-    #         - source_port: -1
-    #         - source_ip: 0.0.0.0
+    def test_1(self, target_port, proto, prepped_fuzzer_file):
+        '''
+        test details:
+            - prepped_fuzz: ./tests/assets/integration_test_1/<proto>_prepped.fuzzer
+            - target_host: 127.0.0.1
+            - sleep_time: 0
+            - range: 0-19
+            - loop: None
+            - dump_raw: 0
+            - quiet: False
+            - log_all: False
+            - processor_dir: ./tests/assets/integration_test_1/
+            - failure_threshold: 3
+            - failure_timeout: 5.0
+            - receive_timeout: 3.0
+            - should_perform_test_run 1
+            - port: 7772-7776, unique for each test to avoid 'Address already in use OSError'
+            - source_port: -1
+            - source_ip: 0.0.0.0
 
-    #         Fuzzes a target until it finds a 'crash' at seed=7, then sends a pause, 
-    #         sleeps, then sends a resume. Fuzzing stops on seed 10, since a
-    #         range of 0-10 was specified
-    #     '''
-    #     print('test 1: {}'.format(proto))
-    #     self.total_tests += 1
-    #     # self.block_print() 
-    #     # populate args
-    #     args = Namespace(prepped_fuzz = prepped_fuzzer_file, target_host = self.target_if, sleep_time = 0, range = '0-10', loop = None, dump_raw = None, quiet = False, log_all = False, testing = True, server = False)
+            Fuzzes a target until it finds a 'crash' at seed=7, then sends a pause, 
+            sleeps, then sends a resume. Fuzzing stops on seed 10, since a
+            range of 0-10 was specified
+        '''
+        print('test 1: {}'.format(proto))
+        self.total_tests += 1
+        # self.block_print() 
+        # populate args
+        args = Namespace(prepped_fuzz = prepped_fuzzer_file, target_host = self.target_if, sleep_time = 0, range = '0-10', loop = None, dump_raw = None, quiet = False, log_all = False, testing = True, server = False)
 
-    #     log_dir = prepped_fuzzer_file.split('.')[0] + '_logs'
-    #     # stand up target server
-    #     target = Target1(proto, self.target_if, target_port)
-    #     # run mutiny
-    #     fuzzer = Mutiny(args)
-    #     fuzzer.radamsa = os.path.abspath( os.path.join(__file__, '../../../radamsa-0.6/bin/radamsa'))
-    #     fuzzer.import_custom_processors()
-    #     fuzzer.debug = False
-    #     # start listening for the fuzz sessions
-    #     target_thread = threading.Thread(target=target.accept_fuzz, args=())
-    #     target_thread.start()
-    #     time.sleep(.03) # avoid race with connection to socket
-    #     fuzz_thread = threading.Thread(target=fuzzer.fuzz, args=())
-    #     fuzz_thread.start() # connect to target and begin fuzzing
-    #     target_thread.join()
-    #     print('target joined')
-    #     fuzz_thread.join()
-    #     print('fuzzer joined')
-    #     if target.communication_conn:
-    #         target.communication_conn.close()
-    #     else:
-    #         target.listen_conn.close()
-    #     shutil.rmtree(log_dir)
-    #     self.enable_print()
-    #     self.passed_tests += 1
-    #     print('ok')
+        log_dir = prepped_fuzzer_file.split('.')[0] + '_logs'
+        # stand up target server
+        target = Target1(proto, self.target_if, target_port)
+        # run mutiny
+        fuzzer = Mutiny(args)
+        fuzzer.radamsa = os.path.abspath( os.path.join(__file__, '../../../radamsa-0.6/bin/radamsa'))
+        fuzzer.import_custom_processors()
+        fuzzer.debug = False
+        # start listening for the fuzz sessions
+        target_thread = threading.Thread(target=target.accept_fuzz, args=())
+        target_thread.start()
+        time.sleep(.03) # avoid race with connection to socket
+        fuzz_thread = threading.Thread(target=fuzzer.fuzz, args=())
+        fuzz_thread.start() # connect to target and begin fuzzing
+        target_thread.join()
+        print('target joined')
+        fuzz_thread.join()
+        print('fuzzer joined')
+        if target.communication_conn:
+            target.communication_conn.close()
+        else:
+            target.listen_conn.close()
+        shutil.rmtree(log_dir)
+        self.enable_print()
+        self.passed_tests += 1
+        print('ok')
 
     # def test_2(self, target_port, proto, prepped_fuzzer_file):
     #     '''
@@ -225,18 +225,18 @@ def main():
     print('-' * 53)
     start_time = time.perf_counter()
     suite = IntegrationSuite()
-    # try: # SINGLE CRASH -> PAUSE -> RESUME -> FINISH SPECIFIED RANGE
-    #     #tcp
-    #     suite.test_1(target_port= 7772, proto = 'tcp', prepped_fuzzer_file = 'tests/assets/integration_test_1/tcp.fuzzer')
-    #     # udp 
-    #     suite.test_1(target_port= 7773, proto = 'udp', prepped_fuzzer_file = 'tests/assets/integration_test_1/udp.fuzzer')
-    #     # tls
-    #     suite.test_1(target_port= 7774, proto = 'tls', prepped_fuzzer_file = 'tests/assets/integration_test_1/tls.fuzzer')
-    #     # raw
-    #     suite.test_1(target_port= 7775, proto = 'L2raw', prepped_fuzzer_file = 'tests/assets/integration_test_1/raw.fuzzer')
-    # except Exception as e:
-    #     print(repr(e))
-    #     traceback.print_exc()
+    try: # SINGLE CRASH -> PAUSE -> RESUME -> FINISH SPECIFIED RANGE
+        #tcp
+        suite.test_1(target_port= 7772, proto = 'tcp', prepped_fuzzer_file = 'tests/assets/integration_test_1/tcp.fuzzer')
+        # udp 
+        suite.test_1(target_port= 7773, proto = 'udp', prepped_fuzzer_file = 'tests/assets/integration_test_1/udp.fuzzer')
+        # tls
+        suite.test_1(target_port= 7774, proto = 'tls', prepped_fuzzer_file = 'tests/assets/integration_test_1/tls.fuzzer')
+        # raw
+        #suite.test_1(target_port= 7775, proto = 'L2raw', prepped_fuzzer_file = 'tests/assets/integration_test_1/raw.fuzzer')
+    except Exception as e:
+        print(repr(e))
+        traceback.print_exc()
 
     # try: # SINGLE OUTBOUND LINE -> CRASH -> HALT
     #     #tcp
@@ -251,20 +251,20 @@ def main():
     #     print(repr(e))
     #     traceback.print_exc()
 
-    try: # SINGLE OUTBOUND LINE -> CRASH -> HALT
+    # try: # SINGLE OUTBOUND LINE -> CRASH -> HALT
         #tcp
-        suite.test_3(target_port= 7776, proto = 'tcp', prepped_fuzzer_file = 'tests/assets/integration_test_2/tcp.fuzzer')
+        # suite.test_3(target_port= 7776, proto = 'tcp', prepped_fuzzer_file = 'tests/assets/integration_test_2/tcp.fuzzer')
         # # udp 
         # suite.test_3(target_port= 7777, proto = 'udp', prepped_fuzzer_file = 'tests/assets/integration_test_2/udp.fuzzer')
         # # tls 
         # suite.test_3(target_port= 7778, proto = 'tls', prepped_fuzzer_file = 'tests/assets/integration_test_2/tls.fuzzer')
         # # raw
         # suite.test_3(target_port = 7779, proto = 'L2raw', prepped_fuzzer_file = 'tests/assets/integration_test_2/raw.fuzzer')
-    except Exception as e:
-        print(repr(e))
-        traceback.print_exc()
-    elapsed_time = time.perf_counter() - start_time
-    print(f'Ran {suite.total_tests} tests in {elapsed_time:0.3f}s\n')
+    # except Exception as e:
+    #     print(repr(e))
+    #     traceback.print_exc()
+    # elapsed_time = time.perf_counter() - start_time
+    # print(f'Ran {suite.total_tests} tests in {elapsed_time:0.3f}s\n')
 
     if suite.passed_tests == suite.total_tests:
         print('OK')

@@ -48,6 +48,7 @@ class Mutiny(object):
         self.min_run_number = 0
         self.max_run_number = -1
         self.seed_loop = []
+        self.connected = False
 
         print('heres self.server',self.server)
 
@@ -122,6 +123,11 @@ class Mutiny(object):
         failure_count = 0
         loop_len = len(self.seed_loop) # if --loop
         is_paused = False
+
+        if self.server:
+            self.connection = FuzzerConnection(self.fuzzer_data.proto, self.target_host, self.fuzzer_data.target_port, self.fuzzer_data.source_ip, self.fuzzer_data.source_port, self.server)
+
+
 
         while True:
             last_message_collection = deepcopy(self.fuzzer_data.message_collection)
@@ -270,6 +276,7 @@ class Mutiny(object):
 
 
     def _perform_run(self, seed: int = -1):
+        print('running new seed')
         '''
         Perform a fuzz run.  
         If seed is -1, don't perform fuzzing (test run)
@@ -286,8 +293,10 @@ class Mutiny(object):
             pass
 
         # create a connection to the target process
-        print('connecting to target process!')
-        self.connection = FuzzerConnection(self.fuzzer_data.proto, self.target_host, self.fuzzer_data.target_port, self.fuzzer_data.source_ip, self.fuzzer_data.source_port, self.server)
+        if not self.server:
+            self.connection = FuzzerConnection(self.fuzzer_data.proto, self.target_host, self.fuzzer_data.target_port, self.fuzzer_data.source_ip, self.fuzzer_data.source_port, self.server)
+        
+
         message_num = 0   
         for message_num in range(0, len(self.fuzzer_data.message_collection.messages)):
 
