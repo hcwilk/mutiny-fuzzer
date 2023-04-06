@@ -54,6 +54,7 @@ class Mutiny(object):
 
         #Assign Lower/Upper bounds on test cases as needed
         if args.range:
+            print('aye yo, ig ot a range here')
             self.min_run_number, self.max_run_number = self._get_run_numbers_from_args(args.range)
         elif args.loop:
             self.seed_loop = validate_number_range(args.loop, flatten_list=True) 
@@ -120,6 +121,8 @@ class Mutiny(object):
         '''
         print('FUZZZ')
         seed = self.min_run_number - 1 if self.fuzzer_data.should_perform_test_run else self.min_run_number 
+
+        print('heres top seed',seed)
         failure_count = 0
         loop_len = len(self.seed_loop) # if --loop
         is_paused = False
@@ -281,6 +284,7 @@ class Mutiny(object):
         Perform a fuzz run.  
         If seed is -1, don't perform fuzzing (test run)
         '''
+        print('here is seed ',seed)
         # Before doing anything, set up logger
         # Otherwise, if connection is refused, we'll log last, but it will be wrong
         if self.logger:
@@ -306,10 +310,10 @@ class Mutiny(object):
             message.reset_altered_message()
 
             if message.is_outbound():
-                print('recv')
+                print('Server Recv')
                 self._send_fuzz_session_message(message_num, message, seed) if not self.server else self._receive_fuzz_session_message(message_num, message)
             else: 
-                print('send s')
+                print('Server Send')
                 self._receive_fuzz_session_message(message_num, message) if not self.server else self._send_fuzz_session_message(message_num, message, seed)
 
             if self.logger != None:  
@@ -332,6 +336,7 @@ class Mutiny(object):
             - message(bytearray): message we would expect
         '''
         message_byte_array = message.get_altered_message()
+        print('heres the message byte array',message_byte_array)
         data = self.connection.receive_packet(len(message_byte_array), self.fuzzer_data.receive_timeout)
         self.message_processor.post_receive_process(data, MessageProcessorExtraParams(message_num, -1, False, [message_byte_array], [data]))
 

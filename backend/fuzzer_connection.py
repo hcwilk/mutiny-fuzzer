@@ -62,7 +62,8 @@ class FuzzerConnection(object):
 
     def send_packet(self, data: bytearray, timeout: float):
 
-        self.connection = self.list_connection.accept()[0] if (self.server) else self.connection
+
+        # self.connection = self.list_connection.accept()[0] if (self.server) else self.connection
         '''
         uses the connection to the target process and outbound data packet (byteArray), sends it out.
         If debug mode is enabled, we print out the raw bytes
@@ -78,8 +79,8 @@ class FuzzerConnection(object):
 
     def receive_packet(self, bytes_to_read: int, timeout: float):
 
-
-        self.connection = self.list_connection.accept()[0] if self.server else self.connection
+        print('server is waiting for another packet')
+        self.connection = self.list_connection.accept()[0] if (self.server and (not self.connection)) else self.connection
 
         read_buf_size = 4096
         self.connection.settimeout(timeout)
@@ -88,6 +89,7 @@ class FuzzerConnection(object):
 
 
         if self.connection.type == socket.SOCK_STREAM or self.connection.type == socket.SOCK_DGRAM or self.connection.type == socket.SOCK_RAW:
+            print('trying to receive')
             response = bytearray(self.connection.recv(read_buf_size))
             self.incoming_buffer.append(response)
 
