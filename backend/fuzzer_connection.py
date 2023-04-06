@@ -79,9 +79,11 @@ class FuzzerConnection(object):
 
     def receive_packet(self, bytes_to_read: int, timeout: float):
 
-        print('server is waiting for another packet')
-        self.connection = self.list_connection.accept()[0] if (self.server and (not self.connection)) else self.connection
 
+        if (self.server and (not self.connection)):   
+            self.connection = self.list_connection.accept()[0]
+        else:
+            self.connection = self.connection
         read_buf_size = 4096
         self.connection.settimeout(timeout)
 

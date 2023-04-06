@@ -1,6 +1,6 @@
 from tests.assets.mock_target import MockClient
 import socket
-import ssl
+import time
 
 
 class Target3(MockClient):
@@ -19,24 +19,22 @@ class Target3(MockClient):
         print('Client is Connected!')
         while True:
             self.send_packet(bytearray('hi', 'utf-8'))
-            # receive 'greetings <fuzzzed subcomponent>'
-            # receive hi
             print('client waiting to receive server stuff!')
-            self.receive_packet(5)
-            print('received packet, i am client')
+            self.receive_packet(4096)
+            
             # send hello, addr not required since tcp
             result = self.incoming_buffer.pop()
+            print('received packet, i am client',len(result))
             if len(result) == 539:
                 print('this shouldnt be hitting irght now')
                 # 7th iteration should cause a crash
                 # write to file that monitor_target is reading
                 assert result == bytearray(b'magic phrase:passworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassword')
-                with open('./tests/assets/integration_test_1/crash.log', 'w') as file:
+                with open('./tests/assets/integration_test_3/crash.log', 'w') as file:
                     file.write('crashed')
-                    if self.communication_conn.type == socket.SOCK_STREAM:
-                        self.listen_conn.close()
                     self.communication_conn.close()
                 return
             self.send_packet(bytearray('incorrect magic phrase, try again!', 'utf-8'))
             print('sent error packet!')
+            time.sleep(1.25)
     

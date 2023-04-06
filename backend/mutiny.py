@@ -50,11 +50,8 @@ class Mutiny(object):
         self.seed_loop = []
         self.connected = False
 
-        print('heres self.server',self.server)
-
         #Assign Lower/Upper bounds on test cases as needed
         if args.range:
-            print('aye yo, ig ot a range here')
             self.min_run_number, self.max_run_number = self._get_run_numbers_from_args(args.range)
         elif args.loop:
             self.seed_loop = validate_number_range(args.loop, flatten_list=True) 
@@ -310,17 +307,18 @@ class Mutiny(object):
             message.reset_altered_message()
 
             if message.is_outbound():
-                print('Server Recv')
+                print('Server Recv / Client Send')
                 self._send_fuzz_session_message(message_num, message, seed) if not self.server else self._receive_fuzz_session_message(message_num, message)
             else: 
-                print('Server Send')
+                print('Server Send / Client Recv')
                 self._receive_fuzz_session_message(message_num, message) if not self.server else self._send_fuzz_session_message(message_num, message, seed)
 
             if self.logger != None:  
                 self.logger.set_highest_message_number(message_num)
             message_num += 1
 
-        self.connection.close()
+        if not self.server:
+            self.connection.close()
 
     def _receive_fuzz_session_message(self, message_num, message):
         '''
@@ -336,7 +334,8 @@ class Mutiny(object):
             - message(bytearray): message we would expect
         '''
         message_byte_array = message.get_altered_message()
-        print('heres the message byte array',message_byte_array)
+
+        print('heres the message Mutiny recvd',message_byte_array)
         data = self.connection.receive_packet(len(message_byte_array), self.fuzzer_data.receive_timeout)
         self.message_processor.post_receive_process(data, MessageProcessorExtraParams(message_num, -1, False, [message_byte_array], [data]))
 
@@ -399,6 +398,9 @@ class Mutiny(object):
                 loc += "-fuzzed"
             with open(loc, "wb") as f:
                 f.write(repr(str(byte_array_to_send))[1:-1])
+
+
+        print('heres the bytes array Mutiny is sending',byte_array_to_send)
 
         self.connection.send_packet(byte_array_to_send, self.fuzzer_data.receive_timeout)
 
