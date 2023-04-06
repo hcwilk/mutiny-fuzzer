@@ -28,6 +28,8 @@ class Mutiny(object):
 
     def __init__(self, args):
 
+        print('what is happening')
+
         self.fuzzer_data = FuzzerData()
         # read data in from .fuzzer file
         self.fuzzer_file_path = args.prepped_fuzz
@@ -47,6 +49,7 @@ class Mutiny(object):
         self.max_run_number = -1
         self.seed_loop = []
 
+        print('heres self.server',self.server)
 
         #Assign Lower/Upper bounds on test cases as needed
         if args.range:
@@ -114,6 +117,7 @@ class Mutiny(object):
         '''
         Main fuzzing routine
         '''
+        print('FUZZZ')
         seed = self.min_run_number - 1 if self.fuzzer_data.should_perform_test_run else self.min_run_number 
         failure_count = 0
         loop_len = len(self.seed_loop) # if --loop
@@ -282,20 +286,21 @@ class Mutiny(object):
             pass
 
         # create a connection to the target process
+        print('connecting to target process!')
         self.connection = FuzzerConnection(self.fuzzer_data.proto, self.target_host, self.fuzzer_data.target_port, self.fuzzer_data.source_ip, self.fuzzer_data.source_port, self.server)
         message_num = 0   
         for message_num in range(0, len(self.fuzzer_data.message_collection.messages)):
 
             message = self.fuzzer_data.message_collection.messages[message_num]
 
-            print('message direction',message.is_outbound())
-
             # Go ahead and revert any fuzzing or messageprocessor changes before proceeding
             message.reset_altered_message()
 
             if message.is_outbound():
+                print('recv')
                 self._send_fuzz_session_message(message_num, message, seed) if not self.server else self._receive_fuzz_session_message(message_num, message)
             else: 
+                print('send s')
                 self._receive_fuzz_session_message(message_num, message) if not self.server else self._send_fuzz_session_message(message_num, message, seed)
 
             if self.logger != None:  

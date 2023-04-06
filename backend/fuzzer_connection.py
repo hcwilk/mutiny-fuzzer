@@ -62,7 +62,7 @@ class FuzzerConnection(object):
 
     def send_packet(self, data: bytearray, timeout: float):
 
-        self.connection = self.list_connection.accept()[0] if (self.server and not self.connection) else self.connection
+        self.connection = self.list_connection.accept()[0] if (self.server) else self.connection
         '''
         uses the connection to the target process and outbound data packet (byteArray), sends it out.
         If debug mode is enabled, we print out the raw bytes
@@ -126,6 +126,7 @@ class FuzzerConnection(object):
             self.list_connection = socket.socket(self.socket_family, socket.SOCK_STREAM)
             self._bind_to_interface()
             self.list_connection.listen()
+            print('listening on ', self.host, ' on port ',self.target_port)
             
         else:
             self.connection = socket.socket(self.socket_family, socket.SOCK_STREAM)
