@@ -91,8 +91,8 @@ class FuzzerConnection(object):
 
 
         if self.connection.type == socket.SOCK_STREAM or self.connection.type == socket.SOCK_DGRAM or self.connection.type == socket.SOCK_RAW:
-            print('trying to receive')
             response = bytearray(self.connection.recv(read_buf_size))
+            print('heres what Mutiny received')
             self.incoming_buffer.append(response)
 
         else:

@@ -276,12 +276,10 @@ class Mutiny(object):
 
 
     def _perform_run(self, seed: int = -1):
-        print('running new seed')
         '''
         Perform a fuzz run.  
         If seed is -1, don't perform fuzzing (test run)
         '''
-        print('here is seed ',seed)
         # Before doing anything, set up logger
         # Otherwise, if connection is refused, we'll log last, but it will be wrong
         if self.logger:
@@ -334,8 +332,6 @@ class Mutiny(object):
             - message(bytearray): message we would expect
         '''
         message_byte_array = message.get_altered_message()
-
-        print('heres the message Mutiny recvd',message_byte_array)
         data = self.connection.receive_packet(len(message_byte_array), self.fuzzer_data.receive_timeout)
         self.message_processor.post_receive_process(data, MessageProcessorExtraParams(message_num, -1, False, [message_byte_array], [data]))
 
@@ -400,7 +396,7 @@ class Mutiny(object):
                 f.write(repr(str(byte_array_to_send))[1:-1])
 
 
-        print('heres the bytes array Mutiny is sending',byte_array_to_send)
+        print('heres what Mutiny is sending',byte_array_to_send)
 
         self.connection.send_packet(byte_array_to_send, self.fuzzer_data.receive_timeout)
 

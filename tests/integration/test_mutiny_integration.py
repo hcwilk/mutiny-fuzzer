@@ -64,7 +64,6 @@ class IntegrationSuite(object):
         # start listening for the fuzz sessions
         target_thread = threading.Thread(target=target.accept_fuzz, args=())
         target_thread.start()
-        time.sleep(3) # avoid race with connection to socket
         fuzz_thread = threading.Thread(target=fuzzer.fuzz, args=())
         fuzz_thread.start() # connect to target and begin fuzzing
         target_thread.join()

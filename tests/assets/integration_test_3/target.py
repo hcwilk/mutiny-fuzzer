@@ -19,14 +19,14 @@ class Target3(MockClient):
         print('Client is Connected!')
         while True:
             self.send_packet(bytearray('hi', 'utf-8'))
-            print('client waiting to receive server stuff!')
+            print('client sent hi, now waiting to receive server stuff!')
             self.receive_packet(4096)
             
             # send hello, addr not required since tcp
             result = self.incoming_buffer.pop()
-            print('received packet, i am client',len(result))
+            print('Client received packet of length: ',len(result))
             if len(result) == 539:
-                print('this shouldnt be hitting irght now')
+                print('CRASHED THE CLIENT')
                 # 7th iteration should cause a crash
                 # write to file that monitor_target is reading
                 assert result == bytearray(b'magic phrase:passworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassword')
