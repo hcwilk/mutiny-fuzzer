@@ -126,6 +126,9 @@ class MockClient(object):
         elif self.proto == 'udp':
             socket_family = socket.AF_INET if '.' in self.client_addr else socket.AF_INET6
             self.communication_conn = socket.socket(socket_family, socket.SOCK_DGRAM)
+            self.communication_conn.bind((self.client_addr, self.client_port))
+
+            print('UDP READY TO GO')
         else:
             proto_num = 0x300 if self.proto == 'L2raw' else PROTO[self.proto]
             self.communication_conn = socket.socket(socket.AF_PACKET, socket.SOCK_RAW, proto_num)
@@ -134,7 +137,8 @@ class MockClient(object):
         if self.communication_conn.type == socket.SOCK_STREAM:
             self.communication_conn.send(data)
         else:
-            self.communication_conn.sendto(data, (self.client_addr, self.client_port))
+            print('trying to send UDP stuff from client')
+            self.communication_conn.sendto(data, (self.target_addr, self.target_port))
 
     def receive_packet(self, packet_len):
         if self.communication_conn.type == socket.SOCK_STREAM or self.communication_conn.type == socket.SOCK_RAW:
@@ -142,6 +146,7 @@ class MockClient(object):
             self.incoming_buffer.append(bytearray(response))
             return response
         else:
+            print('trying to receive from client')
             response, addr = self.communication_conn.recvfrom(packet_len)
             self.incoming_buffer.append(bytearray(response))
 

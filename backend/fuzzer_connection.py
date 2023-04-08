@@ -76,6 +76,7 @@ class FuzzerConnection(object):
         if self.connection.type == socket.SOCK_STREAM:
             self.connection.send(data)
         else:
+            print('udp send, its going to ',self.addr)
             self.connection.sendto(data, self.addr)
 
         print("\tSent %d byte packet" % (len(data)))
@@ -205,7 +206,10 @@ class FuzzerConnection(object):
             # will have to actively go out of their way to subvert this.
             if "." in self.host:
                 self.socket_family = socket.AF_INET
-                self.addr = (self.host, self.target_port)
+                if self.server:
+                    self.addr = (self.source_ip, self.source_port)
+                else:
+                    self.addr = (self.host, self.target_port)
             elif ":" in self.host:
                 self.socket_family = socket.AF_INET6 
                 self.addr = (self.host, self.target_port)
@@ -219,8 +223,12 @@ class FuzzerConnection(object):
                 # Only support right now for tcp or udp, but bind source port address to something
                 # specific if requested
                 if self.host != "" or self.host != "0.0.0.0":
-                    
-                    self.list_connection.bind((self.host, self.target_port))
+
+
+                    if self.proto=='udp':
+                        self.connection.bind((self.host,self.target_port))
+                    else:
+                        self.list_connection.bind((self.host, self.target_port))
                     print('server is on ',self.host + " on port " + str(self.target_port))
 
                 else:
