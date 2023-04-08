@@ -135,7 +135,7 @@ class IntegrationSuite(object):
         print('ok')
 
 
-    def test_3(self, target_port, proto, prepped_fuzzer_file):
+    def test_3(self, target_port, cli_port, proto, prepped_fuzzer_file):
         '''
         test details:
             - prepped_fuzz: ./tests/assets/integration_test_2/<proto>_prepped.fuzzer
@@ -168,7 +168,7 @@ class IntegrationSuite(object):
         log_dir = prepped_fuzzer_file.split('.')[0] + '_logs'
 
         cli_if = '127.0.0.1'
-        cli_port = 50987
+
         # stand up target client
         target = Target3(proto, cli_if, cli_port, self.target_if, target_port)
         # run mutiny
@@ -216,18 +216,18 @@ def main():
     print('-' * 53)
     start_time = time.perf_counter()
     suite = IntegrationSuite()
-    try: # SINGLE CRASH -> PAUSE -> RESUME -> FINISH SPECIFIED RANGE
-        #tcp
-        suite.test_1(target_port= 7772, proto = 'tcp', prepped_fuzzer_file = 'tests/assets/integration_test_1/tcp.fuzzer')
-        # udp 
-        suite.test_1(target_port= 7773, proto = 'udp', prepped_fuzzer_file = 'tests/assets/integration_test_1/udp.fuzzer')
-        # tls
-        suite.test_1(target_port= 7774, proto = 'tls', prepped_fuzzer_file = 'tests/assets/integration_test_1/tls.fuzzer')
-    #     # raw
-    #     #suite.test_1(target_port= 7775, proto = 'L2raw', prepped_fuzzer_file = 'tests/assets/integration_test_1/raw.fuzzer')
-    except Exception as e:
-        print(repr(e))
-        traceback.print_exc()
+    # try: # SINGLE CRASH -> PAUSE -> RESUME -> FINISH SPECIFIED RANGE
+    #     #tcp
+    #     suite.test_1(target_port= 7772, proto = 'tcp', prepped_fuzzer_file = 'tests/assets/integration_test_1/tcp.fuzzer')
+    #     # udp 
+    #     suite.test_1(target_port= 7773, proto = 'udp', prepped_fuzzer_file = 'tests/assets/integration_test_1/udp.fuzzer')
+    #     # tls
+    #     suite.test_1(target_port= 7774, proto = 'tls', prepped_fuzzer_file = 'tests/assets/integration_test_1/tls.fuzzer')
+    # #     # raw
+    # #     #suite.test_1(target_port= 7775, proto = 'L2raw', prepped_fuzzer_file = 'tests/assets/integration_test_1/raw.fuzzer')
+    # except Exception as e:
+    #     print(repr(e))
+    #     traceback.print_exc()
 
     # try: # SINGLE OUTBOUND LINE -> CRASH -> HALT
     #     #tcp
@@ -244,9 +244,9 @@ def main():
 
     try: # SINGLE OUTBOUND LINE -> CRASH -> HALT
         #tcp
-        suite.test_3(target_port= 7776, proto = 'tcp', prepped_fuzzer_file = 'tests/assets/integration_test_3/tcp.fuzzer')
+        suite.test_3(target_port= 7776, cli_port=52954, proto = 'tcp', prepped_fuzzer_file = 'tests/assets/integration_test_3/tcp.fuzzer')
         # # udp 
-        # suite.test_3(target_port= 7777, proto = 'udp', prepped_fuzzer_file = 'tests/assets/integration_test_2/udp.fuzzer')
+        suite.test_3(target_port= 7777, cli_port=52955, proto = 'udp', prepped_fuzzer_file = 'tests/assets/integration_test_3/udp.fuzzer')
         # # tls 
         # suite.test_3(target_port= 7778, proto = 'tls', prepped_fuzzer_file = 'tests/assets/integration_test_2/tls.fuzzer')
         # # raw
