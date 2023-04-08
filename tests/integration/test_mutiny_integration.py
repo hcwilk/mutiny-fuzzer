@@ -229,18 +229,18 @@ def main():
         print(repr(e))
         traceback.print_exc()
 
-    # try: # SINGLE OUTBOUND LINE -> CRASH -> HALT
+    try: # SINGLE OUTBOUND LINE -> CRASH -> HALT
     #     #tcp
-    #     suite.test_2(target_port= 7776, proto = 'tcp', prepped_fuzzer_file = 'tests/assets/integration_test_2/tcp.fuzzer')
+         suite.test_2(target_port= 7776, proto = 'tcp', prepped_fuzzer_file = 'tests/assets/integration_test_2/tcp.fuzzer')
     #     # udp 
-    #     suite.test_2(target_port= 7777, proto = 'udp', prepped_fuzzer_file = 'tests/assets/integration_test_2/udp.fuzzer')
+         suite.test_2(target_port= 7777, proto = 'udp', prepped_fuzzer_file = 'tests/assets/integration_test_2/udp.fuzzer')
     #     # tls 
-    #     suite.test_2(target_port= 7778, proto = 'tls', prepped_fuzzer_file = 'tests/assets/integration_test_2/tls.fuzzer')
+         suite.test_2(target_port= 7778, proto = 'tls', prepped_fuzzer_file = 'tests/assets/integration_test_2/tls.fuzzer')
     #     # raw
     #     suite.test_2(target_port = 7779, proto = 'L2raw', prepped_fuzzer_file = 'tests/assets/integration_test_2/raw.fuzzer')
-    # except Exception as e:
-    #     print(repr(e))
-    #     traceback.print_exc()
+    except Exception as e:
+        print(repr(e))
+        traceback.print_exc()
 
     try: # SINGLE OUTBOUND LINE -> CRASH -> HALT
         #tcp
