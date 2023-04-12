@@ -116,13 +116,33 @@ class MockClient(object):
 
             print('Client is Connected!')
         elif self.proto == 'tls':
+            print('trying')
             socket_family = socket.AF_INET if '.' in self.client_addr else socket.AF_INET6
-            self.communication_conn = socket.socket(socket_family, socket.SOCK_STREAM)
+            try:
+                _create_unverified_https_context = ssl._create_unverified_context
+            except AttributeError:
+            # Legacy Python that doesn't verify HTTPS certificates by default
+                pass
+            else:
+            # Handle target environment that doesn't support HTTPS verification
+                ssl._create_default_https_context = _create_unverified_https_context
+
             context = ssl.create_default_context()
             context.check_hostname = False
             context.verify_mode = ssl.CERT_NONE
-            self.communication_conn.connect((self.client_addr, self.client_port))
-            self.communication_conn = context.wrap_socket(self.communication_conn, server_hostname=self.client_addr)
+            tcp_connection = socket.socket(socket_family, socket.SOCK_STREAM)
+
+            print('here')
+            self.communication_conn = context.wrap_socket(tcp_connection, server_hostname=self.target_addr)
+            print('right')
+            self.communication_conn.bind((self.client_addr, self.client_port))
+            print('trying to connect to ', self.target_addr, " on port ", self.target_port)
+            self.communication_conn.settimeout(5.0) 
+            try:
+                self.communication_conn.connect((self.target_addr, self.target_port))
+                print('Client connected with TLS!')
+            except Exception as e:
+                print(f"Error connecting to {self.target_addr} on port {self.target_port}: {str(e)}")            
         elif self.proto == 'udp':
             socket_family = socket.AF_INET if '.' in self.client_addr else socket.AF_INET6
             self.communication_conn = socket.socket(socket_family, socket.SOCK_DGRAM)

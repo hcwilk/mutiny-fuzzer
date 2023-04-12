@@ -55,6 +55,7 @@ class FuzzerConnection(object):
         elif self.proto == 'udp':
             self._connect_to_udp_socket()
         elif self.proto == 'tls':
+            print('yes')
             self._connect_to_tls_socket()
         # must be a raw socket since we already checked if protocol was supported
         else :
@@ -150,6 +151,7 @@ class FuzzerConnection(object):
         self._bind_to_interface()
 
     def _connect_to_tls_socket(self):
+        print('trying to bind using TLS')
         try:
             _create_unverified_https_context = ssl._create_unverified_context
         except AttributeError:
@@ -162,12 +164,21 @@ class FuzzerConnection(object):
         if self.testing:
             # load self-signed testing certificate
             context.load_verify_locations('./tests/assets/test-server.pem')
-        context.check_hostname = False
-        context.verify_mode = ssl.CERT_NONE
-        tcp_connection = socket.socket(self.socket_family, socket.SOCK_STREAM)
-        self.connection = context.wrap_socket(tcp_connection)
-        self._bind_to_interface()
-        self.connection.connect(self.addr)
+        if self.server:
+            self.list_connection = socket.socket(self.socket_family, socket.SOCK_STREAM)
+            self._bind_to_interface()
+            self.list_connection.listen()
+            context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+            context.load_cert_chain('./tests/assets/test-server.pem', './tests/assets/test-server.key')
+            self.list_connection = context.wrap_socket(self.list_connection, server_side=True)
+            print('now listening!')
+        else:
+            context.check_hostname = False
+            context.verify_mode = ssl.CERT_NONE
+            tcp_connection = socket.socket(self.socket_family, socket.SOCK_STREAM)
+            self.connection = context.wrap_socket(tcp_connection)
+            self._bind_to_interface()
+            self.connection.connect(self.addr)
 
     def _connect_to_raw_socket(self):
         try:

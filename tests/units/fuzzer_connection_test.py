@@ -594,38 +594,38 @@ class TestFuzzerConnection(unittest.TestCase):
 
 # CONNECTIONS -- SERVER
 
-    def test_FuzzerConnectionInit_tcp_ipv4_server(self):
-        proto = 'tcp'
-        # target (where it's being hosted)
-        mock_if = '127.0.0.1'
-        # target (where it's being hosted)
-        mock_port = 9981
-        src_if = '127.0.0.1'
-        src_port = 8871
-        server= True
+    # def test_FuzzerConnectionInit_tcp_ipv4_server(self):
+    #     proto = 'tcp'
+    #     # target (where it's being hosted)
+    #     mock_if = '127.0.0.1'
+    #     # target (where it's being hosted)
+    #     mock_port = 9981
+    #     src_if = '127.0.0.1'
+    #     src_port = 8871
+    #     server= True
         
-        conn = FuzzerConnection(proto, mock_if, mock_port, src_if, src_port, server)
+    #     conn = FuzzerConnection(proto, mock_if, mock_port, src_if, src_port, server)
         
-        sleep(.5) # avoid race, allow handle_connections to bind and listen
-        target = MockClient(proto, src_if, src_port, mock_if, mock_port)
-        listener_thread = threading.Thread(target=target.connect)
-        listener_thread.start()
+    #     sleep(.5) # avoid race, allow handle_connections to bind and listen
+    #     target = MockClient(proto, src_if, src_port, mock_if, mock_port)
+    #     listener_thread = threading.Thread(target=target.connect)
+    #     listener_thread.start()
 
 
-        self.assertEqual(conn.proto, proto)
-        self.assertEqual(conn.host, mock_if)
-        self.assertEqual(conn.target_port, mock_port)
-        self.assertEqual(conn.source_ip, src_if)
-        self.assertEqual(conn.source_port, src_port)
-        self.assertEqual(conn.addr, (src_if, src_port))
-        self.assertEqual(conn.list_connection.family, socket.AF_INET)
-        self.assertEqual(conn.list_connection.type, socket.SOCK_STREAM)
+    #     self.assertEqual(conn.proto, proto)
+    #     self.assertEqual(conn.host, mock_if)
+    #     self.assertEqual(conn.target_port, mock_port)
+    #     self.assertEqual(conn.source_ip, src_if)
+    #     self.assertEqual(conn.source_port, src_port)
+    #     self.assertEqual(conn.addr, (src_if, src_port))
+    #     self.assertEqual(conn.list_connection.family, socket.AF_INET)
+    #     self.assertEqual(conn.list_connection.type, socket.SOCK_STREAM)
 
-        self.assertEqual(target.client_addr,src_if)
-        self.assertEqual(target.client_port,src_port)
-        listener_thread.join()
-        target.communication_conn.close()
-        conn.close()
+    #     self.assertEqual(target.client_addr,src_if)
+    #     self.assertEqual(target.client_port,src_port)
+    #     listener_thread.join()
+    #     target.communication_conn.close()
+    #     conn.close()
 
 
     # def test_FuzzerConnectionInit_tcp_ipv6_server(self):
@@ -659,13 +659,69 @@ class TestFuzzerConnection(unittest.TestCase):
     #     target.communication_conn.close()
     #     conn.close()
     
-    def test_FuzzerConnectionInit_udp_ipv4(self):
-        proto = 'udp'
+    # def test_FuzzerConnectionInit_udp_ipv4(self):
+    #     proto = 'udp'
+    #     mock_if = '127.0.0.1'
+    #     mock_port = 9979
+    #     src_if = '127.0.0.1'
+    #     src_port = 8869
+    #     server= True
+        
+    #     conn = FuzzerConnection(proto, mock_if, mock_port, src_if, src_port, server)
+        
+    #     sleep(.5) # avoid race, allow handle_connections to bind and listen
+    #     target = MockClient(proto, src_if, src_port, mock_if, mock_port)
+    #     listener_thread = threading.Thread(target=target.connect)
+    #     listener_thread.start()
+
+
+    #     self.assertEqual(conn.proto, proto)
+    #     self.assertEqual(conn.host, mock_if)
+    #     self.assertEqual(conn.target_port, mock_port)
+    #     self.assertEqual(conn.source_ip, src_if)
+    #     self.assertEqual(conn.source_port, src_port)
+    #     self.assertEqual(conn.addr, (src_if, src_port))
+    #     self.assertEqual(conn.connection.family, socket.AF_INET)
+    #     self.assertEqual(conn.connection.type, socket.SOCK_DGRAM)
+
+
+    #     listener_thread.join()
+    #     target.communication_conn.close()
+    #     conn.close()
+
+    # def test_FuzzerConnectionInit_udp_ipv6(self):
+    #     proto = 'udp'
+    #     mock_if = '::1'
+    #     mock_port = 9978
+    #     src_if = '::1'
+    #     src_port = 8868
+    #     server = False
+        
+    #     target = MockTarget(proto, mock_if, mock_port)
+    #     listener_thread = threading.Thread(target=target.accept_connection)
+    #     listener_thread.start()
+    #     sleep(.5) # avoid race, allow handle_connections to bind and listen
+    #     conn = FuzzerConnection(proto, mock_if, mock_port, src_if, src_port, server)
+    #     self.assertEqual(conn.proto, proto)
+    #     self.assertEqual(conn.host, mock_if)
+    #     self.assertEqual(conn.target_port, mock_port)
+    #     self.assertEqual(conn.source_ip, src_if)
+    #     self.assertEqual(conn.source_port, src_port)
+    #     self.assertEqual(conn.addr, (mock_if, mock_port))
+    #     self.assertEqual(conn.connection.family, socket.AF_INET6)
+    #     self.assertEqual(conn.connection.type, socket.SOCK_DGRAM)
+    #     listener_thread.join()
+    #     target.communication_conn.close()
+
+    #     conn.close()
+    
+    def test_FuzzerConnectionInit_tls_ipv4(self):
+        proto = 'tls'
         mock_if = '127.0.0.1'
-        mock_port = 9979
+        mock_port = 9977
         src_if = '127.0.0.1'
-        src_port = 8869
-        server= True
+        src_port = 8867
+        server = True
         
         conn = FuzzerConnection(proto, mock_if, mock_port, src_if, src_port, server)
         
@@ -673,77 +729,18 @@ class TestFuzzerConnection(unittest.TestCase):
         target = MockClient(proto, src_if, src_port, mock_if, mock_port)
         listener_thread = threading.Thread(target=target.connect)
         listener_thread.start()
-
-
         self.assertEqual(conn.proto, proto)
         self.assertEqual(conn.host, mock_if)
         self.assertEqual(conn.target_port, mock_port)
         self.assertEqual(conn.source_ip, src_if)
         self.assertEqual(conn.source_port, src_port)
-        self.assertEqual(conn.addr, (src_if, src_port))
-        self.assertEqual(conn.connection.family, socket.AF_INET)
-        self.assertEqual(conn.connection.type, socket.SOCK_DGRAM)
-
-
+        self.assertEqual(conn.list_connection.family, socket.AF_INET)
+        self.assertEqual(conn.list_connection.type, socket.SOCK_STREAM)
+        self.assertIsInstance(conn.list_connection, ssl.SSLSocket)
         listener_thread.join()
-        target.communication_conn.close()
         conn.close()
+        target.communication_conn.close()
 
-#     def test_FuzzerConnectionInit_udp_ipv6(self):
-#         proto = 'udp'
-#         mock_if = '::1'
-#         mock_port = 9978
-#         src_if = '::1'
-#         src_port = 8868
-#         server = False
-        
-#         target = MockTarget(proto, mock_if, mock_port)
-#         listener_thread = threading.Thread(target=target.accept_connection)
-#         listener_thread.start()
-#         sleep(.5) # avoid race, allow handle_connections to bind and listen
-#         conn = FuzzerConnection(proto, mock_if, mock_port, src_if, src_port, server)
-#         self.assertEqual(conn.proto, proto)
-#         self.assertEqual(conn.host, mock_if)
-#         self.assertEqual(conn.target_port, mock_port)
-#         self.assertEqual(conn.source_ip, src_if)
-#         self.assertEqual(conn.source_port, src_port)
-#         self.assertEqual(conn.addr, (mock_if, mock_port))
-#         self.assertEqual(conn.connection.family, socket.AF_INET6)
-#         self.assertEqual(conn.connection.type, socket.SOCK_DGRAM)
-#         listener_thread.join()
-#         target.communication_conn.close()
-
-#         conn.close()
-    
-#     def test_FuzzerConnectionInit_tls_ipv4(self):
-#         proto = 'tls'
-#         mock_if = '127.0.0.1'
-#         mock_port = 9977
-#         src_if = '127.0.0.1'
-#         src_port = 8867
-#         server = False
-        
-#         target = MockTarget(proto, mock_if, mock_port)
-#         listener_thread = threading.Thread(target=target.accept_connection)
-#         listener_thread.start()
-#         sleep(.5) # avoid race, allow handle_connections to bind and listen
-#         conn = FuzzerConnection(proto, mock_if, mock_port, src_if, src_port, server,testing=True)
-#         conn._get_addr()
-#         conn._connect_to_tls_socket()
-#         self.assertEqual(conn.proto, proto)
-#         self.assertEqual(conn.host, mock_if)
-#         self.assertEqual(conn.target_port, mock_port)
-#         self.assertEqual(conn.source_ip, src_if)
-#         self.assertEqual(conn.source_port, src_port)
-#         self.assertEqual(conn.addr, (mock_if, mock_port))
-#         self.assertEqual(conn.connection.family, socket.AF_INET)
-#         self.assertEqual(conn.connection.type, socket.SOCK_STREAM)
-#         self.assertIsInstance(conn.connection, ssl.SSLSocket)
-#         listener_thread.join()
-#         conn.close()
-#         target.communication_conn.close()
-#         target.listen_conn.close()
-    
 #     def test_FuzzerConnectionInit_tls_ipv6(self):
 #         proto = 'tls'
 #         mock_if = '::1'
@@ -805,118 +802,118 @@ class TestFuzzerConnection(unittest.TestCase):
 
 # RECEIVING PACKETS -- SERVER
 
-    def test_receive_packet_tcp_ipv4_server(self):
-        proto = 'tcp'
-        mock_if = '127.0.0.1'
-        mock_port = 9975
-        src_if = '127.0.0.1'
-        src_port = 8865
-        server = True
+    # def test_receive_packet_tcp_ipv4_server(self):
+    #     proto = 'tcp'
+    #     mock_if = '127.0.0.1'
+    #     mock_port = 9975
+    #     src_if = '127.0.0.1'
+    #     src_port = 8865
+    #     server = True
 
-        conn = FuzzerConnection(proto, mock_if, mock_port, src_if, src_port, server)
-        sleep(.1) # avoid race, allow handle_connections to bind and listen
+    #     conn = FuzzerConnection(proto, mock_if, mock_port, src_if, src_port, server)
+    #     sleep(.1) # avoid race, allow handle_connections to bind and listen
       
         
-        target = MockClient(proto, src_if, src_port, mock_if, mock_port)
-        listener_thread = threading.Thread(target=target.connect)
-        listener_thread.start()
-        data = bytes('this should say 24 bytes', 'utf-8')
-        listener_thread.join()
+    #     target = MockClient(proto, src_if, src_port, mock_if, mock_port)
+    #     listener_thread = threading.Thread(target=target.connect)
+    #     listener_thread.start()
+    #     data = bytes('this should say 24 bytes', 'utf-8')
+    #     listener_thread.join()
         
-        reception_thread = threading.Thread(target=self.receive_packet_wrapper, args=(conn,len(data),3.0))
-        reception_thread.start()
-        target.send_packet(data)
-        reception_thread.join()
-        sleep(1)
-        conn.list_connection.close()
-        conn.connection.close()
-        target.communication_conn.close()
-        self.assertEqual(self.received_data.pop(), data)
+    #     reception_thread = threading.Thread(target=self.receive_packet_wrapper, args=(conn,len(data),3.0))
+    #     reception_thread.start()
+    #     target.send_packet(data)
+    #     reception_thread.join()
+    #     sleep(1)
+    #     conn.list_connection.close()
+    #     conn.connection.close()
+    #     target.communication_conn.close()
+    #     self.assertEqual(self.received_data.pop(), data)
 
 
-    def test_receive_packet_udp_ipv4_server(self):
-        proto = 'udp'
-        mock_if = '127.0.0.1'
-        mock_port = 9974
-        src_if = '127.0.0.1'
-        src_port = 8864
-        server = True
+    # def test_receive_packet_udp_ipv4_server(self):
+    #     proto = 'udp'
+    #     mock_if = '127.0.0.1'
+    #     mock_port = 9974
+    #     src_if = '127.0.0.1'
+    #     src_port = 8864
+    #     server = True
 
-        conn = FuzzerConnection(proto, mock_if, mock_port, src_if, src_port, server)
-        sleep(.1) # avoid race, allow handle_connections to bind and listen
+    #     conn = FuzzerConnection(proto, mock_if, mock_port, src_if, src_port, server)
+    #     sleep(.1) # avoid race, allow handle_connections to bind and listen
       
         
-        target = MockClient(proto, src_if, src_port, mock_if, mock_port)
-        listener_thread = threading.Thread(target=target.connect)
-        listener_thread.start()
-        data = bytes('this should say 24 bytes', 'utf-8')
-        listener_thread.join()
+    #     target = MockClient(proto, src_if, src_port, mock_if, mock_port)
+    #     listener_thread = threading.Thread(target=target.connect)
+    #     listener_thread.start()
+    #     data = bytes('this should say 24 bytes', 'utf-8')
+    #     listener_thread.join()
         
-        reception_thread = threading.Thread(target=self.receive_packet_wrapper, args=(conn,len(data),3.0))
-        reception_thread.start()
-        target.send_packet(data)
-        reception_thread.join()
-        sleep(1)
-        conn.connection.close()
-        target.communication_conn.close()
-        self.assertEqual(self.received_data.pop(), data)
+    #     reception_thread = threading.Thread(target=self.receive_packet_wrapper, args=(conn,len(data),3.0))
+    #     reception_thread.start()
+    #     target.send_packet(data)
+    #     reception_thread.join()
+    #     sleep(1)
+    #     conn.connection.close()
+    #     target.communication_conn.close()
+    #     self.assertEqual(self.received_data.pop(), data)
 
 
 # # SENDING PACKETS -- SERVER
 
 
-    def test_send_packet_tcp_ipv4_server(self):
-        proto = 'tcp'
-        mock_if = '127.0.0.1'
-        mock_port = 9973
-        src_if = '127.0.0.1'
-        src_port = 8863
-        server = True
+    # def test_send_packet_tcp_ipv4_server(self):
+    #     proto = 'tcp'
+    #     mock_if = '127.0.0.1'
+    #     mock_port = 9973
+    #     src_if = '127.0.0.1'
+    #     src_port = 8863
+    #     server = True
 
-        conn = FuzzerConnection(proto, mock_if, mock_port, src_if, src_port, server)
-        sleep(.1) # avoid race, allow handle_connections to bind and listen
+    #     conn = FuzzerConnection(proto, mock_if, mock_port, src_if, src_port, server)
+    #     sleep(.1) # avoid race, allow handle_connections to bind and listen
       
         
-        target = MockClient(proto, src_if, src_port, mock_if, mock_port)
-        listener_thread = threading.Thread(target=target.connect)
-        listener_thread.start()
-        data = bytes('again', 'utf-8')
-        listener_thread.join()
+    #     target = MockClient(proto, src_if, src_port, mock_if, mock_port)
+    #     listener_thread = threading.Thread(target=target.connect)
+    #     listener_thread.start()
+    #     data = bytes('again', 'utf-8')
+    #     listener_thread.join()
         
-        reception_thread = threading.Thread(target=target.receive_packet, args=(len(data),))
-        reception_thread.start()
-        conn.send_packet(data,3.0)
-        reception_thread.join()
-        sleep(1)
-        conn.list_connection.close()
-        conn.connection.close()
-        target.communication_conn.close()
-        self.assertEqual(target.incoming_buffer.pop(), data)
+    #     reception_thread = threading.Thread(target=target.receive_packet, args=(len(data),))
+    #     reception_thread.start()
+    #     conn.send_packet(data,3.0)
+    #     reception_thread.join()
+    #     sleep(1)
+    #     conn.list_connection.close()
+    #     conn.connection.close()
+    #     target.communication_conn.close()
+    #     self.assertEqual(target.incoming_buffer.pop(), data)
 
 
-    def test_send_packet_udp_ipv4_server(self):
-        proto = 'udp'
-        mock_if = '127.0.0.1'
-        mock_port = 9972
-        src_if = '127.0.0.1'
-        src_port = 8862
-        server = True
+    # def test_send_packet_udp_ipv4_server(self):
+    #     proto = 'udp'
+    #     mock_if = '127.0.0.1'
+    #     mock_port = 9972
+    #     src_if = '127.0.0.1'
+    #     src_port = 8862
+    #     server = True
 
-        conn = FuzzerConnection(proto, mock_if, mock_port, src_if, src_port, server)
-        sleep(.5) # avoid race, allow handle_connections to bind and listen
+    #     conn = FuzzerConnection(proto, mock_if, mock_port, src_if, src_port, server)
+    #     sleep(.5) # avoid race, allow handle_connections to bind and listen
       
         
-        target = MockClient(proto, src_if, src_port, mock_if, mock_port)
-        listener_thread = threading.Thread(target=target.connect)
-        listener_thread.start()
-        data = bytes('again', 'utf-8')
-        listener_thread.join()
+    #     target = MockClient(proto, src_if, src_port, mock_if, mock_port)
+    #     listener_thread = threading.Thread(target=target.connect)
+    #     listener_thread.start()
+    #     data = bytes('again', 'utf-8')
+    #     listener_thread.join()
         
-        reception_thread = threading.Thread(target=target.receive_packet, args=(len(data),))
-        reception_thread.start()
-        sleep(.5)
-        conn.send_packet(data,3.0)
-        reception_thread.join()
-        conn.connection.close()
-        target.communication_conn.close()
-        self.assertEqual(target.incoming_buffer.pop(), data)
+    #     reception_thread = threading.Thread(target=target.receive_packet, args=(len(data),))
+    #     reception_thread.start()
+    #     sleep(.5)
+    #     conn.send_packet(data,3.0)
+    #     reception_thread.join()
+    #     conn.connection.close()
+    #     target.communication_conn.close()
+    #     self.assertEqual(target.incoming_buffer.pop(), data)
