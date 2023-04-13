@@ -293,9 +293,6 @@ class Mutiny(object):
         # create a connection to the target process
         if not self.server:
             self.connection = FuzzerConnection(self.fuzzer_data.proto, self.target_host, self.fuzzer_data.target_port, self.fuzzer_data.source_ip, self.fuzzer_data.source_port, self.server)
-
-
-        print('got here')
         
 
         message_num = 0   

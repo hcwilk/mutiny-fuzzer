@@ -31,7 +31,6 @@ class FuzzerConnection(object):
 
         '''
 
-        print('INIT CONN')
         self.proto = proto
         self.host = host
         self.target_port = port
@@ -50,17 +49,14 @@ class FuzzerConnection(object):
             print_error(f'Unknown protocol: {self.proto}')
             sys.exit(-1)
         if self.testing:
-            print('bruh')
             return
 
         # determine format of address to use based on protocol
         self._get_addr()
 
         if self.proto == 'tcp':
-            print('why is this tcp')
             self._connect_to_tcp_socket()
         elif self.proto == 'udp':
-            print('UES ITS UDP')
             self._connect_to_udp_socket()
         elif self.proto == 'tls':
             self._connect_to_tls_socket()
@@ -79,7 +75,6 @@ class FuzzerConnection(object):
         if self.connection.type == socket.SOCK_STREAM:
             self.connection.send(data)
         else:
-            print('TRYING TO SEND TO ', self.addr)
             self.connection.sendto(data, self.addr)
 
         print("\tSent %d byte packet" % (len(data)))
@@ -87,11 +82,8 @@ class FuzzerConnection(object):
 
     def receive_packet(self, bytes_to_read: int, timeout: float):
 
-        print('receiving?')
-
         read_buf_size = 4096
         self.connection.settimeout(timeout)
-
 
         
 
@@ -152,9 +144,7 @@ class FuzzerConnection(object):
 
     def _connect_to_udp_socket(self):
         self.connection = socket.socket(self.socket_family, socket.SOCK_DGRAM)
-        print('about to bind')
         self._bind_to_interface()
-        print('after binding')
 
 
     def _connect_to_tls_socket(self):
