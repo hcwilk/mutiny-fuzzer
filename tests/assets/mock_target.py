@@ -144,6 +144,8 @@ class MockClient(object):
             except Exception as e:
                 print(f"Error connecting to {self.target_addr} on port {self.target_port}: {str(e)}")            
         elif self.proto == 'udp':
+
+            print('trying to connect?')
             socket_family = socket.AF_INET if '.' in self.client_addr else socket.AF_INET6
             self.communication_conn = socket.socket(socket_family, socket.SOCK_DGRAM)
             self.communication_conn.bind((self.client_addr, self.client_port))
@@ -156,6 +158,7 @@ class MockClient(object):
         if self.communication_conn.type == socket.SOCK_STREAM:
             self.communication_conn.send(data)
         else:
+            print('sending with UDP to ', self.target_addr, " on port ",self.target_port)
             self.communication_conn.sendto(data, (self.target_addr, self.target_port))
 
     def receive_packet(self, packet_len):

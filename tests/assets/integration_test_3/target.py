@@ -11,10 +11,7 @@ class Target3(MockClient):
         # self.accept_connection()
         print('heres where im binding to ',self.client_addr, ' on port ', str(self.client_port))
         print('trying to connect to',self.target_addr, ' on port ', str(self.target_port))
-        socket_family = socket.AF_INET if '.' in self.client_addr else socket.AF_INET6
-        self.communication_conn = socket.socket(socket_family, socket.SOCK_STREAM)
-        self.communication_conn.bind((self.client_addr, self.client_port))
-        self.communication_conn.connect((self.target_addr, self.target_port))
+        self.connect()
 
         print('Client is Connected!')
         while True:

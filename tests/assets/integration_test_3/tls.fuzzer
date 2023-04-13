@@ -24,5 +24,7 @@ last_seed_tried -1
 
 # The actual messages in the conversation
 # Each contains a message to be sent to or from the server, printably-formatted
-outbound 'greetings '
-sub fuzz 'earthlings'
+outbound 'hi'
+inbound 'magic phrase:'
+sub fuzz 'password'
+outbound 'incorrect magic phrase, try again!'

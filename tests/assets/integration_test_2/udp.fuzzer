@@ -12,7 +12,7 @@ receive_timeout 3.0
 # Whether to perform an unfuzzed test run before fuzzing
 should_perform_test_run 1
 # Protocol (udp or tcp)
-proto tcp
+proto udp
 # Port number to connect to
 port 7777
 # Port number to connect from
