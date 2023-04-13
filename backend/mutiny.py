@@ -28,8 +28,6 @@ class Mutiny(object):
 
     def __init__(self, args):
 
-        print('what is happening')
-
         self.fuzzer_data = FuzzerData()
         # read data in from .fuzzer file
         self.fuzzer_file_path = args.prepped_fuzz
@@ -116,7 +114,6 @@ class Mutiny(object):
         '''
         Main fuzzing routine
         '''
-        print('FUZZZ')
         seed = self.min_run_number - 1 if self.fuzzer_data.should_perform_test_run else self.min_run_number 
 
         print('heres top seed',seed)

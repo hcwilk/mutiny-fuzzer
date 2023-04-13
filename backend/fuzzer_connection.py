@@ -55,7 +55,6 @@ class FuzzerConnection(object):
         elif self.proto == 'udp':
             self._connect_to_udp_socket()
         elif self.proto == 'tls':
-            print('yes')
             self._connect_to_tls_socket()
         # must be a raw socket since we already checked if protocol was supported
         else :
@@ -63,11 +62,6 @@ class FuzzerConnection(object):
 
     def send_packet(self, data: bytearray, timeout: float):
 
-
-        if (self.server and (not self.connection)):   
-            self.connection = self.list_connection.accept()[0]
-        else:
-            self.connection = self.connection       
         
         '''
         uses the connection to the target process and outbound data packet (byteArray), sends it out.
@@ -77,21 +71,12 @@ class FuzzerConnection(object):
         if self.connection.type == socket.SOCK_STREAM:
             self.connection.send(data)
         else:
-            print('udp send, its going to ',self.addr)
             self.connection.sendto(data, self.addr)
 
         print("\tSent %d byte packet" % (len(data)))
 
 
     def receive_packet(self, bytes_to_read: int, timeout: float):
-
-
-        if (self.server and (not self.connection)):   
-            self.connection = self.list_connection.accept()[0]
-        else:
-            self.connection = self.connection
-
-
 
         read_buf_size = 4096
         self.connection.settimeout(timeout)
@@ -128,8 +113,10 @@ class FuzzerConnection(object):
     def close(self):
         # wrapper for socket.close()
 
-        
-        self.connection.close() if self.connection else self.list_connection.close()
+        if self.connection:
+            self.connection.close() 
+        if self.proto!='udp':
+            self.list_connection.close()
         
 
 
@@ -139,6 +126,8 @@ class FuzzerConnection(object):
             self.list_connection = socket.socket(self.socket_family, socket.SOCK_STREAM)
             self._bind_to_interface()
             self.list_connection.listen()
+            self.connection = self.list_connection.accept()[0]
+
             
         else:
             self.connection = socket.socket(self.socket_family, socket.SOCK_STREAM)
@@ -150,8 +139,8 @@ class FuzzerConnection(object):
         self.connection = socket.socket(self.socket_family, socket.SOCK_DGRAM)
         self._bind_to_interface()
 
+
     def _connect_to_tls_socket(self):
-        print('trying to bind using TLS')
         try:
             _create_unverified_https_context = ssl._create_unverified_context
         except AttributeError:
@@ -170,8 +159,11 @@ class FuzzerConnection(object):
             self.list_connection.listen()
             context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
             context.load_cert_chain('./tests/assets/test-server.pem', './tests/assets/test-server.key')
+
             self.list_connection = context.wrap_socket(self.list_connection, server_side=True)
-            print('now listening!')
+            self.connection = self.list_connection.accept()[0]
+
+
         else:
             context.check_hostname = False
             context.verify_mode = ssl.CERT_NONE
@@ -223,7 +215,10 @@ class FuzzerConnection(object):
                     self.addr = (self.host, self.target_port)
             elif ":" in self.host:
                 self.socket_family = socket.AF_INET6 
-                self.addr = (self.host, self.target_port)
+                if self.server:
+                    self.addr = (self.source_ip, self.source_port)
+                else:
+                    self.addr = (self.host, self.target_port)
 
     def _bind_to_interface(self):
         if self.proto == 'L2raw':

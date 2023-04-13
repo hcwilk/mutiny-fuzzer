@@ -36,6 +36,7 @@
 import socket
 import ssl
 from backend.packets import PROTO
+from time import sleep
 
 class MockTarget(object):
     def __init__(self, proto, listen_if, listen_port):
@@ -105,6 +106,8 @@ class MockClient(object):
         self.incoming_buffer = []
 
     def connect(self):
+        # Client is on it's own thread, but we have to sleep here to let server set up properly
+        sleep(1.5)
         if self.proto == 'tcp':
 
             print('heres where im binding to ',self.client_addr, ' on port ', str(self.client_port))
@@ -116,8 +119,8 @@ class MockClient(object):
 
             print('Client is Connected!')
         elif self.proto == 'tls':
-            print('trying')
-            socket_family = socket.AF_INET if '.' in self.client_addr else socket.AF_INET6
+        
+            socket_family = socket.AF_INET if f'.' in self.client_addr else socket.AF_INET6
             try:
                 _create_unverified_https_context = ssl._create_unverified_context
             except AttributeError:
@@ -132,12 +135,9 @@ class MockClient(object):
             context.verify_mode = ssl.CERT_NONE
             tcp_connection = socket.socket(socket_family, socket.SOCK_STREAM)
 
-            print('here')
             self.communication_conn = context.wrap_socket(tcp_connection, server_hostname=self.target_addr)
-            print('right')
             self.communication_conn.bind((self.client_addr, self.client_port))
-            print('trying to connect to ', self.target_addr, " on port ", self.target_port)
-            self.communication_conn.settimeout(5.0) 
+            self.communication_conn.settimeout(15.0) 
             try:
                 self.communication_conn.connect((self.target_addr, self.target_port))
                 print('Client connected with TLS!')
@@ -148,7 +148,6 @@ class MockClient(object):
             self.communication_conn = socket.socket(socket_family, socket.SOCK_DGRAM)
             self.communication_conn.bind((self.client_addr, self.client_port))
 
-            print('UDP READY TO GO')
         else:
             proto_num = 0x300 if self.proto == 'L2raw' else PROTO[self.proto]
             self.communication_conn = socket.socket(socket.AF_PACKET, socket.SOCK_RAW, proto_num)
@@ -157,7 +156,6 @@ class MockClient(object):
         if self.communication_conn.type == socket.SOCK_STREAM:
             self.communication_conn.send(data)
         else:
-            print('trying to send UDP stuff from client')
             self.communication_conn.sendto(data, (self.target_addr, self.target_port))
 
     def receive_packet(self, packet_len):
@@ -166,7 +164,6 @@ class MockClient(object):
             self.incoming_buffer.append(bytearray(response))
             return response
         else:
-            print('trying to receive from client')
             response, addr = self.communication_conn.recvfrom(packet_len)
             self.incoming_buffer.append(bytearray(response))
 
