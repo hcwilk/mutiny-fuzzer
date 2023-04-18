@@ -77,6 +77,7 @@ class MockTarget(object):
             self.communication_conn = socket.socket(socket.AF_PACKET, socket.SOCK_RAW, proto_num)
             if self.proto != 'L2raw' and self.proto != 'raw':
                 self.communication_conn.setsockopt(socket.IPPROTO_IP, socket.IP_HDRINCL, 0)
+            print('This is the listening mac address',self.listen_if)
             self.communication_conn.bind((self.listen_if, 0))
 
 
