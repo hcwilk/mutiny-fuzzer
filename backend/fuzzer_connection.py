@@ -151,7 +151,7 @@ class FuzzerConnection(object):
         # wrapper for socket.close()
 
         self.connection.close() 
-        if self.proto!='udp' and self.server:
+        if (self.proto!='udp' and self.proto!='L2raw') and self.server:
             self.list_connection.close()
         
 
