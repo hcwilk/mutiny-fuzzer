@@ -35,8 +35,11 @@
 
 import socket
 import ssl
+import struct
 from backend.packets import PROTO
 from time import sleep
+from util.raw_functions import *
+
 
 class MockTarget(object):
     def __init__(self, proto, listen_if, listen_port):
@@ -73,17 +76,33 @@ class MockTarget(object):
             self.communication_conn = socket.socket(socket_family, socket.SOCK_DGRAM)
             self.communication_conn.bind((self.listen_if, self.listen_port))
         else: # raw
-            proto_num = 0x300 if self.proto == 'L2raw' else PROTO[self.proto]
-            self.communication_conn = socket.socket(socket.AF_PACKET, socket.SOCK_RAW, proto_num)
-            if self.proto != 'L2raw' and self.proto != 'raw':
-                self.communication_conn.setsockopt(socket.IPPROTO_IP, socket.IP_HDRINCL, 0)
-            print('This is the listening mac address',self.listen_if)
-            self.communication_conn.bind((self.listen_if, 0))
+            # proto_num = 0x300 if self.proto == 'L2raw' else PROTO[self.proto]
+            self.communication_conn = socket.socket(socket.AF_PACKET, socket.SOCK_RAW, 768)
+            # if self.proto != 'L2raw' and self.proto != 'raw':
+            #     print('not hitting')
+            #     self.communication_conn.setsockopt(socket.IPPROTO_IP, socket.IP_HDRINCL, 0)
+            self.communication_conn.bind(('eth0', 0))
+            print('server (targert) is bound!')
 
 
     def receive_packet(self, packet_len):
-        if self.communication_conn.type == socket.SOCK_STREAM  or self.communication_conn.type == socket.SOCK_RAW:
+
+        if self.communication_conn.type == socket.SOCK_STREAM :
             self.incoming_buffer.append(bytearray(self.communication_conn.recv(packet_len)))
+        elif self.communication_conn.type == socket.SOCK_RAW:
+            frame = self.communication_conn.recv(ETH_FRAME_LEN)
+            # Extract a header
+            header = frame[:ETH_HLEN]
+            # Extract a payload
+            payload = frame[ETH_HLEN:]
+            # Unpack an Ethernet header in network byte order
+            # dst, src, proto = struct.unpack('!6s6sH', header)
+            # print(f'dst: {bytes_to_eui48(dst)}, '
+            #         f'src: {bytes_to_eui48(src)}, '
+            #         f'type: {hex(proto)}, '
+            #         f'payload: {payload[:4] if len(payload)>10 else payload}...,')
+            self.incoming_buffer.append(payload)
+
         else:
             response, self.addr = self.communication_conn.recvfrom(packet_len)
             self.incoming_buffer.append(bytearray(response))

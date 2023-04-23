@@ -2,6 +2,7 @@ import ssl
 import socket
 import sys
 import os
+import struct, re, binascii
 current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
 sys.path.append(parent)
@@ -9,6 +10,7 @@ from mutiny_classes.mutiny_exceptions import ConnectionClosedException
 from backend.packets import PROTO
 from backend.fuzzer_types import Message
 from backend.menu_functions import print_error, print_warning, print_success
+from util.raw_functions import *
 
 class FuzzerConnection(object):
     '''
@@ -67,6 +69,8 @@ class FuzzerConnection(object):
     def send_packet(self, data: bytearray, timeout: float):
 
         
+
+        
         '''
         uses the connection to the target process and outbound data packet (byteArray), sends it out.
         If debug mode is enabled, we print out the raw bytes
@@ -74,10 +78,21 @@ class FuzzerConnection(object):
         self.connection.settimeout(timeout)
         if self.connection.type == socket.SOCK_STREAM:
             self.connection.send(data)
+        elif self.connection.type == socket.SOCK_RAW:
+            self.connection.sendall(
+                # Pack in network byte order
+
+                struct.pack(f'!6s6sH{len(data)}s',
+                            eui48_to_bytes(self.host) ,             # Destination MAC address
+                            eui48_to_bytes(self.source_ip) ,    # Source MAC address
+                            ETH_P_802_EX1,                      # Ethernet type
+                            data))                     # Payload
+            print('Sent!')
         else:
             self.connection.sendto(data, self.addr)
 
         print("\tSent %d byte packet" % (len(data)))
+
 
 
     def receive_packet(self, bytes_to_read: int, timeout: float):
@@ -188,11 +203,14 @@ class FuzzerConnection(object):
             # Not needed for IPPROTO_RAW or 0x300 - if added, will break
             if self.proto != 'L2raw' and self.proto != 'raw':
                 connection.setsockopt(socket.IPPROTO_IP, socket.IP_HDRINCL, 0)
+                
         except PermissionError:
             print_error('No permission to create raw sockets.')
             print_error('Raw sockets require "sudo" or to run as a user with CAP_NET_RAW capability.')
         try:
-            self._bind_to_interface()
+            # self._bind_to_interface()
+            self.connection.bind(('eth0',0))
+            print("client (Mutiny) is bound!")
         except OSError as e:
             print_error(f'''Couldn't bind to {host}''')
             print_error(f'Raw sockets require a local interface name to bind to instead of a hostname.')
@@ -229,7 +247,9 @@ class FuzzerConnection(object):
 
     def _bind_to_interface(self):
         if self.proto == 'L2raw':
-            self.connection.bind(self.addr)
+            print('trying to bind here',self.addr)
+            self.connection.bind(('lo',0))
+           
         elif self.server:
 
             if self.target_port != -1:

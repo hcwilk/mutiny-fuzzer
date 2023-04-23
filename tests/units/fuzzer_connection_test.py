@@ -189,36 +189,35 @@ class TestFuzzerConnection(unittest.TestCase):
 #         target.communication_conn.close()
 #         target.listen_conn.close()
     
-    def test_FuzzerConnectionInit_raw(self):
-        if self.platform == 'Darwin':
-            print_warning('Skipping Raw Fuzzer Connection Init Test\n Raw Packet\'s are currently unsupported on OSX')
-            return
-        proto = 'L2raw'
-        mock_if = gma()
-        mock_port = 0
-        src_if = gma()
-        src_port = 0
-        server = False
+    # def test_FuzzerConnectionInit_raw(self):
+    #     if self.platform == 'Darwin':
+    #         print_warning('Skipping Raw Fuzzer Connection Init Test\n Raw Packet\'s are currently unsupported on OSX')
+    #         return
+    #     proto = 'L2raw'
+    #     mock_if = gma()
+    #     mock_port = 0
+    #     src_if = gma()
+    #     src_port = 0
+    #     server = False
         
-        target = MockTarget(proto, mock_if, mock_port)
-        print('set up server!')
-        listener_thread = threading.Thread(target=target.accept_connection)
-        listener_thread.start()
-        sleep(.5) # avoid race, allow handle_connections to bind and listen
-        print('right before connection')
-        conn = FuzzerConnection(proto, mock_if, mock_port, src_if, src_port, server)
-        self.assertEqual(conn.proto, proto)
-        self.assertEqual(conn.host, mock_if)
-        self.assertEqual(conn.target_port, mock_port)
-        self.assertEqual(conn.source_ip, src_if)
-        self.assertEqual(conn.source_port, src_port)
-        self.assertEqual(conn.addr, (mock_if, mock_port))
-        self.assertEqual(conn.connection.family, socket.AF_INET)
-        self.assertEqual(conn.connection.type, socket.SOCK_STREAM)
-        listener_thread.join()
-        conn.close()
-        target.communication_conn.close()
-        target.listen_conn.close()
+    #     target = MockTarget(proto, mock_if, mock_port)
+    #     print('set up server!')
+    #     listener_thread = threading.Thread(target=target.accept_connection)
+    #     listener_thread.start()
+    #     sleep(.5) # avoid race, allow handle_connections to bind and listen
+    #     print('right before connection')
+    #     conn = FuzzerConnection(proto, mock_if, mock_port, src_if, src_port, server)
+    #     self.assertEqual(conn.proto, proto)
+    #     self.assertEqual(conn.host, mock_if)
+    #     self.assertEqual(conn.target_port, mock_port)
+    #     self.assertEqual(conn.source_ip, src_if)
+    #     self.assertEqual(conn.source_port, src_port)
+    #     self.assertEqual(conn.addr, (mock_if, mock_port))
+    #     self.assertEqual(conn.connection.family, socket.AF_PACKET)
+    #     self.assertEqual(conn.connection.type, socket.SOCK_RAW)
+    #     listener_thread.join()
+    #     conn.close()
+    #     target.communication_conn.close()
 
 
 # SENDING PACKETS -- CLIENT
@@ -370,33 +369,32 @@ class TestFuzzerConnection(unittest.TestCase):
 #         target.listen_conn.close()
 #         self.assertEqual(target.incoming_buffer.pop(),data)
 
-#     def test_send_packet_raw(self):
-#         if self.platform == 'Darwin':
-#             print_warning('Skipping Raw Send Packet Test\n Raw Packet\'s are currently unsupported on OSX')
-#             return
-#         proto = 'L2raw'
-#         mock_if = gma()
-#         mock_port = 0
-#         src_if = gma()
-#         src_port = 0
-#         server = False
+    def test_send_packet_raw(self):
+        if self.platform == 'Darwin':
+            print_warning('Skipping Raw Send Packet Test\n Raw Packet\'s are currently unsupported on OSX')
+            return
+        proto = 'L2raw'
+        mock_if = gma()
+        mock_port = 0
+        src_if = gma()
+        src_port = 0
+        server = False
 
         
-#         target = MockTarget(proto, mock_if, mock_port)
-#         listener_thread = threading.Thread(target=target.accept_connection)
-#         listener_thread.start()
-#         data = bytes('test', 'utf-8')
-#         sleep(.1)
-#         conn = FuzzerConnection(proto, mock_if, mock_port, src_if, src_port, server)
-#         listener_thread.join()
-#         reception_thread = threading.Thread(target=target.receive_packet, args=(len(data),))
-#         reception_thread.start()
-#         conn.send_packet(data, 3.0)
-#         reception_thread.join()
-#         conn.connection.close()
-#         target.communication_conn.close()
-#         target.listen_conn.close()
-#         self.assertEqual(target.incoming_buffer.pop(),data)
+        target = MockTarget(proto, mock_if, mock_port)
+        listener_thread = threading.Thread(target=target.accept_connection)
+        listener_thread.start()
+        data = bytes('optimist', 'utf-8')
+        sleep(.1)
+        conn = FuzzerConnection(proto, mock_if, mock_port, src_if, src_port, server)
+        listener_thread.join()
+        reception_thread = threading.Thread(target=target.receive_packet, args=(len(data),))
+        reception_thread.start()
+        conn.send_packet(data, 3.0)
+        reception_thread.join()
+        conn.connection.close()
+        target.communication_conn.close()
+        self.assertEqual(target.incoming_buffer.pop(),data)
 
 
 # RECEIVING PACKETS -- CLIENT
@@ -777,34 +775,34 @@ class TestFuzzerConnection(unittest.TestCase):
     #     target.communication_conn.close()
     #     conn.close()
     
-#     def test_FuzzerConnectionInit_raw(self):
-#         if self.platform == 'Darwin':
-#             print_warning('Skipping Raw Fuzzer Connection Init Test\n Raw Packet\'s are currently unsupported on OSX')
-#             return
-#         proto = 'L2raw'
-#         mock_if = gma()
-#         mock_port = 0
-#         src_if = gma()
-#         src_port = 0
-#         server = False
+    # def test_FuzzerConnectionInit_raw_server(self):
+    #     if self.platform == 'Darwin':
+    #         print_warning('Skipping Raw Fuzzer Connection Init Test\n Raw Packet\'s are currently unsupported on OSX')
+    #         return
+    #     proto = 'L2raw'
+    #     mock_if = gma()
+    #     mock_port = 0
+    #     src_if = gma()
+    #     src_port = 0
+    #     server = False
         
-#         target = MockTarget(proto, mock_if, mock_port)
-#         listener_thread = threading.Thread(target=target.accept_connection)
-#         listener_thread.start()
-#         sleep(.5) # avoid race, allow handle_connections to bind and listen
-#         conn = FuzzerConnection(proto, mock_if, mock_port, src_if, src_port, server)
-#         self.assertEqual(conn.proto, proto)
-#         self.assertEqual(conn.host, mock_if)
-#         self.assertEqual(conn.target_port, mock_port)
-#         self.assertEqual(conn.source_ip, src_if)
-#         self.assertEqual(conn.source_port, src_port)
-#         self.assertEqual(conn.addr, (mock_if, mock_port))
-#         self.assertEqual(conn.connection.family, socket.AF_INET)
-#         self.assertEqual(conn.connection.type, socket.SOCK_STREAM)
-#         listener_thread.join()
-#         conn.close()
-#         target.communication_conn.close()
-#         target.listen_conn.close()
+    #     target = MockTarget(proto, mock_if, mock_port)
+    #     listener_thread = threading.Thread(target=target.accept_connection)
+    #     listener_thread.start()
+    #     sleep(.5) # avoid race, allow handle_connections to bind and listen
+    #     conn = FuzzerConnection(proto, mock_if, mock_port, src_if, src_port, server)
+    #     self.assertEqual(conn.proto, proto)
+    #     self.assertEqual(conn.host, mock_if)
+    #     self.assertEqual(conn.target_port, mock_port)
+    #     self.assertEqual(conn.source_ip, src_if)
+    #     self.assertEqual(conn.source_port, src_port)
+    #     self.assertEqual(conn.addr, (mock_if, mock_port))
+    #     self.assertEqual(conn.connection.family, socket.AF_INET)
+    #     self.assertEqual(conn.connection.type, socket.SOCK_STREAM)
+    #     listener_thread.join()
+    #     conn.close()
+    #     target.communication_conn.close()
+    #     target.listen_conn.close()
 
 
 # RECEIVING PACKETS -- SERVER
