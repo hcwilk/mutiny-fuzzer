@@ -102,9 +102,23 @@ class FuzzerConnection(object):
 
         
 
-        if self.connection.type == socket.SOCK_STREAM or (self.connection.type == socket.SOCK_DGRAM and not self.server) or self.connection.type == socket.SOCK_RAW:
+        if self.connection.type == socket.SOCK_STREAM or (self.connection.type == socket.SOCK_DGRAM and not self.server):
             response = bytearray(self.connection.recv(read_buf_size))
             print('heres what Mutiny received')
+            self.incoming_buffer.append(response)
+
+        elif self.connection.type == socket.SOCK_RAW:
+            frame = self.connection.recv(ETH_FRAME_LEN)
+            # Extract a header
+            header = frame[:ETH_HLEN]
+            # Extract a payload
+            response = frame[ETH_HLEN:]
+            # Unpack an Ethernet header in network byte order
+            # dst, src, proto = struct.unpack('!6s6sH', header)
+            # print(f'dst: {bytes_to_eui48(dst)}, '
+            #         f'src: {bytes_to_eui48(src)}, '
+            #         f'type: {hex(proto)}, '
+            #         f'payload: {payload[:4] if len(payload)>10 else payload}...,')
             self.incoming_buffer.append(response)
 
         else:

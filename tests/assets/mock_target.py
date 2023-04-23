@@ -86,7 +86,6 @@ class MockTarget(object):
 
 
     def receive_packet(self, packet_len):
-
         if self.communication_conn.type == socket.SOCK_STREAM :
             self.incoming_buffer.append(bytearray(self.communication_conn.recv(packet_len)))
         elif self.communication_conn.type == socket.SOCK_RAW:
@@ -109,8 +108,18 @@ class MockTarget(object):
 
 
     def send_packet(self, data):
+        print('trying to send')
         if self.communication_conn.type == socket.SOCK_STREAM:
             self.communication_conn.send(data)
+        elif self.communication_conn.type == socket.SOCK_RAW:
+            self.communication_conn.sendall(
+                # Pack in network byte order
+            struct.pack(f'!6s6sH{len(data)}s',
+                        eui48_to_bytes(self.addr) ,             # Destination MAC address
+                        eui48_to_bytes(self.listen_if) ,    # Source MAC address
+                        ETH_P_802_EX1,                      # Ethernet type
+                        data))                     # Payload
+            print('Sent!')
         else:
             self.communication_conn.sendto(data, self.addr)
 
