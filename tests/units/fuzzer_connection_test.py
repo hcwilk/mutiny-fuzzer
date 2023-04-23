@@ -995,33 +995,34 @@ class TestFuzzerConnection(unittest.TestCase):
     #     target.communication_conn.close()
     #     self.assertEqual(self.received_data.pop(), data)
 
-    # def test_receive_packet_raw(self):
-    #     proto = 'tls'
-    #     mock_if = '::1'
-    #     mock_port = 9969
-    #     src_if = '::1'
-    #     src_port = 8859
-    #     server = True
+    def test_receive_packet_raw(self):
+        if self.platform == 'Darwin':
+            print_warning('Skipping Raw Fuzzer Connection Init Test\n Raw Packet\'s are currently unsupported on OSX')
+            return
+        proto = 'L2raw'
+        mock_if = gma()
+        mock_port = 0
+        src_if = gma()
+        src_port = 0
+        server = True
         
-    #     target = MockClient(proto, src_if, src_port, mock_if, mock_port)
-    #     listener_thread = threading.Thread(target=target.connect)
-    #     listener_thread.start()
+        target = MockClient(proto, src_if, src_port, mock_if, mock_port)
+        listener_thread = threading.Thread(target=target.connect)
+        listener_thread.start()
         
-    #     sleep(.5) # avoid race, allow handle_connections to bind and listen
+        sleep(.5) # avoid race, allow handle_connections to bind and listen
 
-    #     conn = FuzzerConnection(proto, mock_if, mock_port, src_if, src_port, server, testing=True)
-    #     conn._get_addr()
-    #     conn._connect_to_tls_socket()
-    #     listener_thread.join()
-    #     data = bytes('this should say 24 bytes', 'utf-8')
-    #     reception_thread = threading.Thread(target=self.receive_packet_wrapper, args=(conn,len(data),3.0))
-    #     reception_thread.start()
-    #     target.send_packet(data)
-    #     reception_thread.join()
-    #     sleep(1)
-    #     conn.close()
-    #     target.communication_conn.close()
-    #     self.assertEqual(self.received_data.pop(), data)
+        conn = FuzzerConnection(proto, mock_if, mock_port, src_if, src_port, server)
+        listener_thread.join()
+        data = bytes('this should say 24 bytes', 'utf-8')
+        reception_thread = threading.Thread(target=self.receive_packet_wrapper, args=(conn,len(data),3.0))
+        reception_thread.start()
+        target.send_packet(data)
+        reception_thread.join()
+        sleep(1)
+        conn.close()
+        target.communication_conn.close()
+        self.assertEqual(self.received_data.pop(), data)
 
 
 
@@ -1197,31 +1198,32 @@ class TestFuzzerConnection(unittest.TestCase):
     #     self.assertEqual(target.incoming_buffer.pop(), data)
 
            
-    # def test_send_packet_raw(self):
-    #     proto = 'tls'
-    #     mock_if = '::1'
-    #     mock_port = 9962
-    #     src_if = '::1'
-    #     src_port = 8852
-    #     server = True
+    def test_send_packet_raw(self):
+        if self.platform == 'Darwin':
+            print_warning('Skipping Raw Fuzzer Connection Init Test\n Raw Packet\'s are currently unsupported on OSX')
+            return
+        proto = 'L2raw'
+        mock_if = gma()
+        mock_port = 0
+        src_if = gma()
+        src_port = 0
+        server = True
         
-    #     target = MockClient(proto, src_if, src_port, mock_if, mock_port)
-    #     listener_thread = threading.Thread(target=target.connect)
-    #     listener_thread.start()
+        target = MockClient(proto, src_if, src_port, mock_if, mock_port)
+        listener_thread = threading.Thread(target=target.connect)
+        listener_thread.start()
         
-    #     sleep(.5) # avoid race, allow handle_connections to bind and listen
+        sleep(.5) # avoid race, allow handle_connections to bind and listen
 
-    #     conn = FuzzerConnection(proto, mock_if, mock_port, src_if, src_port, server, testing=True)
-    #     conn._get_addr()
-    #     conn._connect_to_tls_socket()
-    #     listener_thread.join()
+        conn = FuzzerConnection(proto, mock_if, mock_port, src_if, src_port, server)
+        listener_thread.join()
 
-    #     data = bytes('tls baby', 'utf-8')
-    #     reception_thread = threading.Thread(target=target.receive_packet, args=(len(data),))
-    #     reception_thread.start()
-    #     conn.send_packet(data,3.0)
-    #     reception_thread.join()
-    #     sleep(1)
-    #     conn.close()
-    #     target.communication_conn.close()
-    #     self.assertEqual(target.incoming_buffer.pop(), data)
+        data = bytes('tls baby', 'utf-8')
+        reception_thread = threading.Thread(target=target.receive_packet, args=(len(data),))
+        reception_thread.start()
+        conn.send_packet(data,3.0)
+        reception_thread.join()
+        sleep(1)
+        conn.close()
+        target.communication_conn.close()
+        self.assertEqual(target.incoming_buffer.pop(), data)

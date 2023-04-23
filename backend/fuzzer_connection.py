@@ -113,6 +113,8 @@ class FuzzerConnection(object):
             header = frame[:ETH_HLEN]
             # Extract a payload
             response = frame[ETH_HLEN:]
+
+            print('heres the message mutiny got',response)
             # Unpack an Ethernet header in network byte order
             # dst, src, proto = struct.unpack('!6s6sH', header)
             # print(f'dst: {bytes_to_eui48(dst)}, '
@@ -151,6 +153,7 @@ class FuzzerConnection(object):
         # wrapper for socket.close()
 
         self.connection.close() 
+        # could change this to just 'has T'
         if (self.proto!='udp' and self.proto!='L2raw') and self.server:
             self.list_connection.close()
         
@@ -224,7 +227,7 @@ class FuzzerConnection(object):
         try:
             # self._bind_to_interface()
             self.connection.bind(('eth0',0))
-            print("client (Mutiny) is bound!")
+            print("Server (mutiny) is bound!!")
         except OSError as e:
             print_error(f'''Couldn't bind to {host}''')
             print_error(f'Raw sockets require a local interface name to bind to instead of a hostname.')

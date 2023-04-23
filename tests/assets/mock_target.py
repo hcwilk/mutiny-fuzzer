@@ -179,21 +179,54 @@ class MockClient(object):
             self.communication_conn.bind((self.client_addr, self.client_port))
 
         else:
-            proto_num = 0x300 if self.proto == 'L2raw' else PROTO[self.proto]
-            self.communication_conn = socket.socket(socket.AF_PACKET, socket.SOCK_RAW, proto_num)
+            self.communication_conn = socket.socket(socket.AF_PACKET, socket.SOCK_RAW, 768)
+            # if self.proto != 'L2raw' and self.proto != 'raw':
+            #     print('not hitting')
+            #     self.communication_conn.setsockopt(socket.IPPROTO_IP, socket.IP_HDRINCL, 0)
+            self.communication_conn.bind(('eth0', 0))
+            print('client (targert) is bound!')
 
     def send_packet(self, data):
         if self.communication_conn.type == socket.SOCK_STREAM:
             self.communication_conn.send(data)
+        elif  self.communication_conn.type == socket.SOCK_RAW:
+
+            print('heres where Im sending it',self.target_addr)
+            print('heres where Im sending it from',self.client_addr)
+
+            self.communication_conn.sendall(
+            # Pack in network byte order
+            struct.pack(f'!6s6sH{len(data)}s',
+                        eui48_to_bytes(self.target_addr) ,             # Destination MAC address
+                        eui48_to_bytes(self.client_addr) ,    # Source MAC address
+                        ETH_P_802_EX1,                      # Ethernet type
+                        data))                     # Payload
+            print('Sent!')
         else:
             print('sending with UDP to ', self.target_addr, " on port ",self.target_port)
             self.communication_conn.sendto(data, (self.target_addr, self.target_port))
 
     def receive_packet(self, packet_len):
-        if self.communication_conn.type == socket.SOCK_STREAM or self.communication_conn.type == socket.SOCK_RAW:
+        if self.communication_conn.type == socket.SOCK_STREAM:
             response = self.communication_conn.recv(packet_len)
             self.incoming_buffer.append(bytearray(response))
             return response
+        elif self.communication_conn.type == socket.SOCK_RAW:
+            frame = self.communication_conn.recv(ETH_FRAME_LEN)
+            # Extract a header
+            header = frame[:ETH_HLEN]
+            # Extract a payload
+            payload = frame[ETH_HLEN:]
+            
+
+            print('heres what the mock client is receiving',payload)
+            # Unpack an Ethernet header in network byte order
+            # dst, src, proto = struct.unpack('!6s6sH', header)
+            # print(f'dst: {bytes_to_eui48(dst)}, '
+            #         f'src: {bytes_to_eui48(src)}, '
+            #         f'type: {hex(proto)}, '
+            #         f'payload: {payload[:4] if len(payload)>10 else payload}...,')
+            self.incoming_buffer.append(payload)
         else:
             response, addr = self.communication_conn.recvfrom(packet_len)
             self.incoming_buffer.append(bytearray(response))
