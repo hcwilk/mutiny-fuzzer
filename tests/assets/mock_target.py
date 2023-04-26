@@ -112,6 +112,7 @@ class MockTarget(object):
         if self.communication_conn.type == socket.SOCK_STREAM:
             self.communication_conn.send(data)
         elif self.communication_conn.type == socket.SOCK_RAW:
+
             self.communication_conn.sendall(
                 # Pack in network byte order
             struct.pack(f'!6s6sH{len(data)}s',

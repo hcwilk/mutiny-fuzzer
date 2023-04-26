@@ -23,7 +23,6 @@ source_ip 2e:b6:c5:a3:37:b3
 # The actual messages in the conversation
 # Each contains a message to be sent to or from the server, printably-formatted
 outbound 'hi'
-inbound 'hello'
-outbound 'magic phrase:'
+inbound 'magic phrase:'
 sub fuzz 'password'
-inbound 'incorrect magic phrase, try again!'
+outbound 'incorrect magic phrase, try again!'

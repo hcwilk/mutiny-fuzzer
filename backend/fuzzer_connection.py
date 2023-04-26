@@ -69,7 +69,7 @@ class FuzzerConnection(object):
     def send_packet(self, data: bytearray, timeout: float):
 
         
-
+        print('sending rn')
         
         '''
         uses the connection to the target process and outbound data packet (byteArray), sends it out.
@@ -78,7 +78,10 @@ class FuzzerConnection(object):
         self.connection.settimeout(timeout)
         if self.connection.type == socket.SOCK_STREAM:
             self.connection.send(data)
+       
+       
         elif self.connection.type == socket.SOCK_RAW:
+            print('trying to send raw to ', self.host,' from ', self.source_ip)
             self.connection.sendall(
                 # Pack in network byte order
 
@@ -88,6 +91,8 @@ class FuzzerConnection(object):
                             ETH_P_802_EX1,                      # Ethernet type
                             data))                     # Payload
             print('Sent!')
+        
+        
         else:
             self.connection.sendto(data, self.addr)
 
@@ -219,7 +224,7 @@ class FuzzerConnection(object):
             # Disable automatically ading headers for us
             # Not needed for IPPROTO_RAW or 0x300 - if added, will break
             if self.proto != 'L2raw' and self.proto != 'raw':
-                connection.setsockopt(socket.IPPROTO_IP, socket.IP_HDRINCL, 0)
+                self.connection.setsockopt(socket.IPPROTO_IP, socket.IP_HDRINCL, 0)
                 
         except PermissionError:
             print_error('No permission to create raw sockets.')
