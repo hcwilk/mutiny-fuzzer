@@ -6,11 +6,13 @@ import struct, re, binascii
 current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
 sys.path.append(parent)
+from getmac import get_mac_address as gma
 from mutiny_classes.mutiny_exceptions import ConnectionClosedException
 from backend.packets import PROTO
 from backend.fuzzer_types import Message
 from backend.menu_functions import print_error, print_warning, print_success
 from util.raw_functions import *
+import time
 
 class FuzzerConnection(object):
     '''
@@ -104,6 +106,7 @@ class FuzzerConnection(object):
 
         read_buf_size = 4096
         self.connection.settimeout(timeout)
+        dont = False
 
         
 
@@ -121,12 +124,15 @@ class FuzzerConnection(object):
 
             print('heres the message mutiny got',response)
             # Unpack an Ethernet header in network byte order
-            # dst, src, proto = struct.unpack('!6s6sH', header)
-            # print(f'dst: {bytes_to_eui48(dst)}, '
-            #         f'src: {bytes_to_eui48(src)}, '
-            #         f'type: {hex(proto)}, '
-            #         f'payload: {payload[:4] if len(payload)>10 else payload}...,')
-            self.incoming_buffer.append(response)
+            dst, src, proto = struct.unpack('!6s6sH', header)
+            print(f'dst: {bytes_to_eui48(dst)}, '
+                    f'src: {bytes_to_eui48(src)}, '
+                    f'type: {hex(proto)}, '
+                    f'payload: {response[:4] if len(response)>10 else response}...,')
+            if bytes_to_eui48(dst)==gma():
+                self.incoming_buffer.append(response)
+            else:
+                dont = True
 
         else:
             print("udp receive")
@@ -151,6 +157,10 @@ class FuzzerConnection(object):
                 i += read_buf_size
                 
         print("\tReceived %d bytes" % (len(response)))
+        if self.connection.type == socket.SOCK_RAW and dont:
+            print('not retunring cause its not meant for us')
+            return
+
         return response
 
 
