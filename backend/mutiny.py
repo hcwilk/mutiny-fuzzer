@@ -119,6 +119,9 @@ class Mutiny(object):
         loop_len = len(self.seed_loop) # if --loop
         is_paused = False
 
+        print('server host',self.target_host)
+        print('server port',self.fuzzer_data.target_port)
+
         if self.server:
             self.connection = FuzzerConnection(self.fuzzer_data.proto, self.target_host, self.fuzzer_data.target_port, self.fuzzer_data.source_ip, self.fuzzer_data.source_port, self.server)
 

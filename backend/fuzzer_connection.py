@@ -241,10 +241,13 @@ class FuzzerConnection(object):
         and calls message_processor.preConnect if proto is not L2raw
         '''
         self.socket_family = None
+        print('this is protocol',self.proto)
         if self.proto == 'L2raw':
             self.addr = (self.host,0)
             self.socket_family = socket.AF_PACKET
         else:
+            print('heres host',self.host)
+            print('heres host port',self.target_port)
             addrs = socket.getaddrinfo(self.host, self.target_port)
             self.host = addrs[0][4][0]
 
