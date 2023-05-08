@@ -9,14 +9,10 @@ class Target3(MockClient):
         #TODO: make message_processor.preconnect available, assert its being called
         # accept initial connection (commented out because it already should do this)
         # self.accept_connection()
-        print('heres where im binding to ',self.client_addr, ' on port ', str(self.client_port))
-        print('trying to connect to',self.target_addr, ' on port ', str(self.target_port))
         self.connect()
 
-        print('Client is Connected!')
         while True:
             self.send_packet(bytearray('hi', 'utf-8'))
-            print('client sent hi, now waiting to receive server stuff!')
             self.receive_packet(4096)
             
             # send hello, addr not required since tcp
@@ -32,6 +28,5 @@ class Target3(MockClient):
                     self.communication_conn.close()
                 return
             self.send_packet(bytearray('incorrect magic phrase, try again!', 'utf-8'))
-            print('sent error packet!')
             time.sleep(1.25)
     

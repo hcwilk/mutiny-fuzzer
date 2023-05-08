@@ -46,9 +46,6 @@ class FuzzerConnection(object):
         self.incoming_buffer = []
         self.connection = None
 
-
-        print('I am here, heres soure host: ', self.source_ip, ' on port ',self.source_port)
-
         if self.proto != "L2raw" and self.proto != 'tls' and self.proto not in PROTO:
             print_error(f'Unknown protocol: {self.proto}')
             sys.exit(-1)
@@ -70,9 +67,7 @@ class FuzzerConnection(object):
 
     def send_packet(self, data: bytearray, timeout: float):
 
-        
-        print('sending rn')
-        
+                
         '''
         uses the connection to the target process and outbound data packet (byteArray), sends it out.
         If debug mode is enabled, we print out the raw bytes
@@ -83,7 +78,6 @@ class FuzzerConnection(object):
        
        
         elif self.connection.type == socket.SOCK_RAW:
-            print('trying to send raw to ', self.host,' from ', self.source_ip)
             self.connection.sendall(
                 # Pack in network byte order
 
@@ -92,7 +86,6 @@ class FuzzerConnection(object):
                             eui48_to_bytes(self.source_ip) ,    # Source MAC address
                             ETH_P_802_EX1,                      # Ethernet type
                             data))                     # Payload
-            print('Sent!')
         
         
         else:
@@ -112,7 +105,6 @@ class FuzzerConnection(object):
 
         if self.connection.type == socket.SOCK_STREAM or (self.connection.type == socket.SOCK_DGRAM and not self.server):
             response = bytearray(self.connection.recv(read_buf_size))
-            print('heres what Mutiny received')
             self.incoming_buffer.append(response)
 
         elif self.connection.type == socket.SOCK_RAW:
@@ -121,25 +113,22 @@ class FuzzerConnection(object):
             header = frame[:ETH_HLEN]
             # Extract a payload
             response = frame[ETH_HLEN:]
-
-            print('heres the message mutiny got',response)
             # Unpack an Ethernet header in network byte order
             dst, src, proto = struct.unpack('!6s6sH', header)
-            print(f'dst: {bytes_to_eui48(dst)}, '
-                    f'src: {bytes_to_eui48(src)}, '
-                    f'type: {hex(proto)}, '
-                    f'payload: {response[:4] if len(response)>10 else response}...,')
-            if bytes_to_eui48(dst)==gma():
+            # print(f'dst: {bytes_to_eui48(dst)}, '
+            #         f'src: {bytes_to_eui48(src)}, '
+            #         f'type: {hex(proto)}, '
+            #         f'payload: {response[:10]}...,')
+            # HARDCODED
+            if bytes_to_eui48(dst)==gma() and bytes_to_eui48(src)==gma():
                 self.incoming_buffer.append(response)
             else:
                 dont = True
 
         else:
-            print("udp receive")
             response, self.addr = self.connection.recvfrom(read_buf_size)
             self.incoming_buffer.append(bytearray(response))
 
-            print('received!')
 
         
         if len(response) == 0:
@@ -158,8 +147,7 @@ class FuzzerConnection(object):
                 
         print("\tReceived %d bytes" % (len(response)))
         if self.connection.type == socket.SOCK_RAW and dont:
-            print('not retunring cause its not meant for us')
-            return
+            self.receive_packet(bytes_to_read,timeout)
 
         return response
 
@@ -242,7 +230,6 @@ class FuzzerConnection(object):
         try:
             # self._bind_to_interface()
             self.connection.bind(('eth0',0))
-            print("Server (mutiny) is bound!!")
         except OSError as e:
             print_error(f'''Couldn't bind to {host}''')
             print_error(f'Raw sockets require a local interface name to bind to instead of a hostname.')
@@ -279,8 +266,7 @@ class FuzzerConnection(object):
 
     def _bind_to_interface(self):
         if self.proto == 'L2raw':
-            print('trying to bind here',self.addr)
-            self.connection.bind(('lo',0))
+            self.connection.bind(('eth0',0))
            
         elif self.server:
 
@@ -294,7 +280,6 @@ class FuzzerConnection(object):
                         self.connection.bind((self.host,self.target_port))
                     else:
                         self.list_connection.bind((self.host, self.target_port))
-                    print('server is on ',self.host + " on port " + str(self.target_port))
 
                 else:
                     # User only specified a port, not an IP

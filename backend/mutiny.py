@@ -31,7 +31,6 @@ class Mutiny(object):
         self.fuzzer_data = FuzzerData()
         # read data in from .fuzzer file
         self.fuzzer_file_path = args.prepped_fuzz
-        print("Reading in fuzzer data from %s..." % (self.fuzzer_file_path))
         self.fuzzer_data.read_from_file(self.fuzzer_file_path)
         self.target_host = args.target_host
         self.sleep_time = args.sleep_time
@@ -116,13 +115,11 @@ class Mutiny(object):
         '''
         seed = self.min_run_number - 1 if self.fuzzer_data.should_perform_test_run else self.min_run_number 
 
-        print('heres top seed',seed)
         failure_count = 0
         loop_len = len(self.seed_loop) # if --loop
         is_paused = False
 
         if self.server:
-            print('server is about to connect!')
             self.connection = FuzzerConnection(self.fuzzer_data.proto, self.target_host, self.fuzzer_data.target_port, self.fuzzer_data.source_ip, self.fuzzer_data.source_port, self.server)
 
 
@@ -146,7 +143,6 @@ class Mutiny(object):
                     continue
 
                 try:
-                    print('about to perform run')
                     if self.dump_raw:
                         print("\n\nPerforming single raw dump case: %d" % self.dump_raw)
                         self._perform_run(seed=self.dump_raw)  
@@ -304,10 +300,8 @@ class Mutiny(object):
             message.reset_altered_message()
 
             if message.is_outbound():
-                print('Server Recv / Client Send')
                 self._send_fuzz_session_message(message_num, message, seed) if not self.server else self._receive_fuzz_session_message(message_num, message)
             else: 
-                print('Server Send / Client Recv')
                 self._receive_fuzz_session_message(message_num, message) if not self.server else self._send_fuzz_session_message(message_num, message, seed)
 
             if self.logger != None:  
@@ -332,8 +326,8 @@ class Mutiny(object):
         '''
         message_byte_array = message.get_altered_message()
         data = self.connection.receive_packet(len(message_byte_array), self.fuzzer_data.receive_timeout)
-        if data==None:
-            pass
+        while data==None:
+            data = self.connection.receive_packet(len(message_byte_array), self.fuzzer_data.receive_timeout)
         else:
             self.message_processor.post_receive_process(data, MessageProcessorExtraParams(message_num, -1, False, [message_byte_array], [data]))
 
@@ -399,7 +393,6 @@ class Mutiny(object):
                 f.write(repr(str(byte_array_to_send))[1:-1])
 
 
-        print('heres what Mutiny is sending',byte_array_to_send)
 
         self.connection.send_packet(byte_array_to_send, self.fuzzer_data.receive_timeout)
 

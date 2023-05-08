@@ -201,11 +201,9 @@ class TestFuzzerConnection(unittest.TestCase):
         server = False
         
         target = MockTarget(proto, mock_if, mock_port)
-        print('set up server!')
         listener_thread = threading.Thread(target=target.accept_connection)
         listener_thread.start()
         sleep(.5) # avoid race, allow handle_connections to bind and listen
-        print('right before connection')
         conn = FuzzerConnection(proto, mock_if, mock_port, src_if, src_port, server)
         self.assertEqual(conn.proto, proto)
         self.assertEqual(conn.host, mock_if)
@@ -792,7 +790,6 @@ class TestFuzzerConnection(unittest.TestCase):
         target = MockClient(proto, src_if, src_port, mock_if, mock_port)
         listener_thread = threading.Thread(target=target.connect)
         listener_thread.start()
-        print('Targer client about to connect!')
         conn = FuzzerConnection(proto, mock_if, mock_port, src_if, src_port, server)
 
         self.assertEqual(conn.proto, proto)
