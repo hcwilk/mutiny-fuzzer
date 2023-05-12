@@ -136,6 +136,8 @@ class MockClient(object):
         sleep(1.5)
         if self.proto == 'tcp':
 
+            print(self.target_addr, ' on port ', str(self.target_port))
+
             socket_family = socket.AF_INET if '.' in self.client_addr else socket.AF_INET6
             self.communication_conn = socket.socket(socket_family, socket.SOCK_STREAM)
             self.communication_conn.bind((self.client_addr, self.client_port))

@@ -19,7 +19,6 @@ class Target3(MockClient):
             result = self.incoming_buffer.pop()
             print('Client received packet of length: ',len(result))
             if len(result) == 539:
-                print('CRASHED THE CLIENT')
                 # 7th iteration should cause a crash
                 # write to file that monitor_target is reading
                 assert result == bytearray(b'magic phrase:passworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassword')

@@ -1,4 +1,6 @@
 from tests.assets.mock_target import MockTarget
+import socket
+import time
 
 class Target2(MockTarget):
 
@@ -11,15 +13,14 @@ class Target2(MockTarget):
             self.receive_packet(4096)
             result = self.incoming_buffer.pop()
             if len(result) > 100 and len(result) < 120:
-                # 15th iteration should cause a crash
-                # write to file that monitor_target is reading
-                print(result)
+                
                 expected_result = bytearray('greetings dartearteartearteartearteartearteartearteartearteartearteartearteartearteartearthearthrthlings', 'utf-8')
                 assert result == expected_result
                 with open('./tests/assets/integration_test_2/crash.log', 'w') as file:
                     file.write('crashed')
                     self.communication_conn.close()
-                    self.listen_conn.close()
+                    if self.communication_conn.type == socket.SOCK_STREAM:
+                        self.listen_conn.close()
                 return
-            self.communication_conn = self.listen_conn.accept()[0]
-
+            if self.communication_conn.type == socket.SOCK_STREAM:
+                self.communication_conn = self.listen_conn.accept()[0]

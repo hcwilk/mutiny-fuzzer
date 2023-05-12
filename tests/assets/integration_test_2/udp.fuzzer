@@ -14,7 +14,7 @@ should_perform_test_run 1
 # Protocol (udp or tcp)
 proto udp
 # Port number to connect to
-port 7777
+port 7776
 # Port number to connect from
 source_port -1
 # Source IP to connect from

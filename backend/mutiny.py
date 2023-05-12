@@ -53,7 +53,6 @@ class Mutiny(object):
         elif args.loop:
             self.seed_loop = validate_number_range(args.loop, flatten_list=True) 
 
-
         #TODO make it so logging message does not appear if reproducing (i.e. -r x-y cmdline arg is set)
         self.logger = None 
         if not self.quiet:
@@ -119,6 +118,8 @@ class Mutiny(object):
         loop_len = len(self.seed_loop) # if --loop
         is_paused = False
 
+
+        print('proto',self.fuzzer_data.proto)
         print('server host',self.target_host)
         print('server port',self.fuzzer_data.target_port)
 
@@ -154,9 +155,11 @@ class Mutiny(object):
                         self._perform_run(seed=-1 ) 
                     elif loop_len: 
                         print("\n\nFuzzing with seed %d" % (self.seed_loop[seed%loop_len]))
+                        print('proto',self.fuzzer_data.proto)
                         self._perform_run(seed=self.seed_loop[seed%loop_len]) 
                     else:
                         print("\n\nFuzzing with seed %d" % (seed))
+                        print('proto',self.fuzzer_data.proto)
                         self._perform_run(seed=seed) 
                     #if --quiet, (logger==None) => AttributeError
                     if self.log_all:
@@ -251,8 +254,10 @@ class Mutiny(object):
 
             except HaltException as e:
                 print_warning("Received HaltException, halting the fuzzing campaign")
-                if self.testing: return
-                else: exit()
+                if self.testing: 
+                    return
+                else: 
+                    exit()
 
             if was_crash_detected:
                 if failure_count < self.fuzzer_data.failure_threshold:

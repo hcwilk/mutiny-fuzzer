@@ -87,6 +87,7 @@ class IntegrationSuite(object):
         print('ok')
 
     def test_2(self, target_port, proto, prepped_fuzzer_file):
+        time.sleep(2)
         '''
         test details:
             - prepped_fuzz: ./tests/assets/integration_test_2/<proto>_prepped.fuzzer
@@ -112,6 +113,12 @@ class IntegrationSuite(object):
         '''
         self.total_tests += 1
         print('test 2: {}'.format(proto))
+
+
+        if proto=='L2raw':
+            self.target_if = gma()
+        else:
+            self.target_if = '127.0.0.1'
         #self.block_print() 
         # populate args
         args = Namespace(prepped_fuzz = prepped_fuzzer_file, target_host = self.target_if, sleep_time = 0, range = '0-', loop = None, dump_raw = None, quiet = False, log_all = False, testing = True, server=False)
@@ -124,18 +131,19 @@ class IntegrationSuite(object):
         fuzzer.radamsa = os.path.abspath( os.path.join(__file__, '../../../radamsa-0.6/bin/radamsa'))
         fuzzer.import_custom_processors()
         fuzzer.debug = False
+        time.sleep(.5)
         # start listening for the fuzz sessions
         target_thread = threading.Thread(target=target.accept_fuzz, args=())
         target_thread.start()
-        time.sleep(.03) # avoid race with connection to socket
+        time.sleep(.5) # avoid race with connection to socket
         fuzz_thread = threading.Thread(target=fuzzer.fuzz, args=())
+        time.sleep(.5)
         fuzz_thread.start() # connect to target and begin fuzzing
         target_thread.join()
         if target.communication_conn:
             target.communication_conn.close()
         else:
             target.listen_conn.close()
-        target.listen_conn.close()
         shutil.rmtree(log_dir)
         self.enable_print()
         self.passed_tests += 1
@@ -204,6 +212,10 @@ class IntegrationSuite(object):
         # This should probbaly send the first packet
         time.sleep(1)
         target_thread.join()
+        if target.communication_conn:
+            target.communication_conn.close()
+        else:
+            target.listen_conn.close()
         shutil.rmtree(log_dir)
         self.enable_print()
         self.passed_tests += 1
@@ -244,28 +256,26 @@ def main():
         print(repr(e))
         traceback.print_exc()
 
-    # try: # SINGLE OUTBOUND LINE -> CRASH -> HALT
-    #     #tcp
-    #     suite.test_2(target_port= 7776, proto = 'tcp', prepped_fuzzer_file = 'tests/assets/integration_test_2/tcp.fuzzer')
-    #     # udp 
-    #     suite.test_2(target_port= 7777, proto = 'udp', prepped_fuzzer_file = 'tests/assets/integration_test_2/udp.fuzzer')
-    #     # tls 
-    #     suite.test_2(target_port= 7778, proto = 'tls', prepped_fuzzer_file = 'tests/assets/integration_test_2/tls.fuzzer')
-    #     # raw
-    #     #suite.test_2(target_port = 7779, proto = 'L2raw', prepped_fuzzer_file = 'tests/assets/integration_test_2/raw.fuzzer')
-    # except Exception as e:
-    #     print(repr(e))
-    #     traceback.print_exc()
-
-    print('TEST 3 NOW')
+    try: # SINGLE OUTBOUND LINE -> CRASH -> HALT
+        #tcp
+        suite.test_2(target_port= 7775, proto = 'tcp', prepped_fuzzer_file = 'tests/assets/integration_test_2/tcp.fuzzer')
+        # udp 
+        suite.test_2(target_port= 7776, proto = 'udp', prepped_fuzzer_file = 'tests/assets/integration_test_2/udp.fuzzer')
+        # tls 
+        suite.test_2(target_port= 7777, proto = 'tls', prepped_fuzzer_file = 'tests/assets/integration_test_2/tls.fuzzer')
+        # raw
+        suite.test_2(target_port = -1, proto = 'L2raw', prepped_fuzzer_file = 'tests/assets/integration_test_2/raw.fuzzer')
+    except Exception as e:
+        print(repr(e))
+        traceback.print_exc()
 
     try: # SINGLE OUTBOUND LINE -> CRASH -> HALT
         # tcp
-        suite.test_3(target_port= 7776, cli_port=52954, proto = 'tcp', prepped_fuzzer_file = 'tests/assets/integration_test_3/tcp.fuzzer')
+        suite.test_3(target_port= 7778, cli_port=52954, proto = 'tcp', prepped_fuzzer_file = 'tests/assets/integration_test_3/tcp.fuzzer')
         # udp 
-        suite.test_3(target_port= 7777, cli_port=52955, proto = 'udp', prepped_fuzzer_file = 'tests/assets/integration_test_3/udp.fuzzer')
+        suite.test_3(target_port= 7779, cli_port=52955, proto = 'udp', prepped_fuzzer_file = 'tests/assets/integration_test_3/udp.fuzzer')
         # tls 
-        suite.test_3(target_port= 7778, cli_port=52956, proto = 'tls', prepped_fuzzer_file = 'tests/assets/integration_test_3/tls.fuzzer')
+        suite.test_3(target_port= 7780, cli_port=52956, proto = 'tls', prepped_fuzzer_file = 'tests/assets/integration_test_3/tls.fuzzer')
         # raw
         suite.test_3(target_port = -1, cli_port=-1, proto = 'L2raw', prepped_fuzzer_file = 'tests/assets/integration_test_3/raw.fuzzer')
     except Exception as e:
