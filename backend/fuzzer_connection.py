@@ -115,14 +115,12 @@ class FuzzerConnection(object):
             response = frame[ETH_HLEN:]
             # Unpack an Ethernet header in network byte order
             dst, src, proto = struct.unpack('!6s6sH', header)
-            # print(f'dst: {bytes_to_eui48(dst)}, '
-            #         f'src: {bytes_to_eui48(src)}, '
-            #         f'type: {hex(proto)}, '
-            #         f'payload: {response[:10]}...,')
-            # HARDCODED
-            if bytes_to_eui48(dst)==gma() and bytes_to_eui48(src)==gma():
+
+            # Only care about files from target and meant for us
+            if bytes_to_eui48(dst)==self.host and bytes_to_eui48(src)==self.source_ip:
                 self.incoming_buffer.append(response)
             else:
+                # Flags response as 'not important' so it can receive another packet down the road
                 dont = True
 
         else:

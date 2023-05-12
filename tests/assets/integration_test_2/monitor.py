@@ -50,14 +50,11 @@ class Monitor(object):
         while True:
             log_file = open('./tests/assets/integration_test_2/crash.log', 'r')
             if 'crashed' in log_file.readlines():
-                print('READING FROM HERE')
                 exception = LogCrashException('crashed')
-                print('this is excpetion',exception)
                 signal_main(LogCrashException(exception))
                 signal_main(HaltException('Received Crash; Halting Fuzzing'))
                 log_file.close()
                 log_file = open('./tests/assets/integration_test_2/crash.log', 'w')
                 log_file.write('')
                 log_file.close()
-                print('CLEARED')
             log_file.close()
