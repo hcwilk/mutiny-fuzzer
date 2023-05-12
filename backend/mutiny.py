@@ -334,22 +334,20 @@ class Mutiny(object):
         '''
         message_byte_array = message.get_altered_message()
         data = self.connection.receive_packet(len(message_byte_array), self.fuzzer_data.receive_timeout)
-        while data==None:
-            data = self.connection.receive_packet(len(message_byte_array), self.fuzzer_data.receive_timeout)
-        else:
-            self.message_processor.post_receive_process(data, MessageProcessorExtraParams(message_num, -1, False, [message_byte_array], [data]))
-
-            if self.debug:
-                print("\tReceived: %s" % (data))
         
-            if data == message_byte_array:
-                print("\tReceived expected response")
-            if self.logger: 
-                self.logger.set_received_message_data(message_num, data)
-            if self.dump_raw:
-                loc = os.path.join(self.dump_dir, "%d-inbound-seed-%d"%(message_num, self.dump_raw))
-                with open(loc,"wb") as f:
-                    f.write(repr(str(data))[1:-1])
+        self.message_processor.post_receive_process(data, MessageProcessorExtraParams(message_num, -1, False, [message_byte_array], [data]))
+
+        if self.debug:
+            print("\tReceived: %s" % (data))
+    
+        if data == message_byte_array:
+            print("\tReceived expected response")
+        if self.logger: 
+            self.logger.set_received_message_data(message_num, data)
+        if self.dump_raw:
+            loc = os.path.join(self.dump_dir, "%d-inbound-seed-%d"%(message_num, self.dump_raw))
+            with open(loc,"wb") as f:
+                f.write(repr(str(data))[1:-1])
 
     def _send_fuzz_session_message(self, message_num, message, seed):
         # Primarily used for deciding how to handle preFuzz/preSend callbacks

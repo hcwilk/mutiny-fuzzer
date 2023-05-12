@@ -174,8 +174,8 @@ class MockClient(object):
 
         else:
             self.communication_conn = socket.socket(socket.AF_PACKET, socket.SOCK_RAW, 768)
-            # if self.proto != 'L2raw' and self.proto != 'raw':
-            #     self.communication_conn.setsockopt(socket.IPPROTO_IP, socket.IP_HDRINCL, 0)
+            if self.proto != 'L2raw' and self.proto != 'raw':
+                self.communication_conn.setsockopt(socket.IPPROTO_IP, socket.IP_HDRINCL, 0)
             self.communication_conn.bind(('eth0', 0))
 
     def send_packet(self, data):

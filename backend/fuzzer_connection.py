@@ -79,10 +79,9 @@ class FuzzerConnection(object):
        
         elif self.connection.type == socket.SOCK_RAW:
             self.connection.sendall(
-                # Pack in network byte order
-
+                # Pack in network byte order (dynamically allocating string size as well)
                 struct.pack(f'!6s6sH{len(data)}s',
-                            eui48_to_bytes(self.host) ,             # Destination MAC address
+                            eui48_to_bytes(self.host) ,         # Destination MAC address
                             eui48_to_bytes(self.source_ip) ,    # Source MAC address
                             ETH_P_802_EX1,                      # Ethernet type
                             data))                     # Payload
@@ -167,13 +166,12 @@ class FuzzerConnection(object):
             self._bind_to_interface()
             self.list_connection.listen()
             self.connection = self.list_connection.accept()[0]
-
             
         else:
             self.connection = socket.socket(self.socket_family, socket.SOCK_STREAM)
             self._bind_to_interface()
             self.connection.connect(self.addr)
-        
+
 
     def _connect_to_udp_socket(self):
         self.connection = socket.socket(self.socket_family, socket.SOCK_DGRAM)
@@ -199,10 +197,8 @@ class FuzzerConnection(object):
             self.list_connection.listen()
             context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
             context.load_cert_chain('./tests/assets/test-server.pem', './tests/assets/test-server.key')
-
             self.list_connection = context.wrap_socket(self.list_connection, server_side=True)
             self.connection = self.list_connection.accept()[0]
-
 
         else:
             context.check_hostname = False
@@ -226,7 +222,7 @@ class FuzzerConnection(object):
             print_error('No permission to create raw sockets.')
             print_error('Raw sockets require "sudo" or to run as a user with CAP_NET_RAW capability.')
         try:
-            # self._bind_to_interface()
+            # Hardcoded for now, not sure if this should be an argument in the CLI or an option in the .fuzzer file
             self.connection.bind(('eth0',0))
         except OSError as e:
             print_error(f'''Couldn't bind to {host}''')
@@ -263,10 +259,8 @@ class FuzzerConnection(object):
                     self.addr = (self.host, self.target_port)
 
     def _bind_to_interface(self):
-        if self.proto == 'L2raw':
-            self.connection.bind(('eth0',0))
            
-        elif self.server:
+        if self.server:
 
             if self.target_port != -1:
                 # Only support right now for tcp or udp, but bind source port address to something
