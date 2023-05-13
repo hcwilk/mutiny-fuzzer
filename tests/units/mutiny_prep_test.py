@@ -13,13 +13,15 @@ class TestMutinyPrep(unittest.TestCase):
         self.pcap_file_1 = './tests/assets/test_MutinyPrep1.pcap'
         self.pcap_file_2 = self.pcap_file_1# FIXME: change to pcap with same ports for both client/server
         self.pcap_file_3 = self.pcap_file_1# FIXME: change to pcap with multiple consecutive inbound/outbounds
+        self.pcap_file_4 = './tests/assets/test_MutinyPrepDissect.pcap'
         self.cra_file_1 = './tests/assets/test_MutinyPrep1.cra'
         self.cra_file_2 = self.cra_file_1  # FIXME: change this to a cArray with multiple consecutive outbound/inbounds
         self.invalid_file = './tests/assets/test_MutinyPrep.invalid'
         self.prompt_and_output_file_1 = './tests/assets/test_MutinyPrep1-0.fuzzer'
         self.prompt_and_output_file_2 = './tests/assets/test_MutinyPrep1-0,2-4.fuzzer'
+        self.prompt_and_output_file_3 = './tests/assets/test_MutinyPrepDissect-0.fuzzer'
         self.nonexistent_file = 'non/existent/file'
-        args = Namespace(pcap_file=self.pcap_file_1, processor_dir='default', dump_ascii=False, force=True, raw=False)
+        args = Namespace(pcap_file=self.pcap_file_1, processor_dir='default', dump_ascii=False, force=True, raw=False, dissect=False, testing=True)
         self.prepper = MutinyPrep(args)
 
     def tearDown(self):
@@ -27,10 +29,12 @@ class TestMutinyPrep(unittest.TestCase):
             os.remove(self.prompt_and_output_file_1)
         if os.path.exists(self.prompt_and_output_file_2):
             os.remove(self.prompt_and_output_file_2)
+        if os.path.exists(self.prompt_and_output_file_3):
+            os.remove(self.prompt_and_output_file_3)
 
 
     def test_MutinyPrep_init(self):
-        args = Namespace(pcap_file=self.pcap_file_1, processor_dir=['default'], dump_ascii=True, force=True, raw=True)
+        args = Namespace(pcap_file=self.pcap_file_1, processor_dir=['default'], dump_ascii=True, force=True, raw=True, dissect=False, testing=True)
         prepper = MutinyPrep(args)
         self.assertEqual(prepper.last_message_direction, -1)
         self.assertEqual(prepper.fuzzer_data.processor_directory, 'default')
@@ -262,3 +266,54 @@ class TestMutinyPrep(unittest.TestCase):
 
             os.remove(self.prompt_and_output_file_2)
 
+    def test_prompt_and_output_dissect(self):
+        self.prepper.fuzzer_data = FuzzerData()
+        self.prepper.input_file_path = self.pcap_file_4
+        self.prepper.dissect = True
+        self.prepper.dissect_defaults = True
+        self.prepper.dissect_default_transport = 'tcp'
+        self.prepper.dissect_default_protocol = 'http'
+        with open(self.prepper.input_file_path, 'r') as input_file:
+            self.prepper._process_pcap(input_file)
+        input_file.close()
+        # with Defaults
+        self.prepper._gen_fuzz_config()
+        # FUZZER_DATA has been generated, now we can run prompt and output 
+        output_message_num = self.prepper._get_next_message(0,Message.Direction.Outbound)
+        self.prepper._prompt_and_output(output_message_num, auto_generate_all_client=True)
+        with open(self.prompt_and_output_file_3, 'r') as file:
+            lines = file.readlines()
+            for i in range(0, len(lines)):
+                line = lines[i]
+                if i == 4:
+                    self.assertIn('processor_dir default', line)
+                if i == 6:
+                    self.assertIn('failure_threshold 3', line)
+                if i == 8:
+                    self.assertIn('failure_timeout 5', line)
+                if i == 10:
+                    self.assertIn('receive_timeout 1.0', line)
+                if i == 12:
+                    self.assertIn('should_perform_test_run 1', line)
+                if i == 14:
+                    self.assertIn('proto tcp', line)
+                if i == 16:
+                    self.assertIn('port 8000', line)
+                if i == 18:
+                    self.assertIn('source_port -1', line)
+                if i == 20:
+                    self.assertIn('source_ip 0.0.0.0', line)
+                if i == 24:
+                    self.assertIn('# http.request.method', line)
+                if i == 25:
+                    self.assertIn('outbound fuzz \'GET \'', line)
+                if i == 27:
+                    self.assertIn('sub fuzz \'/ \'', line)
+                if i == 29:
+                    self.assertIn('sub fuzz \'HTTP/1.1\\r\\n\'', line)
+                if i == 31:
+                    self.assertIn('sub fuzz \'Host: 127.0.0.1:8000\\r\\n\'', line)
+                if i == 32:
+                    self.assertIn('# http.user_agent', line)
+                if i == 33:
+                    self.assertIn('sub fuzz \'User-Agent: curl/7.87.0\\r\\n\'', line)

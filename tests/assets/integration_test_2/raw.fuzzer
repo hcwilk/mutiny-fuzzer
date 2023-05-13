@@ -19,8 +19,6 @@ port -1
 source_port -1
 # Source IP to connect from
 source_ip 2e:b6:c5:a3:37:b3
-# Last seed tried by mutiny in the previous execution
-last_seed_tried -1
 
 # The actual messages in the conversation
 # Each contains a message to be sent to or from the server, printably-formatted

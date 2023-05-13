@@ -1,6 +1,6 @@
 from backend.fuzzer_connection import FuzzerConnection
 from backend.fuzzer_data import FuzzerData
-from tests.assets.mock_target import MockTarget, MockClient
+from tests.assets.mock_targets import MockServer, MockClient
 from backend.menu_functions import print_warning
 import threading
 import ssl
@@ -31,9 +31,9 @@ class TestFuzzerConnection(unittest.TestCase):
         mock_port = 9999
         src_if = '127.0.0.1'
         src_port = 8889
-        server= False
+        server = False
         
-        target = MockTarget(proto, mock_if, mock_port)
+        target = MockServer(proto, mock_if, mock_port)
         if self.platform == 'Darwin':
             print_warning('Skipping Raw Fuzzer Connection Init Test\n Raw Packet\'s are currently unsupported on OSX')
             return
@@ -60,9 +60,9 @@ class TestFuzzerConnection(unittest.TestCase):
         mock_port = 9998
         src_if = '::1'
         src_port = 8888
-        server=False
+        server = False
         
-        target = MockTarget(proto, mock_if, mock_port)
+        target = MockServer(proto, mock_if, mock_port)
         listener_thread = threading.Thread(target=target.accept_connection)
         listener_thread.start()
         sleep(.5) # avoid race, allow handle_connections to bind and listen
@@ -88,7 +88,7 @@ class TestFuzzerConnection(unittest.TestCase):
         src_port = 8887
         server = False
         
-        target = MockTarget(proto, mock_if, mock_port)
+        target = MockServer(proto, mock_if, mock_port)
         listener_thread = threading.Thread(target=target.accept_connection)
         listener_thread.start()
         sleep(.5) # avoid race, allow handle_connections to bind and listen
@@ -113,7 +113,7 @@ class TestFuzzerConnection(unittest.TestCase):
         src_port = 8886
         server = False
         
-        target = MockTarget(proto, mock_if, mock_port)
+        target = MockServer(proto, mock_if, mock_port)
         listener_thread = threading.Thread(target=target.accept_connection)
         listener_thread.start()
         sleep(.5) # avoid race, allow handle_connections to bind and listen
@@ -139,11 +139,11 @@ class TestFuzzerConnection(unittest.TestCase):
         src_port = 8885
         server = False
         
-        target = MockTarget(proto, mock_if, mock_port)
+        target = MockServer(proto, mock_if, mock_port)
         listener_thread = threading.Thread(target=target.accept_connection)
         listener_thread.start()
         sleep(.5) # avoid race, allow handle_connections to bind and listen
-        conn = FuzzerConnection(proto, mock_if, mock_port, src_if, src_port, server,testing=True)
+        conn = FuzzerConnection(proto, mock_if, mock_port, src_if, src_port, server, testing=True)
         conn._get_addr()
         conn._connect_to_tls_socket()
         self.assertEqual(conn.proto, proto)
@@ -168,7 +168,7 @@ class TestFuzzerConnection(unittest.TestCase):
         src_port = 8884
         server = False
         
-        target = MockTarget(proto, mock_if, mock_port)
+        target = MockServer(proto, mock_if, mock_port)
         listener_thread = threading.Thread(target=target.accept_connection)
         listener_thread.start()
         sleep(.5) # avoid race, allow handle_connections to bind and listen
@@ -200,7 +200,7 @@ class TestFuzzerConnection(unittest.TestCase):
         src_port = 0
         server = False
         
-        target = MockTarget(proto, mock_if, mock_port)
+        target = MockServer(proto, mock_if, mock_port)
         listener_thread = threading.Thread(target=target.accept_connection)
         listener_thread.start()
         sleep(.5) # avoid race, allow handle_connections to bind and listen
@@ -227,7 +227,7 @@ class TestFuzzerConnection(unittest.TestCase):
         src_port = 8883
         server = False
         
-        target = MockTarget(proto, mock_if, mock_port)
+        target = MockServer(proto, mock_if, mock_port)
         listener_thread = threading.Thread(target=target.accept_connection)
         listener_thread.start()
         data = bytes('test', 'utf-8')
@@ -253,7 +253,7 @@ class TestFuzzerConnection(unittest.TestCase):
         src_port = 8882
         server = False
 
-        target = MockTarget(proto, mock_if, mock_port)
+        target = MockServer(proto, mock_if, mock_port)
         listener_thread = threading.Thread(target=target.accept_connection)
         listener_thread.start()
         data = bytes('test', 'utf-8')
@@ -277,7 +277,7 @@ class TestFuzzerConnection(unittest.TestCase):
         src_port = 8881
         server = False
         
-        target = MockTarget(proto, mock_if, mock_port)
+        target = MockServer(proto, mock_if, mock_port)
         listener_thread = threading.Thread(target=target.accept_connection)
         listener_thread.start()
         data = bytes('test', 'utf-8')
@@ -300,7 +300,7 @@ class TestFuzzerConnection(unittest.TestCase):
         src_port = 8880
         server = False
 
-        target = MockTarget(proto, mock_if, mock_port)
+        target = MockServer(proto, mock_if, mock_port)
         listener_thread = threading.Thread(target=target.accept_connection)
         listener_thread.start()
         data = bytes('test', 'utf-8')
@@ -323,7 +323,7 @@ class TestFuzzerConnection(unittest.TestCase):
         src_port = 8879
         server = False
         
-        target = MockTarget(proto, mock_if, mock_port)
+        target = MockServer(proto, mock_if, mock_port)
         listener_thread = threading.Thread(target=target.accept_connection)
         listener_thread.start()
         data = bytes('test', 'utf-8')
@@ -349,7 +349,7 @@ class TestFuzzerConnection(unittest.TestCase):
         src_port = 8878
         server = False
         
-        target = MockTarget(proto, mock_if, mock_port)
+        target = MockServer(proto, mock_if, mock_port)
         listener_thread = threading.Thread(target=target.accept_connection)
         listener_thread.start()
         data = bytes('test', 'utf-8')
@@ -379,7 +379,7 @@ class TestFuzzerConnection(unittest.TestCase):
         server = False
 
         
-        target = MockTarget(proto, mock_if, mock_port)
+        target = MockServer(proto, mock_if, mock_port)
         listener_thread = threading.Thread(target=target.accept_connection)
         listener_thread.start()
         data = bytes('optimist', 'utf-8')
@@ -413,7 +413,7 @@ class TestFuzzerConnection(unittest.TestCase):
         src_port = 8877
         server = False
         
-        target = MockTarget(proto, mock_if, mock_port)
+        target = MockServer(proto, mock_if, mock_port)
         listener_thread = threading.Thread(target=target.accept_connection)
         listener_thread.start()
         data = bytes('test', 'utf-8')
@@ -438,9 +438,8 @@ class TestFuzzerConnection(unittest.TestCase):
         src_if = '::1'
         src_port = 8876
         server = False
-
         
-        target = MockTarget(proto, mock_if, mock_port)
+        target = MockServer(proto, mock_if, mock_port)
         listener_thread = threading.Thread(target=target.accept_connection)
         listener_thread.start()
         data = bytes('test', 'utf-8')
@@ -465,7 +464,7 @@ class TestFuzzerConnection(unittest.TestCase):
         src_port = 8875
         server = False
         
-        target = MockTarget(proto, mock_if, mock_port)
+        target = MockServer(proto, mock_if, mock_port)
         listener_thread = threading.Thread(target=target.accept_connection)
         listener_thread.start()
         data = bytes('test', 'utf-8')
@@ -490,7 +489,7 @@ class TestFuzzerConnection(unittest.TestCase):
         src_port = 8874
         server = False
         
-        target = MockTarget(proto, mock_if, mock_port)
+        target = MockServer(proto, mock_if, mock_port)
         listener_thread = threading.Thread(target=target.accept_connection)
         listener_thread.start()
         data = bytes('test', 'utf-8')
@@ -515,7 +514,7 @@ class TestFuzzerConnection(unittest.TestCase):
         src_port = 8873
         server = False
         
-        target = MockTarget(proto, mock_if, mock_port)
+        target = MockServer(proto, mock_if, mock_port)
         listener_thread = threading.Thread(target=target.accept_connection)
         listener_thread.start()
         data = bytes('test', 'utf-8')
@@ -542,7 +541,7 @@ class TestFuzzerConnection(unittest.TestCase):
         src_port = 8872
         server = False
         
-        target = MockTarget(proto, mock_if, mock_port)
+        target = MockServer(proto, mock_if, mock_port)
         listener_thread = threading.Thread(target=target.accept_connection)
         listener_thread.start()
         data = bytes('test', 'utf-8')
@@ -573,7 +572,7 @@ class TestFuzzerConnection(unittest.TestCase):
         src_port = 0
         server = False
         
-        target = MockTarget(proto, mock_if, mock_port)
+        target = MockServer(proto, mock_if, mock_port)
         listener_thread = threading.Thread(target=target.accept_connection)
         listener_thread.start()
         data = bytes('ayeyoletsgo', 'utf-8')
@@ -607,11 +606,7 @@ class TestFuzzerConnection(unittest.TestCase):
         target = MockClient(proto, src_if, src_port, mock_if, mock_port)
         listener_thread = threading.Thread(target=target.connect)
         listener_thread.start()
-        
         conn = FuzzerConnection(proto, mock_if, mock_port, src_if, src_port, server)
-        
-    
-
         self.assertEqual(conn.proto, proto)
         self.assertEqual(conn.host, mock_if)
         self.assertEqual(conn.target_port, mock_port)
@@ -620,7 +615,6 @@ class TestFuzzerConnection(unittest.TestCase):
         self.assertEqual(conn.addr, (src_if, src_port))
         self.assertEqual(conn.list_connection.family, socket.AF_INET)
         self.assertEqual(conn.list_connection.type, socket.SOCK_STREAM)
-
         self.assertEqual(target.client_addr,src_if)
         self.assertEqual(target.client_port,src_port)
         listener_thread.join()
@@ -639,10 +633,7 @@ class TestFuzzerConnection(unittest.TestCase):
         target = MockClient(proto, src_if, src_port, mock_if, mock_port)
         listener_thread = threading.Thread(target=target.connect)
         listener_thread.start()
-
         conn = FuzzerConnection(proto, mock_if, mock_port, src_if, src_port, server)
-    
-
         self.assertEqual(conn.proto, proto)
         self.assertEqual(conn.host, mock_if)
         self.assertEqual(conn.target_port, mock_port)
@@ -651,7 +642,6 @@ class TestFuzzerConnection(unittest.TestCase):
         self.assertEqual(conn.addr, (src_if, src_port))
         self.assertEqual(conn.list_connection.family, socket.AF_INET6)
         self.assertEqual(conn.list_connection.type, socket.SOCK_STREAM)
-
         self.assertEqual(target.client_addr,src_if)
         self.assertEqual(target.client_port,src_port)
         listener_thread.join()
@@ -669,12 +659,7 @@ class TestFuzzerConnection(unittest.TestCase):
         target = MockClient(proto, src_if, src_port, mock_if, mock_port)
         listener_thread = threading.Thread(target=target.connect)
         listener_thread.start()
-
-
         conn = FuzzerConnection(proto, mock_if, mock_port, src_if, src_port, server)
-        
-
-
         self.assertEqual(conn.proto, proto)
         self.assertEqual(conn.host, mock_if)
         self.assertEqual(conn.target_port, mock_port)
@@ -683,8 +668,6 @@ class TestFuzzerConnection(unittest.TestCase):
         self.assertEqual(conn.addr, (src_if, src_port))
         self.assertEqual(conn.connection.family, socket.AF_INET)
         self.assertEqual(conn.connection.type, socket.SOCK_DGRAM)
-
-
         listener_thread.join()
         target.communication_conn.close()
         conn.close()
@@ -700,7 +683,6 @@ class TestFuzzerConnection(unittest.TestCase):
         target = MockClient(proto, src_if, src_port, mock_if, mock_port)
         listener_thread = threading.Thread(target=target.connect)
         listener_thread.start()
-
         conn = FuzzerConnection(proto, mock_if, mock_port, src_if, src_port, server)
         self.assertEqual(conn.proto, proto)
         self.assertEqual(conn.host, mock_if)
@@ -712,7 +694,6 @@ class TestFuzzerConnection(unittest.TestCase):
         self.assertEqual(conn.connection.type, socket.SOCK_DGRAM)
         listener_thread.join()
         target.communication_conn.close()
-
         conn.close()
     
     def test_FuzzerConnectionInit_tls_ipv4(self):
@@ -726,13 +707,10 @@ class TestFuzzerConnection(unittest.TestCase):
         target = MockClient(proto, src_if, src_port, mock_if, mock_port)
         listener_thread = threading.Thread(target=target.connect)
         listener_thread.start()
-        
         sleep(.5) # avoid race, allow handle_connections to bind and listen
-
         conn = FuzzerConnection(proto, mock_if, mock_port, src_if, src_port, server, testing=True)
         conn._get_addr()
         conn._connect_to_tls_socket()
-
         self.assertEqual(conn.proto, proto)
         self.assertEqual(conn.host, mock_if)
         self.assertEqual(conn.target_port, mock_port)
@@ -756,9 +734,7 @@ class TestFuzzerConnection(unittest.TestCase):
         target = MockClient(proto, src_if, src_port, mock_if, mock_port)
         listener_thread = threading.Thread(target=target.connect)
         listener_thread.start()
-        
         sleep(.5) # avoid race, allow handle_connections to bind and listen
-
         conn = FuzzerConnection(proto, mock_if, mock_port, src_if, src_port, server, testing=True)
         conn._get_addr()
         conn._connect_to_tls_socket()
@@ -786,12 +762,10 @@ class TestFuzzerConnection(unittest.TestCase):
         src_port = 0
         server = True
         
-        
         target = MockClient(proto, src_if, src_port, mock_if, mock_port)
         listener_thread = threading.Thread(target=target.connect)
         listener_thread.start()
         conn = FuzzerConnection(proto, mock_if, mock_port, src_if, src_port, server)
-
         self.assertEqual(conn.proto, proto)
         self.assertEqual(conn.host, mock_if)
         self.assertEqual(conn.target_port, mock_port)
@@ -818,15 +792,10 @@ class TestFuzzerConnection(unittest.TestCase):
         target = MockClient(proto, src_if, src_port, mock_if, mock_port)
         listener_thread = threading.Thread(target=target.connect)
         listener_thread.start()
-
         sleep(.5) # avoid race, allow handle_connections to bind and listen
-        
         conn = FuzzerConnection(proto, mock_if, mock_port, src_if, src_port, server)
-      
-        
         data = bytes('this should say 24 bytes', 'utf-8')
         listener_thread.join()
-        
         reception_thread = threading.Thread(target=self.receive_packet_wrapper, args=(conn,len(data),3.0))
         reception_thread.start()
         target.send_packet(data)
@@ -836,6 +805,7 @@ class TestFuzzerConnection(unittest.TestCase):
         conn.connection.close()
         target.communication_conn.close()
         self.assertEqual(self.received_data.pop(), data)
+
 
     def test_receive_packet_tcp_ipv6_server(self):
         proto = 'tcp'
@@ -848,15 +818,10 @@ class TestFuzzerConnection(unittest.TestCase):
         target = MockClient(proto, src_if, src_port, mock_if, mock_port)
         listener_thread = threading.Thread(target=target.connect)
         listener_thread.start()
-
         sleep(.5) # avoid race, allow handle_connections to bind and listen
-        
         conn = FuzzerConnection(proto, mock_if, mock_port, src_if, src_port, server)
-      
-        
         data = bytes('this should say 24 bytes', 'utf-8')
         listener_thread.join()
-        
         reception_thread = threading.Thread(target=self.receive_packet_wrapper, args=(conn,len(data),3.0))
         reception_thread.start()
         target.send_packet(data)
@@ -881,11 +846,8 @@ class TestFuzzerConnection(unittest.TestCase):
         listener_thread.start()
         sleep(.5) # avoid race, allow handle_connections to bind and listen
         conn = FuzzerConnection(proto, mock_if, mock_port, src_if, src_port, server)
-      
-        
         data = bytes('this should say 24 bytes', 'utf-8')
         listener_thread.join()
-        
         reception_thread = threading.Thread(target=self.receive_packet_wrapper, args=(conn,len(data),3.0))
         reception_thread.start()
         target.send_packet(data)
@@ -909,11 +871,8 @@ class TestFuzzerConnection(unittest.TestCase):
         listener_thread.start()
         sleep(.5) # avoid race, allow handle_connections to bind and listen
         conn = FuzzerConnection(proto, mock_if, mock_port, src_if, src_port, server)
-      
-        
         data = bytes('this should say 24 bytes', 'utf-8')
         listener_thread.join()
-        
         reception_thread = threading.Thread(target=self.receive_packet_wrapper, args=(conn,len(data),3.0))
         reception_thread.start()
         target.send_packet(data)
@@ -934,9 +893,7 @@ class TestFuzzerConnection(unittest.TestCase):
         target = MockClient(proto, src_if, src_port, mock_if, mock_port)
         listener_thread = threading.Thread(target=target.connect)
         listener_thread.start()
-        
         sleep(.5) # avoid race, allow handle_connections to bind and listen
-
         conn = FuzzerConnection(proto, mock_if, mock_port, src_if, src_port, server, testing=True)
         conn._get_addr()
         conn._connect_to_tls_socket()
@@ -951,6 +908,7 @@ class TestFuzzerConnection(unittest.TestCase):
         target.communication_conn.close()
         self.assertEqual(self.received_data.pop(), data)
 
+
     def test_receive_packet_tls_ipv6_server(self):
         proto = 'tls'
         mock_if = '::1'
@@ -962,9 +920,7 @@ class TestFuzzerConnection(unittest.TestCase):
         target = MockClient(proto, src_if, src_port, mock_if, mock_port)
         listener_thread = threading.Thread(target=target.connect)
         listener_thread.start()
-        
         sleep(.5) # avoid race, allow handle_connections to bind and listen
-
         conn = FuzzerConnection(proto, mock_if, mock_port, src_if, src_port, server, testing=True)
         conn._get_addr()
         conn._connect_to_tls_socket()
@@ -993,9 +949,7 @@ class TestFuzzerConnection(unittest.TestCase):
         target = MockClient(proto, src_if, src_port, mock_if, mock_port)
         listener_thread = threading.Thread(target=target.connect)
         listener_thread.start()
-        
         sleep(.5) # avoid race, allow handle_connections to bind and listen
-
         conn = FuzzerConnection(proto, mock_if, mock_port, src_if, src_port, server)
         listener_thread.join()
         data = bytes('this should say 24 bytes', 'utf-8')
@@ -1007,7 +961,6 @@ class TestFuzzerConnection(unittest.TestCase):
         conn.close()
         target.communication_conn.close()
         self.assertEqual(self.received_data.pop(), data)
-
 
 
 # SENDING PACKETS -- SERVER
@@ -1024,13 +977,10 @@ class TestFuzzerConnection(unittest.TestCase):
         target = MockClient(proto, src_if, src_port, mock_if, mock_port)
         listener_thread = threading.Thread(target=target.connect)
         listener_thread.start()
-
         sleep(.5) # avoid race, allow handle_connections to bind and listen
-      
         conn = FuzzerConnection(proto, mock_if, mock_port, src_if, src_port, server)
         data = bytes('again', 'utf-8')
         listener_thread.join()
-        
         reception_thread = threading.Thread(target=target.receive_packet, args=(len(data),))
         reception_thread.start()
         conn.send_packet(data,3.0)
@@ -1039,6 +989,7 @@ class TestFuzzerConnection(unittest.TestCase):
         conn.close()
         target.communication_conn.close()
         self.assertEqual(target.incoming_buffer.pop(), data)
+
 
     def test_send_packet_tcp_ipv6_server(self):
         proto = 'tcp'
@@ -1051,9 +1002,7 @@ class TestFuzzerConnection(unittest.TestCase):
         target = MockClient(proto, src_if, src_port, mock_if, mock_port)
         listener_thread = threading.Thread(target=target.connect)
         listener_thread.start()
-
         sleep(.5) # avoid race, allow handle_connections to bind and listen
-      
         conn = FuzzerConnection(proto, mock_if, mock_port, src_if, src_port, server)
         data = bytes('again', 'utf-8')
         listener_thread.join()
@@ -1079,13 +1028,10 @@ class TestFuzzerConnection(unittest.TestCase):
         target = MockClient(proto, src_if, src_port, mock_if, mock_port)
         listener_thread = threading.Thread(target=target.connect)
         listener_thread.start()
-
         sleep(.5) # avoid race, allow handle_connections to bind and listen
-      
         conn = FuzzerConnection(proto, mock_if, mock_port, src_if, src_port, server)
         data = bytes('again', 'utf-8')
         listener_thread.join()
-        
         reception_thread = threading.Thread(target=target.receive_packet, args=(len(data),))
         reception_thread.start()
         sleep(.5)
@@ -1106,13 +1052,10 @@ class TestFuzzerConnection(unittest.TestCase):
         target = MockClient(proto, src_if, src_port, mock_if, mock_port)
         listener_thread = threading.Thread(target=target.connect)
         listener_thread.start()
-
         sleep(.5) # avoid race, allow handle_connections to bind and listen
-      
         conn = FuzzerConnection(proto, mock_if, mock_port, src_if, src_port, server)
         data = bytes('again', 'utf-8')
         listener_thread.join()
-        
         reception_thread = threading.Thread(target=target.receive_packet, args=(len(data),))
         reception_thread.start()
         sleep(.5)
@@ -1134,14 +1077,11 @@ class TestFuzzerConnection(unittest.TestCase):
         target = MockClient(proto, src_if, src_port, mock_if, mock_port)
         listener_thread = threading.Thread(target=target.connect)
         listener_thread.start()
-        
         sleep(.5) # avoid race, allow handle_connections to bind and listen
-
         conn = FuzzerConnection(proto, mock_if, mock_port, src_if, src_port, server, testing=True)
         conn._get_addr()
         conn._connect_to_tls_socket()
         listener_thread.join()
-
         data = bytes('tls baby', 'utf-8')
         reception_thread = threading.Thread(target=target.receive_packet, args=(len(data),))
         reception_thread.start()
@@ -1152,6 +1092,7 @@ class TestFuzzerConnection(unittest.TestCase):
         target.communication_conn.close()
         self.assertEqual(target.incoming_buffer.pop(), data)
     
+
     def test_send_packet_tls_ipv6_server(self):
         proto = 'tls'
         mock_if = '::1'
@@ -1163,14 +1104,11 @@ class TestFuzzerConnection(unittest.TestCase):
         target = MockClient(proto, src_if, src_port, mock_if, mock_port)
         listener_thread = threading.Thread(target=target.connect)
         listener_thread.start()
-        
         sleep(.5) # avoid race, allow handle_connections to bind and listen
-
         conn = FuzzerConnection(proto, mock_if, mock_port, src_if, src_port, server, testing=True)
         conn._get_addr()
         conn._connect_to_tls_socket()
         listener_thread.join()
-
         data = bytes('tls baby', 'utf-8')
         reception_thread = threading.Thread(target=target.receive_packet, args=(len(data),))
         reception_thread.start()
@@ -1196,12 +1134,9 @@ class TestFuzzerConnection(unittest.TestCase):
         target = MockClient(proto, src_if, src_port, mock_if, mock_port)
         listener_thread = threading.Thread(target=target.connect)
         listener_thread.start()
-        
         sleep(.5) # avoid race, allow handle_connections to bind and listen
-
         conn = FuzzerConnection(proto, mock_if, mock_port, src_if, src_port, server)
         listener_thread.join()
-
         data = bytes('tls baby', 'utf-8')
         reception_thread = threading.Thread(target=target.receive_packet, args=(len(data),))
         reception_thread.start()

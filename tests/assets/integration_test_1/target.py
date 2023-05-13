@@ -1,7 +1,7 @@
-from tests.assets.mock_target import MockTarget
+from tests.assets.mock_targets import MockServer
 import socket
 
-class Target1(MockTarget):
+class Target1(MockServer):
 
     def accept_fuzz(self):
         #TODO: make message_processor.preconnect available, assert its being called

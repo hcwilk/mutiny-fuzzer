@@ -92,7 +92,7 @@ class TestMutiny(unittest.TestCase):
     def test_fuzz_subcomponents_radamsa(self):
         # subcomp 1 -fuzz
         message = Message()
-        seed = 1
+        self.mutiny.seed = 1
         # subcomp 0 - fuzz
         message.set_message_from(Message.Format.Raw, bytearray('test', 'utf-8'), True)
         # subcomp 1 - dont fuzz
@@ -102,33 +102,38 @@ class TestMutiny(unittest.TestCase):
         # subcomp 3 -fuzz
         message.append_message_from(Message.Format.Raw, bytearray('test3', 'utf-8'), True)
 
-        self.mutiny._fuzz_subcomponents(message, seed) 
+        self.mutiny._fuzz_subcomponents(message) 
         self.assertEqual(message.subcomponents[0].get_original_byte_array(), bytearray('test', 'utf-8'))
         self.assertEqual(message.subcomponents[0].get_altered_byte_array(), bytearray('testtest', 'utf-8'))
         self.assertEqual(message.subcomponents[1].get_original_byte_array(), bytearray('test1', 'utf-8'))
         self.assertEqual(message.subcomponents[1].get_altered_byte_array(), bytearray('test1', 'utf-8'))
         message.reset_altered_message()
-        self.mutiny._fuzz_subcomponents(message, seed=2)
+        self.mutiny.seed = 2
+        self.mutiny._fuzz_subcomponents(message)
         self.assertEqual(message.subcomponents[2].get_original_byte_array(), bytearray('test2', 'utf-8'))
         self.assertEqual(message.subcomponents[2].get_altered_byte_array(), bytearray('testest184467441', 'utf-8'))
         message.reset_altered_message()
-        self.mutiny._fuzz_subcomponents(message, seed=3)
+        self.mutiny.seed = 3
+        self.mutiny._fuzz_subcomponents(message)
         self.assertEqual(message.subcomponents[3].get_original_byte_array(), bytearray('test3', 'utf-8'))
         self.assertEqual(message.subcomponents[3].get_altered_byte_array(), bytearray('test-2', 'utf-8'))
 
         # run again to check that seeds give same result 
         message.reset_altered_message()
-        self.mutiny._fuzz_subcomponents(message, seed) 
+        self.mutiny.seed = 1
+        self.mutiny._fuzz_subcomponents(message) 
         self.assertEqual(message.subcomponents[0].get_original_byte_array(), bytearray('test', 'utf-8'))
         self.assertEqual(message.subcomponents[0].get_altered_byte_array(), bytearray('testtest', 'utf-8'))
         self.assertEqual(message.subcomponents[1].get_original_byte_array(), bytearray('test1', 'utf-8'))
         self.assertEqual(message.subcomponents[1].get_altered_byte_array(), bytearray('test1', 'utf-8'))
         message.reset_altered_message()
-        self.mutiny._fuzz_subcomponents(message, seed=2)
+        self.mutiny.seed = 2
+        self.mutiny._fuzz_subcomponents(message)
         self.assertEqual(message.subcomponents[2].get_original_byte_array(), bytearray('test2', 'utf-8'))
         self.assertEqual(message.subcomponents[2].get_altered_byte_array(), bytearray('testest184467441', 'utf-8'))
         message.reset_altered_message()
-        self.mutiny._fuzz_subcomponents(message, seed=3)
+        self.mutiny.seed = 3
+        self.mutiny._fuzz_subcomponents(message)
         self.assertEqual(message.subcomponents[3].get_original_byte_array(), bytearray('test3', 'utf-8'))
         self.assertEqual(message.subcomponents[3].get_altered_byte_array(), bytearray('test-2', 'utf-8'))
 

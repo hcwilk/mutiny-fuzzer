@@ -1,8 +1,8 @@
-from tests.assets.mock_target import MockTarget
+from tests.assets.mock_targets import MockServer
 import socket
 import time
 
-class Target2(MockTarget):
+class Target2(MockServer):
 
     def accept_fuzz(self):
         #TODO: make message_processor.preconnect available, assert its being called
@@ -13,7 +13,6 @@ class Target2(MockTarget):
             self.receive_packet(4096)
             result = self.incoming_buffer.pop()
             if len(result) > 100 and len(result) < 120:
-                
                 expected_result = bytearray('greetings dartearteartearteartearteartearteartearteartearteartearteartearteartearteartearthearthrthlings', 'utf-8')
                 assert result == expected_result
                 with open('./tests/assets/integration_test_2/crash.log', 'w') as file:

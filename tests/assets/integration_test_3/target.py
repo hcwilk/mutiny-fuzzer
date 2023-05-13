@@ -1,4 +1,4 @@
-from tests.assets.mock_target import MockClient
+from tests.assets.mock_targets import MockClient
 import socket
 import time
 

@@ -28,6 +28,7 @@ from backend.packets import PROTO
 import logging
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 import scapy.all
+import pyshark
 
 class MutinyPrep(object):
     class ProcessingState:
@@ -39,6 +40,7 @@ class MutinyPrep(object):
         self.last_message_direction = -1
         self.force_defaults = args.force
         self.dump_ascii = args.dump_ascii
+        self.dissect = args.dissect
         self.input_file_path = args.pcap_file
         self.default_port = None
         self.fuzzer_data = FuzzerData()
@@ -48,7 +50,14 @@ class MutinyPrep(object):
         self.use_macs = self.is_raw
         # If it's C Arrays, we ask for the protocol in the prompts
         self.c_array = False
-        pass
+        # Initalize Dissection defaults
+        self.dissect_port = None
+        self.dissect_transport = None
+        self.dissect_protocol = None
+        self.dissect_defaults = False #FIXME: are the below defaults reasonable?
+        self.dissect_default_transport = 'tcp'
+        self.dissect_default_protocol = 'http'
+        self.testing = args.testing
 
     def prep(self):
         '''
@@ -66,6 +75,7 @@ class MutinyPrep(object):
         '''
         Processes input files by opening them and dispatching a pcap ingestor. if pcap ingestor fails,
         attempts to dispach a c_array ingestor
+
         '''
         print("Processing %s..." % (self.input_file_path))
         try:
@@ -93,6 +103,13 @@ class MutinyPrep(object):
         '''
         ingests pcap using scapy and parses client-server communication to populate self.fuzzer_data 
         with message sequences that we can use as a baseline for our fuzzing
+
+        This is generally the first function that gets hit when parsing a pcap and calls 
+        `_process_first_pcap_packet_` on the first packet. After this, it then checks if a
+        dissection flag was given, and if so, it calls `_dissect_packets` and 
+        `_interleave_description_and_packet` to get the proper dissections and save them 
+        to the messages for output in a correct format.
+
         params:
             test_port: (optional) used for testing to stub out the calls to prompt() for port selection
             test_mac: (optional) used for testing to stub out the calls to prompt() for mac selection
@@ -163,13 +180,134 @@ class MutinyPrep(object):
                 message = Message()
                 message.direction = new_message_direction
                 self.last_message_direction = new_message_direction
-                message.set_message_from(Message.Format.Raw, bytearray(temp_message_data), False)
+                # Dissect the packet if dissection has been selected
+                if self.dissect:
+                    self.protocol_fields = self._dissect_packets(self.input_file_path, message, i, new_message_direction, client_port, server_port)
+                    # if protocol_fields has been computed, get the messages
+                    if not type(self.protocol_fields) == bool or self.protocol_fields:
+                        messages = self._interleave_description_and_packet(self.protocol_fields, temp_message_data)
+                        #iterate over the messages that are created by interleaving
+                        for msg in messages:
+                            # add a new submessage with the bytes for the field
+                            message.append_message_from(Message.Format.Raw, bytearray(msg[1]), False)
+                            # add a comment for the associated message (you MUST add the submessage before the comment, otherwise an exception is thrown)                     
+                            message.append_comment(msg[0])
+                        
+                # If dissection did not occur, add the bytes normally
+                if not self.dissect or not self.protocol_fields:
+                    message.set_message_from(Message.Format.Raw, bytearray(temp_message_data), False)                    
+
                 self.fuzzer_data.message_collection.add_message(message)
+                
                 j += 1
                 print_success("\tMessage #%d - Processed %d bytes %s" % (j, len(message.get_original_message()), message.direction))
             except AttributeError:
                 # No payload, keep going (different from empty payload)
                 continue
+    
+    def _dissect_packets(self, input_file_path, message, packet_num, message_direction, client_port, server_port):
+        '''
+        Dissects the packet from a pcap
+
+        PyShark is utilized to obtain the field and content protocol_fieldss of the packets, 
+        appending them to an array that is passed back to `_process_pcap` to be outputted to the correct place.
+        
+        params:
+            input_file_path(string): path to the pcap
+            message(Message): the message object for the packet
+            packet_num(int): the ith packet number in the pcap
+            message_direction(string): inbound or outbound
+            client_port(int): port of the client
+            server_port(int): port of the server
+        '''
+        # If outbound dissect, if inbound don't dissect and return false
+        if message_direction == "inbound":
+            return False       
+        # Get the ith packet of the pcap, MUST use json (implicit) dissection, because of the pos field not being filled otherwise
+        pkt = pyshark.FileCapture(input_file_path, include_raw=False,  decode_as={f'{self.dissect_transport}.port=={self.dissect_port}': f'{self.dissect_protocol}'})[packet_num]
+
+        try:
+            protocol_fields = []
+            #get the application layer
+            layer = pkt.__getitem__(pkt.highest_layer)
+            first_field = True
+            offset = 0
+            prior_pos = 0
+            #iterate over all the fields
+            for field in layer._all_fields:
+                #if its a real field
+                if(type(layer.get_field(field)) == pyshark.packet.fields.LayerFieldsContainer):
+                    # Caputre the information we need from the packet
+                    name = layer.get_field(field).main_field.name
+                    value = layer.get_field(field).main_field.get_default_value()
+                    position = layer.get_field(field).main_field.pos
+                    size = layer.get_field(field).main_field.size
+                    # Ignore all sub-fields or otherwise unimportant fileds
+                    if not (name == '' or name[0] == '_' or value == '' or size == '0'):
+                        #capture start of packet
+                        if first_field:
+                            offset = int(position)                            
+                            first_field = False
+                        #caputre location of the current filed
+                        new_pos = int(position) - offset
+                        if prior_pos == new_pos and new_pos > 0:
+                            continue
+                        prior_pos = new_pos
+                        #append to the protocol_fields
+                        protocol_fields.append({'name': name,'pos': new_pos })
+                else:
+                    pass
+            return protocol_fields
+        except Exception as e:
+            print(e)
+        
+    def _interleave_description_and_packet(self, protocol_fields, temp_data):
+        '''
+        Takes the protocol_fields of fields to bytes and the bytes itself and interleves them.
+        Intended to correctly format and output the dissection comments and content
+        in the correct order
+
+        params:
+            - protocol_fields(dict): the protocol_fields from _dissect_packets()
+            - temp_data(bytearray): the raw bytes of the packet
+        '''
+        dissection = []
+
+        try:
+            #Add an end of packet marker
+            protocol_fields.append({'name': '#END OF PACKET', 'pos': len(temp_data)})
+            #sort the protocol_fields by start of each field
+            protocol_fields = sorted(protocol_fields, key=lambda d: d['pos'])         
+            #iterate over each field (ignoring the end of packet sentenal
+            for i in range(0, len(protocol_fields) - 1):
+                # ADD A new dissection objtect
+                dissection.append([protocol_fields[i]['name'] , temp_data[protocol_fields[i]['pos'] : protocol_fields[i+1]['pos']] ])
+            return dissection 
+        except Exception as ex:
+            raise(str(ex))
+        
+    
+    def get_all_values_for_layer_field(self, pcap, layer, field):
+        '''
+            Returns all values for the field in the specified layer
+            params: 
+                - pcap(Pcap): the pyshark pcap object or list of packets
+                - layer(string): name of the layer
+                - field(string): name of the field
+            returns:
+                all values for the field in the specified layer
+                or None, if any of the arguments are None
+        '''
+        if pcap is None or not layer or not field:
+            return None
+        values = set()
+        for packet in pcap:
+            for current_layer in packet.layers:
+                if layer == current_layer.__dict__['_layer_name'] and \
+                   field in current_layer.__dict__['_all_fields']:
+                    values.add(current_layer.__dict__['_all_fields'][field])
+                    break
+        return values
 
 
     def _process_first_pcap_packet(self, packet, test_port, test_mac):
@@ -224,6 +362,23 @@ class MutinyPrep(object):
 
             client_port = src_port if server_port == dst_port else dst_port
             self.default_port = server_port
+            #This is a temparary fix for testing, ideally the print_warning line can be removed and the commented out code below can be included
+            
+            if not self.dissect and not self.testing: # only ask if they want to dissect if we didnt receive '-D' and its not a test
+                self.dissect = prompt("Do you want to dissect the outbound packets by field?", ['y', 'n'], default_index=1)
+            # If Dissection is selected, initalize the attributes
+            if self.dissect:
+                self.dissect_transport = self.fuzzer_data.proto 
+                self.dissect_port = self.default_port
+                # Prompt the user to see if automatic detection has been successful
+                if not self.dissect_defaults:
+                    if not prompt("We have detected that this is a {0} converstaion on port {1}, is this transport protocol correct?".format(self.dissect_transport, self.dissect_port), ['y','n'], default_index=1):
+                        self.dissect_transport = prompt("Which transport protocol do you wish to dissect with?", ['tcp', 'udp'], default_index = 1)
+                    
+                    self.dissect_protocol = prompt_string('Which protocol do you wish to dissect the packet as (see the help file at /supported_protocols.md to find what string you should use)?', default_response="http")
+                else:
+                    self.dissect_transport = self.dissect_default_transport
+                    self.dissect_protocol = self.dissect_default_protocol
             return client_port, server_port
 
 
@@ -232,10 +387,8 @@ class MutinyPrep(object):
         '''
         Process and convert c_array into .fuzzer
         This is processing the wireshark syntax looking like:
-
         char peer0_0[] = { 0x66, 0x64, 0x73, 0x61, 0x0a };
         char peer1_0[] = { 0x61, 0x73, 0x64, 0x66, 0x0a };
-
         First is message from client to server, second is server to client
         Format is peer0/1_messagenum
         0 = client, 1 = server
@@ -326,8 +479,6 @@ class MutinyPrep(object):
             self.fuzzer_data.target_port = self.default_port
             self.fuzzer_data.failure_threshold = 3
             self.fuzzer_data.failure_timeout = 5
-            self.fuzzer_data.server = False
-    
         else:
             # ask how many times we should repeat a failed test, as in one causing a crash
             self.fuzzer_data.failure_threshold = failure_threshold if failure_threshold else prompt_int("\nHow many times should a test case causing a crash or error be repeated?", default_response=3)
@@ -457,6 +608,7 @@ def parse_arguments():
     parser.add_argument('-a', '--dump_ascii', help='Dump the ascii output from packets ', action='store_true', default=False)
     parser.add_argument('-f', '--force', help='Take all default options', action = 'store_true', default=False) 
     parser.add_argument('-r', '--raw', help='Pull all layer 2+ data / create .fuzzer for raw sockets', action = 'store_true', default=False) 
+    parser.add_argument('-D', '--dissect', help='Take all default options', action = 'store_true', default=False)
 
     # stub out calls to input() and related test handling
     parser.add_argument('-t', '--testing', help='For use by test suite to stub calls to input() and perform related test handling', action='store_true')
@@ -477,3 +629,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+

@@ -70,9 +70,9 @@ def parse_arguments():
     verbosity.add_argument('--log_all', help='Log all the outputs', action='store_true')
 
     parser.add_argument('-s', '--sleep_time', help='Time to sleep between fuzz cases (float)', type=float, default=0)
+    parser.add_argument('-S', '--server', help='Act like a server instead of a client (uses target_host as the bind address)',action='store_true')
     # stub out calls to input() and related test handling
     parser.add_argument('-t', '--testing', help='For use by test suite to stub calls to input() and perform related test handling', action='store_true')
-    parser.add_argument("--server",help="Act like a server instead of a client (uses target_host as the bind address)",action='store_true')
 
 
     return parser.parse_args()
@@ -99,6 +99,5 @@ if __name__ == '__main__':
     # load any of the users custom processors
     fuzzer.import_custom_processors()
     # begin fuzzing 
-    print('begin fuzzing')
     fuzzer.fuzz()
 

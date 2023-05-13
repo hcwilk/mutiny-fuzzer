@@ -6,7 +6,7 @@ import os
 import threading
 import sys
 sys.path.append('../mutiny-fuzzer')
-from tests.assets.mock_target import MockTarget
+from tests.assets.mock_targets import MockServer
 from getmac import get_mac_address as gma
 from tests.assets.integration_test_1.target import Target1
 from tests.assets.integration_test_2.target import Target2
@@ -153,7 +153,7 @@ class IntegrationSuite(object):
     def test_3(self, target_port, cli_port, proto, prepped_fuzzer_file):
         '''
         test details:
-            - prepped_fuzz: ./tests/assets/integration_test_2/<proto>_prepped.fuzzer
+            - prepped_fuzz: ./tests/assets/integration_test_3/<proto>_prepped.fuzzer
             - target_host: 127.0.0.1
             - sleep_time: 0
             - range: None
@@ -161,7 +161,7 @@ class IntegrationSuite(object):
             - dump_raw: 0
             - quiet: False
             - log_all: False
-            - processor_dir: ./tests/assets/integration_test_2/
+            - processor_dir: ./tests/assets/integration_test_3/
             - failure_threshold: 3
             - failure_timeout: 5.0
             - receive_timeout: 3.0
@@ -170,9 +170,8 @@ class IntegrationSuite(object):
             - source_port: -1
             - source_ip: 0.0.0.0
 
-            Fuzzes a target until it finds a 'crash' at seed=10, using a single
-            outbound line to test against regression on the bug described in issue #11,
-            upon reception of the crash, the monitor sends a HaltException to mutiny to halt execution
+            Integration test to validate correctness of --server mode, i.e., fuzzing of a client rather
+            than a server
         '''
         self.total_tests += 1
         print('test 3: {}'.format(proto))
@@ -186,13 +185,9 @@ class IntegrationSuite(object):
             self.target_if = '127.0.0.1'
             cli_if = '127.0.0.1'
 
-
         
         args = Namespace(prepped_fuzz = prepped_fuzzer_file, source_ip = cli_if, source_port = cli_port, target_host = self.target_if, sleep_time = 0, range = '0-10', loop = None, dump_raw = None, quiet = False, log_all = False, testing = True, server = True)
-
         log_dir = prepped_fuzzer_file.split('.')[0] + '_logs'
-
-
         # stand up target client
         target = Target3(proto, cli_if, cli_port, self.target_if, target_port)
         # run mutiny
@@ -200,12 +195,9 @@ class IntegrationSuite(object):
         fuzzer.radamsa = os.path.abspath( os.path.join(__file__, '../../../radamsa-0.6/bin/radamsa'))
         fuzzer.import_custom_processors()
         fuzzer.debug = False
-
         fuzz_thread = threading.Thread(target=fuzzer.fuzz, args=())
         fuzz_thread.start() # connect to target and begin fuzzing
         time.sleep(.5) # avoid race with connection to socket
-
-
         target_thread = threading.Thread(target=target.connect_fuzz, args=())
         target_thread.start()
         time.sleep(.5) # avoid race with connection to socket
@@ -220,8 +212,6 @@ class IntegrationSuite(object):
         self.enable_print()
         self.passed_tests += 1
         print('ok')
-
-
 
     def block_print(self):
         '''

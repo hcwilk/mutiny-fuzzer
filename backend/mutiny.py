@@ -4,6 +4,7 @@ import importlib
 import os
 import signal
 import socket
+import queue
 import subprocess
 import sys
 import time
@@ -27,10 +28,10 @@ from backend.menu_functions import prompt, prompt_int, prompt_string, validate_n
 class Mutiny(object):
 
     def __init__(self, args):
-
         self.fuzzer_data = FuzzerData()
         # read data in from .fuzzer file
         self.fuzzer_file_path = args.prepped_fuzz
+        print("Reading in fuzzer data from %s..." % (self.fuzzer_file_path))
         self.fuzzer_data.read_from_file(self.fuzzer_file_path)
         self.target_host = args.target_host
         self.sleep_time = args.sleep_time
@@ -45,6 +46,9 @@ class Mutiny(object):
         self.min_run_number = 0
         self.max_run_number = -1
         self.seed_loop = []
+        self.campaign_mode = args.campaign_mode if 'campaign_mode' in args else False
+        if self.campaign_mode:
+            self.campaign_event_queue = queue.SimpleQueue()
         self.connected = False
 
         #Assign Lower/Upper bounds on test cases as needed
@@ -52,6 +56,7 @@ class Mutiny(object):
             self.min_run_number, self.max_run_number = self._get_run_numbers_from_args(args.range)
         elif args.loop:
             self.seed_loop = validate_number_range(args.loop, flatten_list=True) 
+        self.seed = self.min_run_number -1 if self.fuzzer_data.should_perform_test_run else self.min_run_number
 
         #TODO make it so logging message does not appear if reproducing (i.e. -r x-y cmdline arg is set)
         self.logger = None 
@@ -112,7 +117,6 @@ class Mutiny(object):
         '''
         Main fuzzing routine
         '''
-        seed = self.min_run_number - 1 if self.fuzzer_data.should_perform_test_run else self.min_run_number 
 
         failure_count = 0
         loop_len = len(self.seed_loop) # if --loop
@@ -147,30 +151,30 @@ class Mutiny(object):
                     continue
 
                 try:
-                    if self.dump_raw:
-                        print("\n\nPerforming single raw dump case: %d" % self.dump_raw)
-                        self._perform_run(seed=self.dump_raw)  
-                    elif seed == self.min_run_number - 1:
+                   # perform test run
+                    if self.seed == self.min_run_number - 1:
                         print("\n\nPerforming test run without fuzzing...")
-                        self._perform_run(seed=-1 ) 
-                    elif loop_len: 
-                        print("\n\nFuzzing with seed %d" % (self.seed_loop[seed%loop_len]))
-                        print('proto',self.fuzzer_data.proto)
-                        self._perform_run(seed=self.seed_loop[seed%loop_len]) 
+                        self._perform_run(test_run=True) 
                     else:
-                        print("\n\nFuzzing with seed %d" % (seed))
-                        print('proto',self.fuzzer_data.proto)
-                        self._perform_run(seed=seed) 
+                        if self.dump_raw:
+                            print("\n\nPerforming single raw dump case: %d" % self.dump_raw)
+                            self.seed = self.dump_raw
+                        elif loop_len:
+                            print("\n\nFuzzing with seed %d" % (self.seed_loop[self.seed % loop_len]))
+                            self.seed = self.seed = self.seed_loop[self.seed % loop_len]
+                        else:
+                            print("\n\nFuzzing with seed %d" % (seed))
+                            self._perform_run()
                     #if --quiet, (logger==None) => AttributeError
                     if self.log_all:
                         try:
-                            self.logger.output_log(seed, self.fuzzer_data.message_collection, "log_all ")
+                            self.logger.output_log(self.seed, self.fuzzer_data.message_collection, "log_all ")
                         except AttributeError:
                             pass 
                 except Exception as e:
                     if self.log_all:
                         try:
-                            self.logger.output_log(seed, self.fuzzer_data.message_collection, "log_all ")
+                            self.logger.output_log(self.seed, self.fuzzer_data.message_collection, "log_all ")
                         except AttributeError:
                             pass
 
@@ -202,13 +206,13 @@ class Mutiny(object):
                 if failure_count == 0:
                     try:
                         print_success("Mutiny detected a crash")
-                        self.logger.output_log(seed, self.fuzzer_data.message_collection, str(e))
+                        self.logger.output_log(self.seed, self.fuzzer_data.message_collection, str(e))
                     except AttributeError:  
                         pass   
 
                 if self.log_all:
                     try:
-                        self.logger.output_log(seed, self.fuzzer_data.message_collection, "log_all ")
+                        self.logger.output_log(self.seed, self.fuzzer_data.message_collection, "log_all ")
                     except AttributeError:
                         pass
 
@@ -228,7 +232,7 @@ class Mutiny(object):
 
             except LogAndHaltException as e:
                 if self.logger:
-                    self.logger.output_log(seed, self.fuzzer_data.message_collection, str(e))
+                    self.logger.output_log(self.seed, self.fuzzer_data.message_collection, str(e))
                     print_warning("Received LogAndHaltException, logging and halting")
                 else:
                     print_warning("Received LogAndHaltException, halting but not logging (quiet mode)")
@@ -237,14 +241,14 @@ class Mutiny(object):
 
             except LogLastAndHaltException as e:
                 if self.logger:
-                    if seed > self.min_run_number:
+                    if self.seed > self.min_run_number:
                         print_warning("Received LogLastAndHaltException, logging last run and halting")
                         if self.min_run_number == self.max_run_number:
                             #in case only 1 case is run
-                            self.logger.output_last_log(seed, last_message_collection, str(e))
-                            print("Logged case %d" % seed)
+                            self.logger.output_last_log(self.seed, last_message_collection, str(e))
+                            print("Logged case %d" % self.seed)
                         else:
-                            self.logger.output_last_log(seed-1, last_message_collection, str(e))
+                            self.logger.output_last_log(self.seed-1, last_message_collection, str(e))
                     else:
                         print_warning("Received LogLastAndHaltException, skipping logging (due to last run being a test run) and halting")
                 else:
@@ -261,27 +265,29 @@ class Mutiny(object):
 
             if was_crash_detected:
                 if failure_count < self.fuzzer_data.failure_threshold:
-                    print_error("Failure %d of %d allowed for seed %d" % (failure_count, self.fuzzer_data.failure_threshold, seed))
+                    print_error("Failure %d of %d allowed for seed %d" % (failure_count, self.fuzzer_data.failure_threshold, self.seed))
                     print("The test run didn't complete, continuing after %d seconds..." % (self.fuzzer_data.failure_timeout))
                     time.sleep(self.fuzzer_data.failure_timeout)
                 else:
                     print_warning("Failed %d times, moving to next test." % (failure_count))
                     failure_count = 0
-                    seed += 1
+                    self.seed += 1
             else:
-                seed += 1
+                self.seed += 1
 
             # Stop if we have a maximum and have hit it
-            if (self.max_run_number >= 0 and seed > self.max_run_number) or self.dump_raw:
+            if (self.max_run_number >= 0 and self.seed > self.max_run_number) or self.dump_raw:
                 print_success('Completed specified fuzzing range, gracefully shutting down...')
                 if self.testing: return
                 else: exit()
 
 
-    def _perform_run(self, seed: int = -1):
+    def _perform_run(self, test_run = False):
         '''
         Perform a fuzz run.  
-        If seed is -1, don't perform fuzzing (test run)
+
+        params:
+            test_run(bool): whether a test run should be performed
         '''
         # Before doing anything, set up logger
         # Otherwise, if connection is refused, we'll log last, but it will be wrong
@@ -290,7 +296,7 @@ class Mutiny(object):
 
         # Call messageprocessor preconnect callback if it exists
         try:
-            self.message_processor.pre_connect(seed, self.target_host, self.fuzzer_data.target_port) 
+            self.message_processor.pre_connect(self.seed, self.target_host, self.fuzzer_data.target_port) 
         except AttributeError:
             pass
 
@@ -301,16 +307,13 @@ class Mutiny(object):
 
         message_num = 0   
         for message_num in range(0, len(self.fuzzer_data.message_collection.messages)):
-
             message = self.fuzzer_data.message_collection.messages[message_num]
-
             # Go ahead and revert any fuzzing or messageprocessor changes before proceeding
             message.reset_altered_message()
-
             if message.is_outbound():
-                self._send_fuzz_session_message(message_num, message, seed) if not self.server else self._receive_fuzz_session_message(message_num, message)
+                self._send_fuzz_session_message(message_num, message, test_run) if not self.server else self._receive_fuzz_session_message(message_num, message)
             else: 
-                self._receive_fuzz_session_message(message_num, message) if not self.server else self._send_fuzz_session_message(message_num, message, seed)
+                self._receive_fuzz_session_message(message_num, message) if not self.server else self._send_fuzz_session_message(message_num, message, self.seed)
 
             if self.logger != None:  
                 self.logger.set_highest_message_number(message_num)
@@ -349,7 +352,16 @@ class Mutiny(object):
             with open(loc,"wb") as f:
                 f.write(repr(str(data))[1:-1])
 
-    def _send_fuzz_session_message(self, message_num, message, seed):
+    def _send_fuzz_session_message(self, message_num, message, test_run):
+        '''
+        sends subcomponents to the server during a fuzzing session, using
+        subcomponent.is_fuzzed to determine if a given subcomponent should be fuzzed
+
+        params
+            message_num(int): index of message to send in message collection
+            message(Message): message object to send
+            test_run(bool): whether or not we are in a test run, if we are, dont fuzz
+        '''
         # Primarily used for deciding how to handle preFuzz/preSend callbacks
         message_has_subcomponents = len(message.subcomponents) > 1
 
@@ -372,10 +384,10 @@ class Mutiny(object):
             pre_fuzz = self.message_processor.pre_fuzz_process(actual_subcomponents[0], MessageProcessorExtraParams(message_num, -1, message.is_fuzzed, original_subcomponents, actual_subcomponents))
             message.subcomponents[0].set_altered_byte_array(pre_fuzz)
 
-        # Skip fuzzing for seed == -1
-        if seed > -1:
+        # dont fuzz for test run 
+        if not test_run:
             # Now run the fuzzer for each fuzzed subcomponent
-            self._fuzz_subcomponents(message, seed)
+            self._fuzz_subcomponents(message)
 
         # Fuzzing has now been done if this message is fuzzed
         # Always call preSend() regardless for subcomponents if there are any
@@ -397,9 +409,6 @@ class Mutiny(object):
                 loc += "-fuzzed"
             with open(loc, "wb") as f:
                 f.write(repr(str(byte_array_to_send))[1:-1])
-
-
-
         self.connection.send_packet(byte_array_to_send, self.fuzzer_data.receive_timeout)
 
         if self.debug:
@@ -407,14 +416,14 @@ class Mutiny(object):
             print("\tRaw Bytes: %s" % (Message.serialize_byte_array(byte_array_to_send)))
 
 
-    def _fuzz_subcomponents(self, message, seed):
+    def _fuzz_subcomponents(self, message):
         '''
         iterates through each subcomponent in a message and uses radamsa to generate fuzzed
         versions of each subcomponent if its .isFuzzed is set to True
         '''
         for subcomponent in message.subcomponents:
             if subcomponent.is_fuzzed:
-                radamsa = subprocess.Popen([self.radamsa, "--seed", str(seed)], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                radamsa = subprocess.Popen([self.radamsa, "--seed", str(self.seed)], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 byte_array = subcomponent.get_altered_byte_array()
                 (fuzzed_byte_array, error_output) = radamsa.communicate(input=byte_array)
                 fuzzed_byte_array = bytearray(fuzzed_byte_array)
@@ -426,6 +435,8 @@ class Mutiny(object):
         if not self.monitor.queue.empty():
             print_warning('Monitor event detected')
             exception = self.monitor.queue.get()
+            if self.campaign_mode:
+                self.campaign_event_queue.put(exception)
 
             if is_paused:
                 if isinstance(exception, PauseFuzzingException):

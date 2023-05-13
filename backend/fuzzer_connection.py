@@ -66,8 +66,6 @@ class FuzzerConnection(object):
             self._connect_to_raw_socket()
 
     def send_packet(self, data: bytearray, timeout: float):
-
-                
         '''
         uses the connection to the target process and outbound data packet (byteArray), sends it out.
         If debug mode is enabled, we print out the raw bytes
@@ -75,8 +73,6 @@ class FuzzerConnection(object):
         self.connection.settimeout(timeout)
         if self.connection.type == socket.SOCK_STREAM:
             self.connection.send(data)
-       
-       
         elif self.connection.type == socket.SOCK_RAW:
             self.connection.sendall(
                 # Pack in network byte order (dynamically allocating string size as well)
@@ -85,27 +81,20 @@ class FuzzerConnection(object):
                             eui48_to_bytes(self.source_ip) ,    # Source MAC address
                             ETH_P_802_EX1,                      # Ethernet type
                             data))                     # Payload
-        
-        
         else:
             self.connection.sendto(data, self.addr)
 
         print("\tSent %d byte packet" % (len(data)))
 
 
-
     def receive_packet(self, bytes_to_read: int, timeout: float):
-
         read_buf_size = 4096
         self.connection.settimeout(timeout)
-        dont = False
-
-        
+        keep_receiving = False
 
         if self.connection.type == socket.SOCK_STREAM or (self.connection.type == socket.SOCK_DGRAM and not self.server):
             response = bytearray(self.connection.recv(read_buf_size))
             self.incoming_buffer.append(response)
-
         elif self.connection.type == socket.SOCK_RAW:
             frame = self.connection.recv(ETH_FRAME_LEN)
             # Extract a header
@@ -114,19 +103,15 @@ class FuzzerConnection(object):
             response = frame[ETH_HLEN:]
             # Unpack an Ethernet header in network byte order
             dst, src, proto = struct.unpack('!6s6sH', header)
-
-            # Only care about files from target and meant for us
+            # Only care about packets from target and meant for us
             if bytes_to_eui48(dst)==self.host and bytes_to_eui48(src)==self.source_ip:
                 self.incoming_buffer.append(response)
             else:
                 # Flags response as 'not important' so it can receive another packet down the road
-                dont = True
-
+                keep_receiving = True
         else:
             response, self.addr = self.connection.recvfrom(read_buf_size)
             self.incoming_buffer.append(bytearray(response))
-
-
         
         if len(response) == 0:
             # If 0 bytes are recv'd, the server has closed the connection
@@ -143,30 +128,29 @@ class FuzzerConnection(object):
                 i += read_buf_size
                 
         print("\tReceived %d bytes" % (len(response)))
-        if self.connection.type == socket.SOCK_RAW and dont:
-            self.receive_packet(bytes_to_read,timeout)
-
+        if self.connection.type == socket.SOCK_RAW and keep_receiving:
+            self.receive_packet(bytes_to_read, timeout)
         return response
 
 
     def close(self):
-        # wrapper for socket.close()
-
+        '''
+        wrapper for socket.close()
+        '''
         self.connection.close() 
-        # could change this to just 'has T'
-        if (self.proto!='udp' and self.proto!='L2raw') and self.server:
+        if (self.proto != 'udp' and self.proto != 'L2raw') and self.server:
             self.list_connection.close()
-        
 
 
     def _connect_to_tcp_socket(self):
-        # create, bind, and connect to socket
+        '''
+        create, bind, and connect to socket
+        '''
         if self.server:
             self.list_connection = socket.socket(self.socket_family, socket.SOCK_STREAM)
             self._bind_to_interface()
             self.list_connection.listen()
             self.connection = self.list_connection.accept()[0]
-            
         else:
             self.connection = socket.socket(self.socket_family, socket.SOCK_STREAM)
             self._bind_to_interface()
@@ -199,7 +183,6 @@ class FuzzerConnection(object):
             context.load_cert_chain('./tests/assets/test-server.pem', './tests/assets/test-server.key')
             self.list_connection = context.wrap_socket(self.list_connection, server_side=True)
             self.connection = self.list_connection.accept()[0]
-
         else:
             context.check_hostname = False
             context.verify_mode = ssl.CERT_NONE
@@ -207,6 +190,7 @@ class FuzzerConnection(object):
             self.connection = context.wrap_socket(tcp_connection)
             self._bind_to_interface()
             self.connection.connect(self.addr)
+
 
     def _connect_to_raw_socket(self):
         try:
@@ -223,6 +207,7 @@ class FuzzerConnection(object):
             print_error('Raw sockets require "sudo" or to run as a user with CAP_NET_RAW capability.')
         try:
             # Hardcoded for now, not sure if this should be an argument in the CLI or an option in the .fuzzer file
+            # FIXME: should probably
             self.connection.bind(('eth0',0))
         except OSError as e:
             print_error(f'''Couldn't bind to {host}''')
@@ -261,18 +246,14 @@ class FuzzerConnection(object):
     def _bind_to_interface(self):
            
         if self.server:
-
             if self.target_port != -1:
                 # Only support right now for tcp or udp, but bind source port address to something
                 # specific if requested
                 if self.host != "" or self.host != "0.0.0.0":
-
-
                     if self.proto=='udp':
                         self.connection.bind((self.host,self.target_port))
                     else:
                         self.list_connection.bind((self.host, self.target_port))
-
                 else:
                     # User only specified a port, not an IP
                     self.list_connection.bind(('0.0.0.0', self.target_port))

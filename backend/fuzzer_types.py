@@ -79,35 +79,43 @@ class Message(object):
         # Then 11,22,33 will be subcomponent 0, 44,55,66 will be subcomponent 1
         # If it's a traditional message, it will only have one element (entire message)
         self.subcomponents = []
+        
+        self.comments = []
 
     def get_original_subcomponents(self):
         return [subcomponent.message for subcomponent in self.subcomponents]
     
-    # May or may not have actually been changed
-    # Version of subcomponents that includes fuzzing and messageprocessor changes from user
-    # Is transient and reverted to original every iteration
     def get_altered_subcomponents(self):
+        '''
+        May or may not have actually been changed
+        Version of subcomponents that includes fuzzing and messageprocessor changes from user
+        Is transient and reverted to original every iteration
+        '''
         return [subcomponent.get_altered_byte_array() for subcomponent in self.subcomponents]
     
     def get_original_message(self):
         return bytearray().join([subcomponent.message for subcomponent in self.subcomponents])
     
-    # May or may not have actually been changed
-    # Version of message that includes fuzzing and messageprocessor changes from user
-    # Is transient and reverted to original every iteration
     def get_altered_message(self):
+        '''
+        May or may not have actually been changed
+        Version of message that includes fuzzing and messageprocessor changes from user
+        Is transient and reverted to original every iteration
+        '''
         return bytearray().join([subcomponent.get_altered_byte_array() for subcomponent in self.subcomponents])
     
     def reset_altered_message(self):
         for subcomponent in self.subcomponents:
             subcomponent.set_altered_byte_array(subcomponent.message)
     
-    # Set the message on the Message
-    # source_type - Format.Comma_Separated_Hex, Ascii, or Raw
-    # message - Message in above format
-    # is_fuzzed - whether this message should have its subcomponent
-    #   flag is_fuzzed set
     def set_message_from(self, source_type: Format, message, is_fuzzed: bool):
+        '''
+        Set the message on the Message
+        source_type - Format.Comma_Separated_Hex, Ascii, or Raw
+        message - Message in above format
+        is_fuzzed - whether this message should have its subcomponent
+        flag is_fuzzed set
+        '''
         if source_type == self.Format.Comma_Separated_Hex:
             message = message.replace(',', '')
             message = bytearray.fromhex(message)
@@ -123,11 +131,13 @@ class Message(object):
         if is_fuzzed:
             self.is_fuzzed = True
     
-    # Same arguments as above, but adds to .message as well as
-    # adding a new subcomponent
-    # create_new_subcomponent - If false, don't create another subcomponent,
-    #   instead, append new message data to last subcomponent in message
     def append_message_from(self, source_type: Format, message, is_fuzzed: bool, create_new_subcomponent: bool = True):
+        '''
+        Same arguments as above, but adds to .message as well as
+        adding a new subcomponent
+        create_new_subcomponent - If false, don't create another subcomponent,
+        instead, append new message data to last subcomponent in message
+        '''
         if source_type == self.Format.Comma_Separated_Hex:
             message = message.replace(',', '')
             new_message = bytearray.fromhex(message)
@@ -179,10 +189,13 @@ class Message(object):
         if len(self.subcomponents) < 1:
             return "{0} {1}\n".format(self.direction, "ERROR: No data in message.")
         else:
-            serialized_message = "{0} {1}{2}\n".format(self.direction, "fuzz " if self.subcomponents[0].is_fuzzed else "", self.serialize_byte_array(self.subcomponents[0].message))
+            comment = "# " + self.comments[0] + "\n" if len(self.comments) > 0 else ""
+            serialized_message = "{3}{0} {1}{2}\n".format(self.direction, "fuzz " if self.subcomponents[0].is_fuzzed else "", self.serialize_byte_array(self.subcomponents[0].message), comment)
             
-            for subcomponent in self.subcomponents[1:]:
-                serialized_message += "sub {0}{1}\n".format("fuzz " if subcomponent.is_fuzzed else "", self.serialize_byte_array(subcomponent.message))
+            for i in range(1, len(self.subcomponents)):
+                subcomponent = self.subcomponents[i]
+                comment = "# " + self.comments[i] +"\n" if len(self.comments) >= i else ""
+                serialized_message += "{2}sub {0}{1}\n".format("fuzz " if subcomponent.is_fuzzed else "", self.serialize_byte_array(subcomponent.message), comment)
             
             return serialized_message
 
@@ -268,6 +281,14 @@ class Message(object):
             is_fuzzed = True
         
         self.append_message_from(self.Format.Ascii, message_data, is_fuzzed, create_new_subcomponent=create_new_subcomponent)
+
+    def append_comment(self, comment):
+
+        if len(self.subcomponents) > len(self.comments):
+            self.comments.append(comment)
+        else:
+            raise RuntimeError("No subcomponent without an accopanieing comment")
+        
 
 class MessageCollection(object):
     def __init__(self):

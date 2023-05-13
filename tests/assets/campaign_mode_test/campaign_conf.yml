@@ -1,0 +1,28 @@
+---
+radamsa: './radamsa-0.6/bin/radamsa'
+
+# ------- WORKER CONFIGURATION
+workers:
+  # Define your .fuzzer files and their targets here
+  #
+  # defined in format:
+  # ['</path/to/.fuzzer>', '<target host>']
+  #
+  # or, if using round robin:
+  # ['</path/to/folder/containing/.fuzzers>', '<target host>']
+  - ['tests/assets/campaign_mode_test/target_1/target1_tcp.fuzzer', '127.0.0.1']
+  - ['tests/assets/campaign_mode_test/target_2/target2_tcp.fuzzer', '127.0.0.1']
+  - ['tests/assets/campaign_mode_test/target_3/target3_tcp.fuzzer', '127.0.0.1']
+
+# -------- ROUND ROBIN CONFIGURATION
+round_robin: False
+#round_robin_cases: 10
+
+# -------- DISTRIBUTED FUZZING CONFIGURATION
+distributed: False
+# possible types = ['namespaces', 'unix-sockets', 'net-sockets']
+#distributed_type: 'net-sockets'
+# TODO: add other options for config of communication
+
+testing: True
+debug: False

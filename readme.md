@@ -47,6 +47,7 @@ Untar Radamsa and `make`  (You do not have to make install, unless you want it
 in /usr/bin - it will use the local Radamsa) Update `mutiny.py` with path to
 Radamsa if you changed it.
 
+
 ## Basic Usage
 
 Save pcap into a folder.  Run `mutiny_prep.py` on `<XYZ>.pcap` (also optionally
@@ -107,6 +108,7 @@ data, aside from seeing if what the server actually sent matches this string.
 If a crash occurs, Mutiny will log both the expected output from the server and
 what the server actually replied with.
 
+
 ### Customization
 
 mutiny_classes/ contains base classes for the Message Processor, Monitor, and
@@ -118,7 +120,7 @@ These three classes allow for storing server responses and changing outgoing
 messages, monitoring the target on a separate thread, and changing how Mutiny
 handles exceptions.
 
-### Customization - Message Processor
+#### Customization - Message Processor
 
 The Message Processor defines various callbacks that are called during a fuzzing
 run.  Within these callbacks, any Python code can be run.  Anecdotally, these
@@ -143,7 +145,7 @@ used.  Within a callback, any custom exceptions defined in
 exceptions, all commented, that will cause various behaviors from Mutiny.  These
 generally involve either logging, retrying, or aborting the current run.
 
-### Customization - Monitor
+#### Customization - Monitor
 
 The Monitor has a `monitorTarget()` function that is run on a separate thread from
 the main Mutiny fuzzer.  The purpose is to allow implementing a long-running
@@ -157,7 +159,7 @@ signal the main Mutiny thread that a crash has occurred, and it will log the
 crash.  This function should generally operate in an infinite loop, as returning
 will cause the thread to terminate, and it will not be restarted.
 
-### Customization - Exception Processor
+#### Customization - Exception Processor
 
 The Exception Processor determines what Mutiny should do with a given exception
 during a fuzz session.  In the most general sense, the `processException()`
@@ -171,7 +173,37 @@ changed to that of any of the exceptions in
 `mutiny_classes/mutiny_exceptions.py` as needed, allowing tailoring of crash
 detection and error correction.
 
-### Testing
-Testing is implemented using python's [unittest](https://docs.python.org/3/library/unittest.html) library. To run the full test suite, you can use the following command from the projects root directory
+### Campaign Mode
 
-`python3 -m unittest tests/units/*test.py`
+Campaign mode enables a user to create a long-running fuzzing campaign for easy
+viewing of the campaign status via a curses UI as well as management of multiple
+mutiny instances and optional coordination of target monitoring between them.
+
+An example use case in which this is useful is during an engagement where multiple
+target endpoints of a cohesive system should all be fuzzed, and upon the system 
+crashing, all fuzzers should be paused until a signal is received that the system
+has rebooted. 
+
+#### Configuration
+| Option            | Default Value                | Description                                                                                                                              |
+| :-------          | :--------------------------: | :---------------------                                                                                                                   |
+| radamsa           | '../radamsa-0.6/bin/radmasa' | path to radamsa binary                                                                                                                   |
+| workers           | None                         | definition of .fuzzer files to targets, or in the case of round robin, folders containing .fuzzer files to be rotated through to targets |
+| testing           | False                        | Whether certain methods should be stubbed for testing, you shouldn't need to change this since its True in the integration test's config |
+| round_robin       | False                        | Whether round robin fuzzing should be employed                                                                                           |
+| round_robin_cases | 10                           | Number of fuzzing executions using each .fuzzer before rotating to the next one (round robin mode)                                       |
+| distributed       | False                        | Whether to distribute workers across network namespaces, unix sockets, or network sockets                                                |
+| distributed_type  | 'net-sockets'                | Type of communincation to use when deplyoing in distributed mode. possible values: ['net-sockets', 'unix-sockets', 'net-namespaces']     |
+
+
+## Testing 
+
+The test suite consists of both unit tests implemented using python's [unittest](https://docs.python.org/3/library/unittest.html) library, and integration tests using pure python asserts. To run the 
+full test suite:
+
+`./run_tests.sh`
+
+All PRs which include the addition of features or functionality are expected 
+to include relevant unit tests.
+
+

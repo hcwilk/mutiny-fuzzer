@@ -4,7 +4,7 @@ import socket
 import sys
 
 ip = "127.0.0.1"
-port = 2500
+port = 9999
 
 #msg format : <pid>.<# of test cases>
 #although it doesn't really do much right now
