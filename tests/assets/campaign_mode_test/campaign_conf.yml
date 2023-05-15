@@ -1,5 +1,8 @@
 ---
 radamsa: './radamsa-0.6/bin/radamsa'
+testing: True
+debug: False
+server_mode: False
 
 # ------- WORKER CONFIGURATION
 workers:
@@ -24,5 +27,3 @@ distributed: False
 #distributed_type: 'net-sockets'
 # TODO: add other options for config of communication
 
-testing: True
-debug: False

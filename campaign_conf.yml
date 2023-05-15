@@ -1,5 +1,8 @@
 ---
 radamsa: './radamsa-0.6/bin/radamsa'
+testing: False
+debug: False
+server_mode: False #FIXME: this should be defined on a per-fuzzer basis
 
 # ------- WORKER CONFIGURATION
 workers:
@@ -31,5 +34,3 @@ distributed: False
 #distributed_type: 'net-sockets'
 # TODO: add other options for config of communication
 
-testing: False
-debug: False

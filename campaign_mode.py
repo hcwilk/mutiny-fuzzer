@@ -135,6 +135,7 @@ class CampaignManager(object):
         self.testing = config['testing']
         self.workers = config['workers']
         self.debug = config['debug']
+        self.server_mode = config['server_mode']
         self.round_robin = config['round_robin']
         if self.round_robin:
             self.round_robin_cases = config['round_robin_cases']
@@ -162,7 +163,7 @@ class CampaignManager(object):
         for fuzz_file, target in self.workers:
             self.block_print()
             # initialize a child mutiny thread for each worker
-            fuzzer_args = argparse.Namespace(prepped_fuzz = fuzz_file, target_host = target, sleep_time = 0, range = None, loop = None, dump_raw = None, quiet = False, log_all = False, testing = False, campaign_mode = True)
+            fuzzer_args = argparse.Namespace(prepped_fuzz = fuzz_file, target_host = target, sleep_time = 0, range = None, loop = None, dump_raw = None, quiet = False, log_all = False, server = self.server_mode testing = False, campaign_mode = True)
             fuzzer = Mutiny(fuzzer_args)
             fuzzer.radamsa = self.radamsa
             fuzzer.debug = self.debug
@@ -188,10 +189,13 @@ class CampaignManager(object):
         quit_requested = False
         # poll for user input in seperate thread
         while not quit_requested:
-            quit_requested = self.poll_user_input()
-            self.refresh_display()
-            self.update_campaign_information()
-            self.refresh_display()
+            try:
+                quit_requested = self.poll_user_input()
+                self.refresh_display()
+                self.update_campaign_information()
+                self.refresh_display()
+            except curses.error as e:
+                print('terminal too small to display UI, please resize') #FIXME: cant print while in a curses session, perhaps we need to exit curses session and reopen it when this happens?
         self.graceful_shutdown()
 
     def setup_curses(self):
@@ -334,9 +338,13 @@ class CampaignManager(object):
             cmd = self.screen.getch()
         except curses.error:
             return quit_requested
-        if cmd == ord('q'):
+        if cmd == curses.KEY_RESIZE:
+            curses.resizeterm(*self.screen.getmaxyx())
+            self.screen.clear()
+            self.screen.refresh()
+        elif cmd == ord('q'):
             quit_requested = True
-        if cmd == ord('s'):
+        elif cmd == ord('s'):
             quit_requested = True
             self.save_and_quit()
         elif cmd == ord('p'):
@@ -419,7 +427,7 @@ class CampaignManager(object):
 
     def refresh_display(self):
         '''
-        refreshes both the log pad 
+        refreshes the log pad 
         '''
         # log_pad_pos has the following elements:
         # [upperleft y, upperleft x, lowerright y, lowerright x]
