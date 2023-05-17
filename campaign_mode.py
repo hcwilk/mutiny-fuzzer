@@ -212,7 +212,7 @@ class CampaignManager(object):
         # setup colors 
         self.setup_curses_colors()
         # TODO: make assertions about min window sizes 
-        self.render_title()
+        self.render_title(self.screen_width, self.screen_height)
         # Render help window on rightmost quarter of screen
         self.render_help_window()
         # render status bar
@@ -240,27 +240,38 @@ class CampaignManager(object):
         curses.init_pair(self.TextColors.Yellow, curses.COLOR_YELLOW, curses.COLOR_BLACK)
         curses.init_pair(self.TextColors.Inverted, curses.COLOR_BLACK, curses.COLOR_WHITE)
 
-    def render_title(self):
+    def render_title(self, width, height):
         '''
         renders the title and subtitle on the first two lines
         in the center of the screen
         '''
         # Rendering title
-        title = 'The Mutiny Fuzzing Framework' 
-        start_x_title = int((self.screen_width // 2) - (len(title) // 2) - len(title) % 2)
-        self.screen.attron(curses.color_pair(self.TextColors.Green))
-        self.screen.attron(curses.A_BOLD)
-        self.screen.addstr(0, start_x_title, title)
-        self.screen.attron(curses.color_pair(self.TextColors.White))
-        self.screen.attroff(curses.A_BOLD)
+        
+        if width<125 or height < 55:
+            title = 'Please make your window larger!' 
+            start_x_title = int((self.screen_width // 2) - (len(title) // 2) - len(title) % 2)
+            self.screen.attron(curses.color_pair(self.TextColors.Green))
+            self.screen.attron(curses.A_BOLD)
+            self.screen.addstr(0, start_x_title, title)
+            self.screen.attron(curses.color_pair(self.TextColors.White))
+            self.screen.attroff(curses.A_BOLD)
 
-        # Rendering subtitle
-        subtitle = 'Campaign Mode'
-        start_x_subtitle = int((self.screen_width // 2) - (len(subtitle) // 2) - len(subtitle) % 2)
-        self.screen.attron(curses.color_pair(self.TextColors.Red))
-        self.screen.addstr(1, start_x_subtitle, subtitle)
-        self.screen.attron(curses.color_pair(self.TextColors.White))
-        self.screen.refresh()
+        else:
+            title = 'The Mutiny Fuzzing Framework' 
+            start_x_title = int((self.screen_width // 2) - (len(title) // 2) - len(title) % 2)
+            self.screen.attron(curses.color_pair(self.TextColors.Green))
+            self.screen.attron(curses.A_BOLD)
+            self.screen.addstr(0, start_x_title, title)
+            self.screen.attron(curses.color_pair(self.TextColors.White))
+            self.screen.attroff(curses.A_BOLD)
+
+            # Rendering subtitle
+            subtitle = 'Campaign Mode'
+            start_x_subtitle = int((self.screen_width // 2) - (len(subtitle) // 2) - len(subtitle) % 2)
+            self.screen.attron(curses.color_pair(self.TextColors.Red))
+            self.screen.addstr(1, start_x_subtitle, subtitle)
+            self.screen.attron(curses.color_pair(self.TextColors.White))
+            self.screen.refresh()
 
     def render_status_window(self):
         '''
@@ -319,7 +330,7 @@ class CampaignManager(object):
         from monitors 
         '''
         # create log pad 
-        pad_width = ((self.screen_width // 4) * 3) - 2
+        pad_width = ((self.screen_width // 2) * 3) - 2
         self.log_pad = curses.newpad(self.log_pad_max_lines, pad_width)
         # position on screen it should be displayed
         top_left_y = 2
@@ -358,16 +369,20 @@ class CampaignManager(object):
             self.screen.refresh()
 
             # re-render the title and subtitle
-            self.render_title()
+            self.render_title(w,h)
             
             # resize and reposition the status window
             self.status_win.resize(1, w)
             self.status_win.mvwin(h - 1, 0)
             self.status_win.refresh()
 
+            # self.render_help_window()
+            # self.help_win.refresh()
+
             # resize and reposition the help window
 
             # if w<140:    
+            #     self.help_win.clear()
             #     help_height = h//3
             #     help_width = w
             #     begin_y = 1
@@ -375,27 +390,26 @@ class CampaignManager(object):
             #     self.help_win.resize(help_height, help_width)
             #     self.help_win.mvwin(1, begin_x)
             #     self.help_win.refresh()
-            #     # self.log_pad.resize(h//2,w)
-            # # [upperleft y, upperleft x, lowerright y, lowerright x]
-            #     pminrow = h//2
+            # [upperleft y, upperleft x, lowerright y, lowerright x]
+            #     total_pad_lines = self.log_pad.getmaxyx()[0]
             #     pmincol = 0
             #     sminrow = begin_y + help_height
             #     smincol = 0
             #     smaxrow = h - 1
             #     smaxcol = w - 1
+            #     pminrow = max(0, total_pad_lines - (smaxrow - sminrow + 1))
             #     self.log_pad.refresh(pminrow, pmincol, sminrow, smincol, smaxrow, smaxcol)
             #     self.log_pad.scrollok(True)
             #     self.log_pad.keypad(True)
-  
                        
             # else:
-            help_height = h - 4
-            help_width = w // 4
-            begin_y = 2
-            begin_x = (w // 4) * 3
-            self.help_win.resize(help_height, help_width)
-            self.help_win.mvwin(begin_y, begin_x)
-            self.help_win.refresh()
+            # help_height = h - 4
+            # help_width = w // 4
+            # begin_y = 2
+            # begin_x = (w // 4) * 3
+            # self.help_win.resize(help_height, help_width)
+            # self.help_win.mvwin(begin_y, begin_x)
+            # self.help_win.refresh()
 
 
         elif cmd == ord('q'):
@@ -473,6 +487,7 @@ class CampaignManager(object):
                 isinstance(exception, LogLastAndHaltException) or \
                 isinstance(exception, LogAndHaltException):
             self.log_pad.attron(curses.color_pair(self.TextColors.Yellow))
+            # HERE
         # self.log_pad.addstr(str(exception))
         self.log_pad.attron(curses.color_pair(self.TextColors.White))
         self.log_pad_write_y, _ = self.log_pad.getyx()
