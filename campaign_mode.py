@@ -51,7 +51,11 @@ from backend.mutiny import Mutiny
 from backend.menu_functions import print_warning, print_error, print_success
 from mutiny_classes.mutiny_exceptions import *
 import time
+import logging
 import threading
+
+
+
 
 class CampaignManager(object):
     class CampaignMode:
@@ -80,6 +84,7 @@ class CampaignManager(object):
         Inverted = 7
 
     def __init__(self, config_file, log_pad_max_lines, testing=False):
+
         # determine configuration of campaign
         self.process_config(config_file)
 
@@ -145,6 +150,7 @@ class CampaignManager(object):
         
 
     def start_campaign(self, stdscr):
+
         '''
         begins the fuzzing campaign by starting threads and initializing the
         curses window
@@ -163,7 +169,7 @@ class CampaignManager(object):
         for fuzz_file, target in self.workers:
             self.block_print()
             # initialize a child mutiny thread for each worker
-            fuzzer_args = argparse.Namespace(prepped_fuzz = fuzz_file, target_host = target, sleep_time = 0, range = None, loop = None, dump_raw = None, quiet = False, log_all = False, server = self.server_mode testing = False, campaign_mode = True)
+            fuzzer_args = argparse.Namespace(prepped_fuzz = fuzz_file, target_host = target, sleep_time = 0, range = None, loop = None, dump_raw = None, quiet = False, log_all = False, server = self.server_mode, testing = False, campaign_mode = True)
             fuzzer = Mutiny(fuzzer_args)
             fuzzer.radamsa = self.radamsa
             fuzzer.debug = self.debug
@@ -272,40 +278,40 @@ class CampaignManager(object):
         begin_y = 2
         help_height = self.screen_height - 4
         help_width = (self.screen_width // 4)
-        help_win = curses.newwin(help_height, help_width, begin_y, begin_x)
-        help_win.attron(curses.A_BOLD)
-        help_win.attron(curses.color_pair(self.TextColors.Green))
+        self.help_win = curses.newwin(help_height, help_width, begin_y, begin_x)
+        self.help_win.attron(curses.A_BOLD)
+        self.help_win.attron(curses.color_pair(self.TextColors.Green))
         command_title = 'Key Commands'
         command_start_x = (help_width // 2) - (len(command_title) // 2)
-        help_win.addstr(0, command_start_x, command_title)
-        help_win.attron(curses.color_pair(self.TextColors.White))
-        help_win.addstr(1, 0, '-' * help_width)
+        self.help_win.addstr(0, command_start_x, command_title)
+        self.help_win.attron(curses.color_pair(self.TextColors.White))
+        self.help_win.addstr(1, 0, '-' * help_width)
         y = 2
-        help_win.attron(curses.A_BOLD)
-        help_win.addch(y, 0, 'p')
-        help_win.attroff(curses.A_BOLD)
-        help_win.addstr(y, 1, ': pause campaign')
+        self.help_win.attron(curses.A_BOLD)
+        self.help_win.addch(y, 0, 'p')
+        self.help_win.attroff(curses.A_BOLD)
+        self.help_win.addstr(y, 1, ': pause campaign')
         y += 2
-        help_win.attron(curses.A_BOLD)
-        help_win.addch(y, 0, 'r')
-        help_win.attroff(curses.A_BOLD)
-        help_win.addstr(y, 1, ': resume campaign')
+        self.help_win.attron(curses.A_BOLD)
+        self.help_win.addch(y, 0, 'r')
+        self.help_win.attroff(curses.A_BOLD)
+        self.help_win.addstr(y, 1, ': resume campaign')
         y += 2
-        help_win.attron(curses.A_BOLD)
-        help_win.addch(y, 0, 's')
-        help_win.attroff(curses.A_BOLD)
-        help_win.addstr(y, 1, ': save campaign state to disk and quit')
+        self.help_win.attron(curses.A_BOLD)
+        self.help_win.addch(y, 0, 's')
+        self.help_win.attroff(curses.A_BOLD)
+        self.help_win.addstr(y, 1, ': save campaign state to disk and quit')
         y += 2
-        help_win.attron(curses.A_BOLD)
-        help_win.addch(y, 0, 'q')
-        help_win.attroff(curses.A_BOLD)
-        help_win.addstr(y, 1, ': quit campaign')
+        self.help_win.attron(curses.A_BOLD)
+        self.help_win.addch(y, 0, 'q')
+        self.help_win.attroff(curses.A_BOLD)
+        self.help_win.addstr(y, 1, ': quit campaign')
         y += 2
-        help_win.attron(curses.A_BOLD)
-        help_win.addstr(y, 0, '{}/{}'.format(chr(8593), chr(8595)))
-        help_win.attroff(curses.A_BOLD)
-        help_win.addstr(y, 3, ': navigate campaign logs')
-        help_win.refresh()
+        self.help_win.attron(curses.A_BOLD)
+        self.help_win.addstr(y, 0, '{}/{}'.format(chr(8593), chr(8595)))
+        self.help_win.attroff(curses.A_BOLD)
+        self.help_win.addstr(y, 3, ': navigate campaign logs')
+        self.help_win.refresh()
 
     def create_log_pad(self):
         '''
@@ -339,9 +345,59 @@ class CampaignManager(object):
         except curses.error:
             return quit_requested
         if cmd == curses.KEY_RESIZE:
-            curses.resizeterm(*self.screen.getmaxyx())
+            # get the new screen size
+            h, w = self.screen.getmaxyx()
+
+
+            logging.info(f'New size: {h}x{w}')
+  
+
+            curses.resizeterm(h, w)
+
             self.screen.clear()
             self.screen.refresh()
+
+            # re-render the title and subtitle
+            self.render_title()
+            
+            # resize and reposition the status window
+            self.status_win.resize(1, w)
+            self.status_win.mvwin(h - 1, 0)
+            self.status_win.refresh()
+
+            # resize and reposition the help window
+
+            # if w<140:    
+            #     help_height = h//3
+            #     help_width = w
+            #     begin_y = 1
+            #     begin_x = 0
+            #     self.help_win.resize(help_height, help_width)
+            #     self.help_win.mvwin(1, begin_x)
+            #     self.help_win.refresh()
+            #     # self.log_pad.resize(h//2,w)
+            # # [upperleft y, upperleft x, lowerright y, lowerright x]
+            #     pminrow = h//2
+            #     pmincol = 0
+            #     sminrow = begin_y + help_height
+            #     smincol = 0
+            #     smaxrow = h - 1
+            #     smaxcol = w - 1
+            #     self.log_pad.refresh(pminrow, pmincol, sminrow, smincol, smaxrow, smaxcol)
+            #     self.log_pad.scrollok(True)
+            #     self.log_pad.keypad(True)
+  
+                       
+            # else:
+            help_height = h - 4
+            help_width = w // 4
+            begin_y = 2
+            begin_x = (w // 4) * 3
+            self.help_win.resize(help_height, help_width)
+            self.help_win.mvwin(begin_y, begin_x)
+            self.help_win.refresh()
+
+
         elif cmd == ord('q'):
             quit_requested = True
         elif cmd == ord('s'):
@@ -417,7 +473,7 @@ class CampaignManager(object):
                 isinstance(exception, LogLastAndHaltException) or \
                 isinstance(exception, LogAndHaltException):
             self.log_pad.attron(curses.color_pair(self.TextColors.Yellow))
-        self.log_pad.addstr(str(exception))
+        # self.log_pad.addstr(str(exception))
         self.log_pad.attron(curses.color_pair(self.TextColors.White))
         self.log_pad_write_y, _ = self.log_pad.getyx()
         self.log_pad_write_y += 1
@@ -442,6 +498,7 @@ class CampaignManager(object):
         self.status = self.CampaignStatus.Paused
         for fuzzer in self.fuzzers:
             exception = PauseFuzzingException('User Requested Pause')
+
             fuzzer.monitor.signal_crash_detected_on_main(exception)
 
     def resume(self):
@@ -495,11 +552,13 @@ class CampaignManager(object):
         sys.stdout = sys.__stdout__
 
 if __name__ == '__main__':
+    logging.basicConfig(filename='logfile.log', level=logging.INFO)
     desc =  '======== The Mutiny Fuzzing Framework ==========' 
     epi = '==' * 24 + '\n'
     parser = argparse.ArgumentParser(prog='./campaign_mode.py', description=desc,epilog=epi)
     parser.add_argument('config_file', help='path to campaign_conf.yml file')
     parser.add_argument('-l', '--lines', help='number of maximum lines in event output', default=1000)
+
 
     # Usage case
     if len(sys.argv) < 2:
@@ -511,4 +570,5 @@ if __name__ == '__main__':
         manager = CampaignManager(config_file, args.lines) 
     
     # begin campaign with curses interface
+
     curses.wrapper(manager.start_campaign)

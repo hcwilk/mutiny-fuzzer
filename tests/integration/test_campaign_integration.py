@@ -46,7 +46,7 @@ class CampaignIntegrationSuite(object):
         for i in range(0, len(targets)):
             thread = threading.Thread(target=targets[i].accept_fuzz, args=())
             thread.start()
-            print('[target {}] listening!'.format(i))
+            print('[target {}] listening'.format(i),'on port',ports[i])
 
 
 def main():

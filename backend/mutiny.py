@@ -163,7 +163,7 @@ class Mutiny(object):
                             print("\n\nFuzzing with seed %d" % (self.seed_loop[self.seed % loop_len]))
                             self.seed = self.seed = self.seed_loop[self.seed % loop_len]
                         else:
-                            print("\n\nFuzzing with seed %d" % (seed))
+                            print("\n\nFuzzing with seed %d" % (self.seed))
                             self._perform_run()
                     #if --quiet, (logger==None) => AttributeError
                     if self.log_all:
