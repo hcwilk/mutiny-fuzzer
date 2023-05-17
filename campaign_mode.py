@@ -330,7 +330,7 @@ class CampaignManager(object):
         from monitors 
         '''
         # create log pad 
-        pad_width = ((self.screen_width // 2) * 3) - 2
+        pad_width = ((self.screen_width // 4) * 3) - 2
         self.log_pad = curses.newpad(self.log_pad_max_lines, pad_width)
         # position on screen it should be displayed
         top_left_y = 2
@@ -487,7 +487,6 @@ class CampaignManager(object):
                 isinstance(exception, LogLastAndHaltException) or \
                 isinstance(exception, LogAndHaltException):
             self.log_pad.attron(curses.color_pair(self.TextColors.Yellow))
-            # HERE
         # self.log_pad.addstr(str(exception))
         self.log_pad.attron(curses.color_pair(self.TextColors.White))
         self.log_pad_write_y, _ = self.log_pad.getyx()
