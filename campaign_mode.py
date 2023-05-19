@@ -213,12 +213,14 @@ class CampaignManager(object):
         self.setup_curses_colors()
         # TODO: make assertions about min window sizes 
         self.render_title(self.screen_width, self.screen_height)
-        # Render help window on rightmost quarter of screen
-        self.render_help_window()
+     
         # render status bar
         self.render_status_window()
         # create scrollable pad for event output
         log_pad = self.create_log_pad()
+
+           # Render help window on rightmost quarter of screen
+        self.render_help_window()
         self.screen.nodelay(True) # make getkey nonblocking
         curses.curs_set(0) # hide cursor
         self.refresh_display() # start display
@@ -247,31 +249,22 @@ class CampaignManager(object):
         '''
         # Rendering title
         
-        if width<125 or height < 55:
-            title = 'Please make your window larger!' 
-            start_x_title = int((self.screen_width // 2) - (len(title) // 2) - len(title) % 2)
-            self.screen.attron(curses.color_pair(self.TextColors.Green))
-            self.screen.attron(curses.A_BOLD)
-            self.screen.addstr(0, start_x_title, title)
-            self.screen.attron(curses.color_pair(self.TextColors.White))
-            self.screen.attroff(curses.A_BOLD)
+      
+        title = 'The Mutiny Fuzzing Framework' 
+        start_x_title = int((self.screen_width // 2) - (len(title) // 2) - len(title) % 2)
+        self.screen.attron(curses.color_pair(self.TextColors.Green))
+        self.screen.attron(curses.A_BOLD)
+        self.screen.addstr(0, start_x_title, title)
+        self.screen.attron(curses.color_pair(self.TextColors.White))
+        self.screen.attroff(curses.A_BOLD)
 
-        else:
-            title = 'The Mutiny Fuzzing Framework' 
-            start_x_title = int((self.screen_width // 2) - (len(title) // 2) - len(title) % 2)
-            self.screen.attron(curses.color_pair(self.TextColors.Green))
-            self.screen.attron(curses.A_BOLD)
-            self.screen.addstr(0, start_x_title, title)
-            self.screen.attron(curses.color_pair(self.TextColors.White))
-            self.screen.attroff(curses.A_BOLD)
-
-            # Rendering subtitle
-            subtitle = 'Campaign Mode'
-            start_x_subtitle = int((self.screen_width // 2) - (len(subtitle) // 2) - len(subtitle) % 2)
-            self.screen.attron(curses.color_pair(self.TextColors.Red))
-            self.screen.addstr(1, start_x_subtitle, subtitle)
-            self.screen.attron(curses.color_pair(self.TextColors.White))
-            self.screen.refresh()
+        # Rendering subtitle
+        subtitle = 'Campaign Mode'
+        start_x_subtitle = int((self.screen_width // 2) - (len(subtitle) // 2) - len(subtitle) % 2)
+        self.screen.attron(curses.color_pair(self.TextColors.Red))
+        self.screen.addstr(1, start_x_subtitle, subtitle)
+        self.screen.attron(curses.color_pair(self.TextColors.White))
+        self.screen.refresh()
 
     def render_status_window(self):
         '''
@@ -285,10 +278,10 @@ class CampaignManager(object):
         renders the help window on the rightmost quarter of the 
         screen, providing information about valid commands
         '''
-        begin_x = (self.screen_width // 4) * 3
+        begin_x = 4
         begin_y = 2
         help_height = self.screen_height - 4
-        help_width = (self.screen_width // 4)
+        help_width = self.screen_width - 8
         self.help_win = curses.newwin(help_height, help_width, begin_y, begin_x)
         self.help_win.attron(curses.A_BOLD)
         self.help_win.attron(curses.color_pair(self.TextColors.Green))
@@ -330,10 +323,10 @@ class CampaignManager(object):
         from monitors 
         '''
         # create log pad 
-        pad_width = ((self.screen_width // 4) * 3) - 2
+        pad_width = self.screen_width
         self.log_pad = curses.newpad(self.log_pad_max_lines, pad_width)
         # position on screen it should be displayed
-        top_left_y = 2
+        top_left_y = 14
         top_left_x = 0
         bottom_right_y = self.screen_height - 3
         bottom_right_x = pad_width
@@ -366,7 +359,7 @@ class CampaignManager(object):
             curses.resizeterm(h, w)
 
             self.screen.clear()
-            self.screen.refresh()
+            self.screen.refresh() 
 
             # re-render the title and subtitle
             self.render_title(w,h)
@@ -376,7 +369,11 @@ class CampaignManager(object):
             self.status_win.mvwin(h - 1, 0)
             self.status_win.refresh()
 
-            # self.render_help_window()
+
+            self.log_pad.resize(self.log_pad_max_lines,w)
+            self.log_pad.refresh(0, 0, self.log_pad_pos[0], self.log_pad_pos[1], h-1, w-1)
+
+            self.render_help_window()
             # self.help_win.refresh()
 
             # resize and reposition the help window
@@ -487,7 +484,8 @@ class CampaignManager(object):
                 isinstance(exception, LogLastAndHaltException) or \
                 isinstance(exception, LogAndHaltException):
             self.log_pad.attron(curses.color_pair(self.TextColors.Yellow))
-        # self.log_pad.addstr(str(exception))
+        # BRUH
+        self.log_pad.addstr(str(exception))
         self.log_pad.attron(curses.color_pair(self.TextColors.White))
         self.log_pad_write_y, _ = self.log_pad.getyx()
         self.log_pad_write_y += 1
