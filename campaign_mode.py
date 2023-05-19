@@ -216,11 +216,13 @@ class CampaignManager(object):
      
         # render status bar
         self.render_status_window()
-        # create scrollable pad for event output
-        log_pad = self.create_log_pad()
+
 
            # Render help window on rightmost quarter of screen
         self.render_help_window()
+
+                # create scrollable pad for event output
+        log_pad = self.create_log_pad()
         self.screen.nodelay(True) # make getkey nonblocking
         curses.curs_set(0) # hide cursor
         self.refresh_display() # start display
@@ -278,44 +280,87 @@ class CampaignManager(object):
         renders the help window on the rightmost quarter of the 
         screen, providing information about valid commands
         '''
-        begin_x = 4
-        begin_y = 2
-        help_height = self.screen_height - 4
-        help_width = self.screen_width - 8
-        self.help_win = curses.newwin(help_height, help_width, begin_y, begin_x)
-        self.help_win.attron(curses.A_BOLD)
-        self.help_win.attron(curses.color_pair(self.TextColors.Green))
-        command_title = 'Key Commands'
-        command_start_x = (help_width // 2) - (len(command_title) // 2)
-        self.help_win.addstr(0, command_start_x, command_title)
-        self.help_win.attron(curses.color_pair(self.TextColors.White))
-        self.help_win.addstr(1, 0, '-' * help_width)
-        y = 2
-        self.help_win.attron(curses.A_BOLD)
-        self.help_win.addch(y, 0, 'p')
-        self.help_win.attroff(curses.A_BOLD)
-        self.help_win.addstr(y, 1, ': pause campaign')
-        y += 2
-        self.help_win.attron(curses.A_BOLD)
-        self.help_win.addch(y, 0, 'r')
-        self.help_win.attroff(curses.A_BOLD)
-        self.help_win.addstr(y, 1, ': resume campaign')
-        y += 2
-        self.help_win.attron(curses.A_BOLD)
-        self.help_win.addch(y, 0, 's')
-        self.help_win.attroff(curses.A_BOLD)
-        self.help_win.addstr(y, 1, ': save campaign state to disk and quit')
-        y += 2
-        self.help_win.attron(curses.A_BOLD)
-        self.help_win.addch(y, 0, 'q')
-        self.help_win.attroff(curses.A_BOLD)
-        self.help_win.addstr(y, 1, ': quit campaign')
-        y += 2
-        self.help_win.attron(curses.A_BOLD)
-        self.help_win.addstr(y, 0, '{}/{}'.format(chr(8593), chr(8595)))
-        self.help_win.attroff(curses.A_BOLD)
-        self.help_win.addstr(y, 3, ': navigate campaign logs')
-        self.help_win.refresh()
+        try:
+            self.help_y= 6
+            begin_x = 4
+            begin_y = 2
+            help_height = self.screen_height - 4
+            help_width = self.screen_width - 8
+            self.help_win = curses.newwin(help_height, help_width, begin_y, begin_x)
+            self.help_win.attron(curses.A_BOLD)
+            self.help_win.attron(curses.color_pair(self.TextColors.Green))
+            command_title = 'Key Commands'
+            command_start_x = (help_width // 2) - (len(command_title) // 2)
+            self.help_win.addstr(0, command_start_x, command_title)
+            self.help_win.attron(curses.color_pair(self.TextColors.White))
+            self.help_win.addstr(1, 0, '-' * help_width)
+            x = 2
+            self.help_win.attron(curses.A_BOLD)
+            self.help_win.addch(2, x, 'p')
+            self.help_win.attroff(curses.A_BOLD)
+            self.help_win.addstr(2, x+2, ': pause campaign')
+            x += 20
+            self.help_win.attron(curses.A_BOLD)
+            self.help_win.addch(2, x, 'r')
+            self.help_win.attroff(curses.A_BOLD)
+            self.help_win.addstr(2, x+2, ': resume campaign')
+            x += 20
+            self.help_win.attron(curses.A_BOLD)
+            self.help_win.addch(2, x, 's')
+            self.help_win.attroff(curses.A_BOLD)
+            self.help_win.addstr(2, x+2, ': save campaign state to disk and quit')
+            x += 42
+            self.help_win.attron(curses.A_BOLD)
+            self.help_win.addch(2, x, 'q')
+            self.help_win.attroff(curses.A_BOLD)
+            self.help_win.addstr(2, x+2, ': quit campaign')
+            x += 20
+            self.help_win.attron(curses.A_BOLD)
+            self.help_win.addstr(2, x, '{}/{}'.format(chr(8593), chr(8595)))
+            self.help_win.attroff(curses.A_BOLD)
+            self.help_win.addstr(2, x+2, ': navigate campaign logs')
+            self.help_win.refresh()
+        except:
+            self.help_y = 14
+            begin_x = 4
+            begin_y = 2
+            help_height = self.screen_height - 4
+            help_width = self.screen_width - 8
+            self.help_win = curses.newwin(help_height, help_width, begin_y, begin_x)
+            self.help_win.attron(curses.A_BOLD)
+            self.help_win.attron(curses.color_pair(self.TextColors.Green))
+            command_title = 'Key Commands'
+            command_start_x = (help_width // 2) - (len(command_title) // 2)
+            self.help_win.addstr(0, command_start_x, command_title)
+            self.help_win.attron(curses.color_pair(self.TextColors.White))
+            self.help_win.addstr(1, 0, '-' * help_width)
+            y = 2
+            self.help_win.attron(curses.A_BOLD)
+            self.help_win.addch(y, 0, 'p')
+            self.help_win.attroff(curses.A_BOLD)
+            self.help_win.addstr(y, 1, ': pause campaign')
+            y += 2
+            self.help_win.attron(curses.A_BOLD)
+            self.help_win.addch(y, 0, 'r')
+            self.help_win.attroff(curses.A_BOLD)
+            self.help_win.addstr(y, 1, ': resume campaign')
+            y += 2
+            self.help_win.attron(curses.A_BOLD)
+            self.help_win.addch(y, 0, 's')
+            self.help_win.attroff(curses.A_BOLD)
+            self.help_win.addstr(y, 1, ': save campaign state to disk and quit')
+            y += 2
+            self.help_win.attron(curses.A_BOLD)
+            self.help_win.addch(y, 0, 'q')
+            self.help_win.attroff(curses.A_BOLD)
+            self.help_win.addstr(y, 1, ': quit campaign')
+            y += 2
+            self.help_win.attron(curses.A_BOLD)
+            self.help_win.addstr(y, 0, '{}/{}'.format(chr(8593), chr(8595)))
+            self.help_win.attroff(curses.A_BOLD)
+            self.help_win.addstr(y, 3, ': navigate campaign logs')
+            self.help_win.refresh()
+
 
     def create_log_pad(self):
         '''
@@ -326,7 +371,7 @@ class CampaignManager(object):
         pad_width = self.screen_width
         self.log_pad = curses.newpad(self.log_pad_max_lines, pad_width)
         # position on screen it should be displayed
-        top_left_y = 14
+        top_left_y = self.help_y
         top_left_x = 0
         bottom_right_y = self.screen_height - 3
         bottom_right_x = pad_width
@@ -349,14 +394,13 @@ class CampaignManager(object):
         except curses.error:
             return quit_requested
         if cmd == curses.KEY_RESIZE:
-            # get the new screen size
+            # # get the new screen size
             h, w = self.screen.getmaxyx()
 
             self.screen_height = h
             self.screen_width = w
 
 
-            logging.info(f'New size: {h}x{w}')
   
 
             curses.resizeterm(h, w)
@@ -372,12 +416,30 @@ class CampaignManager(object):
             self.status_win.mvwin(h - 1, 0)
             self.status_win.refresh()
 
+            # Get the current size of the log pad
+            pad_height, pad_width = self.log_pad.getmaxyx()
 
+            # Update the size and position of the log pad
+            top_left_y = self.help_y
+            top_left_x = 0
+            bottom_right_y = h - 3
+            bottom_right_x = pad_width
+            self.log_pad_pos = [top_left_y, top_left_x, bottom_right_y, bottom_right_x]
+
+            # Calculate the first line of the log pad that should be displayed
+            pad_start_line = max(0, pad_height - (bottom_right_y - top_left_y))
+
+            # Display the appropriate part of the log pad in the terminal window
             self.log_pad.resize(self.log_pad_max_lines,w)
-            self.log_pad.refresh(0, 0, self.log_pad_pos[0], self.log_pad_pos[1], h-1, w-1)
+            self.log_pad.refresh(pad_start_line, 0, top_left_y, top_left_x, h-1, w-1)
+
+
+
+            # logging.info(f'Log Pad Height: {h} and width: {w}')
+
 
             self.render_help_window()
-            # self.help_win.refresh()
+            self.help_win.refresh()
 
             # resize and reposition the help window
 
@@ -442,6 +504,8 @@ class CampaignManager(object):
                 self.parse_event(exception, fuzzer.fuzzer_file_path, fuzzer.output_data_folder_path)
             # update statistics
             execs += fuzzer.seed
+
+
 
         # Render Status bar
         elapsed_time = datetime.timedelta(seconds=round(time.time() - self.start_time))
