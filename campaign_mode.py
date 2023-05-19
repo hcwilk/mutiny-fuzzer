@@ -53,6 +53,7 @@ from mutiny_classes.mutiny_exceptions import *
 import time
 import logging
 import threading
+import json
 
 
 
@@ -83,10 +84,11 @@ class CampaignManager(object):
         Magenta = 6
         Inverted = 7
 
-    def __init__(self, config_file, log_pad_max_lines, testing=False):
+    def __init__(self, config_file, log_pad_max_lines, seeds, testing=False):
 
         # determine configuration of campaign
         self.process_config(config_file)
+        
 
         self.fuzzers = {} # key=mutiny object, val=thread
         self.execs = 0 # number of fuzz cases tried 
@@ -100,6 +102,7 @@ class CampaignManager(object):
         self.screen_width = 0
         self.log_pad = None # scrollable curses pad for displaying logs/events
         self.log_pad_max_lines = log_pad_max_lines
+        self.seeds = seeds
         self.log_pad_view_y = 0 # for tracking cursor when scrolling log pad
         self.log_pad_write_y = 0 # for tracking cursor when writing to log pad
         self.log_pad_write_x = 0 # for tracking cursor when writing to log pad
@@ -166,11 +169,15 @@ class CampaignManager(object):
         # initialize pad, create title, subtitle, and help menu
         self.setup_curses()
 
-        for fuzz_file, target in self.workers:
+
+        for i, (fuzz_file, target) in enumerate(self.workers):
             self.block_print()
             # initialize a child mutiny thread for each worker
             fuzzer_args = argparse.Namespace(prepped_fuzz = fuzz_file, target_host = target, sleep_time = 0, range = None, loop = None, dump_raw = None, quiet = False, log_all = False, server = self.server_mode, testing = False, campaign_mode = True)
             fuzzer = Mutiny(fuzzer_args)
+            if seeds and str(i) in seeds:
+                fuzzer.seed = seeds[str(i)]
+            logging.info(f'Heres the starting seed {fuzzer.seed}')
             fuzzer.radamsa = self.radamsa
             fuzzer.debug = self.debug
             fuzzer.import_custom_processors()
@@ -202,6 +209,10 @@ class CampaignManager(object):
                 self.refresh_display()
             except curses.error as e:
                 print('terminal too small to display UI, please resize') #FIXME: cant print while in a curses session, perhaps we need to exit curses session and reopen it when this happens?
+        logging.info('QUIT')
+        for i, fuzzer in enumerate(self.fuzzers):
+            logging.info('hitting')
+            logging.info(f'Fuzzer {i} ended on seed {fuzzer.seed}')
         self.graceful_shutdown()
 
     def setup_curses(self):
@@ -435,9 +446,6 @@ class CampaignManager(object):
 
 
 
-            # logging.info(f'Log Pad Height: {h} and width: {w}')
-
-
             self.render_help_window()
             self.help_win.refresh()
 
@@ -510,6 +518,8 @@ class CampaignManager(object):
         # Render Status bar
         elapsed_time = datetime.timedelta(seconds=round(time.time() - self.start_time))
         new_status_bar = 'workers: {} | fuzzed executions: {} | crashes found: {} | time elapsed: {} | mode: {} | status: {}'.format(len(self.workers), execs, self.crashes, elapsed_time, self.mode, self.status)
+
+        logging.info('running')
         # only update when theres something new to display
         if self.status_bar != new_status_bar:
             self.status_win.erase()
@@ -594,6 +604,17 @@ class CampaignManager(object):
         saves the state of all fuzzers to disk so that
         a future campaign can pick off where this one ended
         '''
+        seeds = {}
+        for i, fuzzer in enumerate(self.fuzzers):
+            logging.info(f'Fuzzer {i} ended on seed {fuzzer.seed}')
+            seeds[i] = fuzzer.seed
+
+        with open('fuzzer_seeds.json', 'w') as f:
+            json.dump(seeds, f)
+
+        self.graceful_shutdown()
+
+
         pass
         # TODO: save seeds to disk and enable -resume flag to
         # allow a campaign to be continued 
@@ -637,16 +658,25 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(prog='./campaign_mode.py', description=desc,epilog=epi)
     parser.add_argument('config_file', help='path to campaign_conf.yml file')
     parser.add_argument('-l', '--lines', help='number of maximum lines in event output', default=1000)
+    parser.add_argument('-r', '--resume', help='path to file from previous run to resume campaign', default=None)
+
+    print('hitting')
 
 
     # Usage case
     if len(sys.argv) < 2:
         sys.argv.append('-h')
 
+    seeds = None
+
     # process configuration file
     args = parser.parse_args()
+    if args.resume:
+        with open(args.resume, 'r') as resume_file:
+            seeds = json.load(resume_file)
+
     with open(args.config_file, 'r') as config_file:
-        manager = CampaignManager(config_file, args.lines) 
+        manager = CampaignManager(config_file, args.lines, seeds) 
     
     # begin campaign with curses interface
 
