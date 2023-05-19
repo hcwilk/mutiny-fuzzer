@@ -352,6 +352,9 @@ class CampaignManager(object):
             # get the new screen size
             h, w = self.screen.getmaxyx()
 
+            self.screen_height = h
+            self.screen_width = w
+
 
             logging.info(f'New size: {h}x{w}')
   
