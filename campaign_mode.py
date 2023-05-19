@@ -447,39 +447,7 @@ class CampaignManager(object):
 
 
             self.render_help_window()
-            self.help_win.refresh()
 
-            # resize and reposition the help window
-
-            # if w<140:    
-            #     self.help_win.clear()
-            #     help_height = h//3
-            #     help_width = w
-            #     begin_y = 1
-            #     begin_x = 0
-            #     self.help_win.resize(help_height, help_width)
-            #     self.help_win.mvwin(1, begin_x)
-            #     self.help_win.refresh()
-            # [upperleft y, upperleft x, lowerright y, lowerright x]
-            #     total_pad_lines = self.log_pad.getmaxyx()[0]
-            #     pmincol = 0
-            #     sminrow = begin_y + help_height
-            #     smincol = 0
-            #     smaxrow = h - 1
-            #     smaxcol = w - 1
-            #     pminrow = max(0, total_pad_lines - (smaxrow - sminrow + 1))
-            #     self.log_pad.refresh(pminrow, pmincol, sminrow, smincol, smaxrow, smaxcol)
-            #     self.log_pad.scrollok(True)
-            #     self.log_pad.keypad(True)
-                       
-            # else:
-            # help_height = h - 4
-            # help_width = w // 4
-            # begin_y = 2
-            # begin_x = (w // 4) * 3
-            # self.help_win.resize(help_height, help_width)
-            # self.help_win.mvwin(begin_y, begin_x)
-            # self.help_win.refresh()
 
 
         elif cmd == ord('q'):
@@ -615,11 +583,6 @@ class CampaignManager(object):
         self.graceful_shutdown()
 
 
-        pass
-        # TODO: save seeds to disk and enable -resume flag to
-        # allow a campaign to be continued 
-        # (seeds can be picked up in __init__ or start_campaign)
-
     def graceful_shutdown(self):
         '''
         destroys curses window and signals to all threads to stop execution
@@ -660,21 +623,19 @@ if __name__ == '__main__':
     parser.add_argument('-l', '--lines', help='number of maximum lines in event output', default=1000)
     parser.add_argument('-r', '--resume', help='path to file from previous run to resume campaign', default=None)
 
-    print('hitting')
-
-
     # Usage case
     if len(sys.argv) < 2:
         sys.argv.append('-h')
 
     seeds = None
 
-    # process configuration file
+    # process resume file (if user specified)
     args = parser.parse_args()
     if args.resume:
         with open(args.resume, 'r') as resume_file:
             seeds = json.load(resume_file)
 
+    # process configuration file
     with open(args.config_file, 'r') as config_file:
         manager = CampaignManager(config_file, args.lines, seeds) 
     
