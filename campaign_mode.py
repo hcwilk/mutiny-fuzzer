@@ -196,7 +196,7 @@ class CampaignManager(object):
             self.log_pad.addstr('[{}] '.format(fuzz_file.split('/')[-1]))
             self.log_pad.attroff(curses.A_BOLD)
             self.log_pad.attron(curses.color_pair(self.TextColors.Yellow))
-            self.log_pad.addstr('Fuzzer Initialized!')
+            self.log_pad.addstr(f'Fuzzer {i} Initialized on seed {fuzzer.seed}!')
             self.log_pad_write_y += 1
         self.status = self.CampaignStatus.Running
         quit_requested = False
@@ -288,9 +288,10 @@ class CampaignManager(object):
 
     def render_help_window(self):
         '''
-        renders the help window on the rightmost quarter of the 
+        renders the help window at the top of the 
         screen, providing information about valid commands
         '''
+        # This block is for large screens sizes
         try:
             self.help_y= 6
             begin_x = 4
@@ -332,6 +333,7 @@ class CampaignManager(object):
             self.help_win.addstr(2, x+2, ': navigate campaign logs')
             self.help_win.refresh()
         except:
+            # This block is for small screens sizes
             self.help_y = 14
             begin_x = 4
             begin_y = 2
@@ -411,9 +413,6 @@ class CampaignManager(object):
             self.screen_height = h
             self.screen_width = w
 
-
-  
-
             curses.resizeterm(h, w)
 
             self.screen.clear()
@@ -443,8 +442,6 @@ class CampaignManager(object):
             # Display the appropriate part of the log pad in the terminal window
             self.log_pad.resize(self.log_pad_max_lines,w)
             self.log_pad.refresh(pad_start_line, 0, top_left_y, top_left_x, h-1, w-1)
-
-
 
             self.render_help_window()
 
