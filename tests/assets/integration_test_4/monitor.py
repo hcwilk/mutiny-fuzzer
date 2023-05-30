@@ -55,24 +55,13 @@ class Monitor(object):
         self.listen_conn.listen()
         self.communication_conn = self.listen_conn.accept()[0]
         print('accepted agent connection!')
-        # while True:
-        #     if 'crashed' in log_file.readlines():
-        #         print('hitting here')
-        #         exception = LogCrashException('crashed')
-        #         signal_main(LogCrashException(exception))
-        #         signal_main(PauseFuzzingException('Sleeping for 10 seconds'))
-        #         log_file.close()
-        #         log_file = open('./tests/assets/integration_test_4/crash.log', 'w')
-        #         log_file.write('')
-        #         log_file.close()
-        #         sleep(.05)
-        #         signal_main(ResumeFuzzingException())
-        #     log_file.close()
+   
 
 
         while True:
             data = self.communication_conn.recv(1024)
             decoded = data.decode('utf-8')
+            print('decoded: ', decoded)
             if decoded =='crashed':
                 print('hitting here')
                 exception = LogCrashException('crashed')

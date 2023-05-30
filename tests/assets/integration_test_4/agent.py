@@ -44,34 +44,21 @@ class Agent:
         
 
     def send_server_heartbeat(self) -> None:
+
         while self.active:
-            try:
-                if self.check_process_running():
-                    print('allgood')
-                    
-                else:
-                    print('not active for some reason')
-                    message = 'crashed'
-                    self.conn.sendall(str.encode(message))  
-                    self.checking_pulse_attempts += 1
-                    if self.checking_pulse_attempts > 5:
-                        print("Process not found")
-                        self.active = False
-                    time.sleep(5)
-
-            except Exception as e:
-                print(e)
-                print("Error sending server heartbeat")
+            # Check if the process is still running
+            # ideally, this will revolve around the PID instead of reading a log file
+            # Is there a 'webhook' for PID events? I feel like querying the PID over and over will be computationally intensive
+            # It could also lag behind the actual process state
+            log_file = open('./tests/assets/integration_test_4/crash.log', 'r')
+            if 'crashed' in log_file.readlines():
+                print('crashed from agent') 
+                message = 'crashed'
+                self.conn.sendall(str.encode(message))  
+                log_file.close()
+                log_file = open('./tests/assets/integration_test_4/crash.log', 'w')
+                log_file.write('')
+                log_file.close()
                 self.active = False
+            log_file.close()
 
-
-# if __name__ == '__main__':
-#     parser = argparse.ArgumentParser(description="Client details")
-#     parser.add_argument("host", help="The server ip to connect to")
-#     parser.add_argument("port", help="The port on the server to connect to", type=int)
-#     parser.add_argument("-num", help="The PID of the process to montior")
-
-#     args = parser.parse_args()
-
-#     agent = Agent(args.host, args.port, args.num)
-#     agent.start()
