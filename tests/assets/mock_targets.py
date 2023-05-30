@@ -57,7 +57,6 @@ class MockServer(object):
             self.listen_conn.bind((self.listen_if, self.listen_port))
             self.listen_conn.listen()
             self.pid = os.getpid()
-            print('pid: ', self.pid)
             self.communication_conn = self.listen_conn.accept()[0]
         
         elif self.proto == 'tls':

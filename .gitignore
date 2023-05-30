@@ -4,3 +4,4 @@ radamsa-*/*
 *.pyc
 *_logs*
 sadsox
+fuzzer_seeds.json

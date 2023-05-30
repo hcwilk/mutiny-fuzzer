@@ -177,7 +177,6 @@ class CampaignManager(object):
             fuzzer = Mutiny(fuzzer_args)
             if seeds and str(i) in seeds:
                 fuzzer.seed = seeds[str(i)]
-            logging.info(f'Heres the starting seed {fuzzer.seed}')
             fuzzer.radamsa = self.radamsa
             fuzzer.debug = self.debug
             fuzzer.import_custom_processors()
@@ -208,11 +207,7 @@ class CampaignManager(object):
                 self.update_campaign_information()
                 self.refresh_display()
             except curses.error as e:
-                print('terminal too small to display UI, please resize') #FIXME: cant print while in a curses session, perhaps we need to exit curses session and reopen it when this happens?
-        logging.info('QUIT')
-        for i, fuzzer in enumerate(self.fuzzers):
-            logging.info('hitting')
-            logging.info(f'Fuzzer {i} ended on seed {fuzzer.seed}')
+                print('terminal too small to display UI, please resize')
         self.graceful_shutdown()
 
     def setup_curses(self):
@@ -484,7 +479,6 @@ class CampaignManager(object):
         elapsed_time = datetime.timedelta(seconds=round(time.time() - self.start_time))
         new_status_bar = 'workers: {} | fuzzed executions: {} | crashes found: {} | time elapsed: {} | mode: {} | status: {}'.format(len(self.workers), execs, self.crashes, elapsed_time, self.mode, self.status)
 
-        logging.info('running')
         # only update when theres something new to display
         if self.status_bar != new_status_bar:
             self.status_win.erase()
@@ -571,7 +565,6 @@ class CampaignManager(object):
         '''
         seeds = {}
         for i, fuzzer in enumerate(self.fuzzers):
-            logging.info(f'Fuzzer {i} ended on seed {fuzzer.seed}')
             seeds[i] = fuzzer.seed
 
         with open('fuzzer_seeds.json', 'w') as f:
@@ -612,6 +605,7 @@ class CampaignManager(object):
         sys.stdout = sys.__stdout__
 
 if __name__ == '__main__':
+    # Just to debug incase you need somewhere to dump output
     logging.basicConfig(filename='logfile.log', level=logging.INFO)
     desc =  '======== The Mutiny Fuzzing Framework ==========' 
     epi = '==' * 24 + '\n'
