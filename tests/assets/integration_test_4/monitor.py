@@ -40,6 +40,7 @@
 
 from mutiny_classes.mutiny_exceptions import *
 from time import sleep
+import socket
 
 class Monitor(object):
     # Set to True to use the monitor
@@ -47,17 +48,35 @@ class Monitor(object):
     
     # This function will run asynchronously in a different thread to monitor the host
     def monitor_target(self, target_ip, target_port, signal_main):
+        print('here is where we are!')
+        socket_family = socket.AF_INET if '.' in target_ip else socket.AF_INET6
+        self.listen_conn = socket.socket(socket_family, socket.SOCK_STREAM)
+        self.listen_conn.bind((target_ip, target_port-1500))
+        self.listen_conn.listen()
+        self.communication_conn = self.listen_conn.accept()[0]
+        print('accepted agent connection!')
+        # while True:
+        #     if 'crashed' in log_file.readlines():
+        #         print('hitting here')
+        #         exception = LogCrashException('crashed')
+        #         signal_main(LogCrashException(exception))
+        #         signal_main(PauseFuzzingException('Sleeping for 10 seconds'))
+        #         log_file.close()
+        #         log_file = open('./tests/assets/integration_test_4/crash.log', 'w')
+        #         log_file.write('')
+        #         log_file.close()
+        #         sleep(.05)
+        #         signal_main(ResumeFuzzingException())
+        #     log_file.close()
+
+
         while True:
-            log_file = open('./tests/assets/integration_test_1/crash.log', 'r')
-            if 'crashed' in log_file.readlines():
-                print('please dont show this one')
+            data = self.communication_conn.recv(1024)
+            decoded = data.decode('utf-8')
+            if decoded =='crashed':
+                print('hitting here')
                 exception = LogCrashException('crashed')
                 signal_main(LogCrashException(exception))
                 signal_main(PauseFuzzingException('Sleeping for 10 seconds'))
-                log_file.close()
-                log_file = open('./tests/assets/integration_test_1/crash.log', 'w')
-                log_file.write('')
-                log_file.close()
                 sleep(.05)
                 signal_main(ResumeFuzzingException())
-            log_file.close()

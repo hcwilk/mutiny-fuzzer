@@ -30,34 +30,45 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #------------------------------------------------------------------
 #
+# This file handles all custom errors that are raised
 # Copy this file to your project's mutiny classes directory to
-# implement a long-running thread to monitor your target
-# This is useful for watching files, logs, remote connections,
-# PIDs, etc in parallel while mutiny is operating
-# This parallel thread can signal Mutiny when it detects a crash
+# change exception handling
+# This is useful for telling Mutiny how to interpret the server
+# closing a connection, and so on
 #
 #------------------------------------------------------------------
 
+import errno
+import socket
+import traceback
 from mutiny_classes.mutiny_exceptions import *
-from time import sleep
 
-class Monitor(object):
-    # Set to True to use the monitor
-    is_enabled = True
-    
-    # This function will run asynchronously in a different thread to monitor the host
-    def monitor_target(self, target_ip, target_port, signal_main):
-        while True:
-            log_file = open('./tests/assets/integration_test_1/crash.log', 'r')
-            if 'crashed' in log_file.readlines():
-                print('please dont show this one')
-                exception = LogCrashException('crashed')
-                signal_main(LogCrashException(exception))
-                signal_main(PauseFuzzingException('Sleeping for 10 seconds'))
-                log_file.close()
-                log_file = open('./tests/assets/integration_test_1/crash.log', 'w')
-                log_file.write('')
-                log_file.close()
-                sleep(.05)
-                signal_main(ResumeFuzzingException())
-            log_file.close()
+class ExceptionProcessor(object):
+
+    def __init__(self):
+        pass
+
+    # Determine how to handle a given exception
+    # Raise the exceptions defined in mutiny_exceptions to cause Mutiny
+    # to do different things based on what has occurred
+    def process_exception(self, exception):
+        print(f'{type(exception)}: {str(exception)}')
+        if isinstance(exception, socket.error):
+            if exception.errno == errno.ECONNREFUSED:
+                # Default to assuming this means server is crashed so we're done
+                #raise LogLastAndHaltException("Connection refused: Assuming we crashed the server, logging previous run and halting")
+                pass
+            elif "timed out" in str(exception):
+                raise AbortCurrentRunException("Server closed the connection")
+            else:
+                if exception.errno:
+                    raise AbortCurrentRunException("Unknown socket error: %d" % (exception.errno))
+                else:
+                    raise AbortCurrentRunException("Unknown socket error: %s" % (str(exception)))
+        elif isinstance(exception, ConnectionClosedException):
+            raise AbortCurrentRunException("Server closed connection: %s" % (str(exception)))
+        elif exception.__class__ not in MessageProcessorExceptions.all:
+            # Default to logging a crash if we don't recognize the error
+            print('Unknown exception received - not Mutiny exception or socket error, backtrace:')
+            traceback.print_exc()
+            raise LogCrashException(str(exception))

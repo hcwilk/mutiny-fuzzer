@@ -28,36 +28,3 @@
 # ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#------------------------------------------------------------------
-#
-# Copy this file to your project's mutiny classes directory to
-# implement a long-running thread to monitor your target
-# This is useful for watching files, logs, remote connections,
-# PIDs, etc in parallel while mutiny is operating
-# This parallel thread can signal Mutiny when it detects a crash
-#
-#------------------------------------------------------------------
-
-from mutiny_classes.mutiny_exceptions import *
-from time import sleep
-
-class Monitor(object):
-    # Set to True to use the monitor
-    is_enabled = True
-    
-    # This function will run asynchronously in a different thread to monitor the host
-    def monitor_target(self, target_ip, target_port, signal_main):
-        while True:
-            log_file = open('./tests/assets/integration_test_1/crash.log', 'r')
-            if 'crashed' in log_file.readlines():
-                print('please dont show this one')
-                exception = LogCrashException('crashed')
-                signal_main(LogCrashException(exception))
-                signal_main(PauseFuzzingException('Sleeping for 10 seconds'))
-                log_file.close()
-                log_file = open('./tests/assets/integration_test_1/crash.log', 'w')
-                log_file.write('')
-                log_file.close()
-                sleep(.05)
-                signal_main(ResumeFuzzingException())
-            log_file.close()
