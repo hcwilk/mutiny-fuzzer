@@ -24,7 +24,7 @@ class Agent:
         self.active = True
 
         # create a single thread to report the status of the process to the server
-        self.server_heartbeat_thread = Thread(target=self.send_server_heartbeat)
+        self.server_heartbeat_thread = Thread(target=self.monitor_program_logs)
 
         # The number of times we check for a pulse without a response
         self.checking_pulse_attempts = 0
@@ -33,6 +33,8 @@ class Agent:
         self.server_heartbeat_thread.start()
 
     def check_process_running(self) -> bool:
+        # Isn't being used now, but I want this to be able to work for local PIDs
+        # Not sure exactly what I should be calling to get this done
         try:
             subprocess.check_output('ps -p '+str(self.pid)+' -o comm=', shell=True)
         except subprocess.CalledProcessError as e: 
@@ -42,7 +44,7 @@ class Agent:
             return True
         
 
-    def send_server_heartbeat(self) -> None:
+    def monitor_program_logs(self) -> None:
 
         while self.active:
             # Check if the process is still running

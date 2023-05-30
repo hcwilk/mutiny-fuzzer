@@ -217,6 +217,9 @@ class IntegrationSuite(object):
         print('ok')
 
     def test_4(self, target_port, proto, prepped_fuzzer_file):
+
+        ## DOES NOT HAVE RAW SOCKET SUPPORT AT THE MOMENT
+        ## OR SERVER-SIDE FUNCTIONALITY
         '''
         test details:
             - prepped_fuzz: ./tests/assets/integration_test_1/<proto>_prepped.fuzzer
@@ -353,11 +356,11 @@ def main():
         # #tcp
         suite.test_4(target_port= 7781, proto = 'tcp', prepped_fuzzer_file = 'tests/assets/integration_test_4/tcp.fuzzer')
         # # udp 
-        # suite.test_1(target_port= 7782, proto = 'udp', prepped_fuzzer_file = 'tests/assets/integration_test_1/udp.fuzzer')
+        # suite.test_1(target_port= 7782, proto = 'udp', prepped_fuzzer_file = 'tests/assets/integration_test_4/udp.fuzzer')
         # # tls
-        # suite.test_1(target_port= 7783, proto = 'tls', prepped_fuzzer_file = 'tests/assets/integration_test_1/tls.fuzzer')
+        # suite.test_1(target_port= 7783, proto = 'tls', prepped_fuzzer_file = 'tests/assets/integration_test_4/tls.fuzzer')
         # raw
-        # suite.test_1(target_port= -1, proto = 'L2raw', prepped_fuzzer_file = 'tests/assets/integration_test_1/raw.fuzzer')
+        # suite.test_1(target_port= -1, proto = 'L2raw', prepped_fuzzer_file = 'tests/assets/integration_test_4/raw.fuzzer')
     except Exception as e:
         print(repr(e))
         traceback.print_exc()
