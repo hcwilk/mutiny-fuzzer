@@ -17,7 +17,6 @@ class Agent:
         self.conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
         # Init the connection with the server
-        print('agent trying to connect to server')
         self.conn.connect((server_ip, server_port-1500))
         print('agent connected to server')
 

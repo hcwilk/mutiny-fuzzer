@@ -48,14 +48,14 @@ class Monitor(object):
     
     # This function will run asynchronously in a different thread to monitor the host
     def monitor_target(self, target_ip, target_port, signal_main):
-        print('here is where we are!')
+
+        # initialize the socket for the agent to connect to
         socket_family = socket.AF_INET if '.' in target_ip else socket.AF_INET6
         self.listen_conn = socket.socket(socket_family, socket.SOCK_STREAM)
         self.listen_conn.bind((target_ip, target_port-1500))
         self.listen_conn.listen()
         self.communication_conn = self.listen_conn.accept()[0]
         print('accepted agent connection!')
-   
 
 
         while True:
@@ -63,7 +63,6 @@ class Monitor(object):
             decoded = data.decode('utf-8')
             print('decoded: ', decoded)
             if decoded =='crashed':
-                print('hitting here')
                 exception = LogCrashException('crashed')
                 signal_main(LogCrashException(exception))
                 signal_main(PauseFuzzingException('Sleeping for 10 seconds'))
