@@ -19,7 +19,6 @@ class Target4(MockServer):
             if len(result) == 539:
                 # 7th iteration should cause a crash
                 # write to file that monitor_target is reading
-                print('here we are')
                 assert result == bytearray(b'magic phrase:passworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassword')
                 with open('./tests/assets/integration_test_4/crash.log', 'w') as file:
                     file.write('crashed')

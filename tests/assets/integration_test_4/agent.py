@@ -53,7 +53,6 @@ class Agent:
             # It could also lag behind the actual process state
             log_file = open('./tests/assets/integration_test_4/crash.log', 'r')
             if 'crashed' in log_file.readlines():
-                print('crashed from agent') 
                 message = 'crashed'
                 self.conn.sendall(str.encode(message))  
                 log_file.close()

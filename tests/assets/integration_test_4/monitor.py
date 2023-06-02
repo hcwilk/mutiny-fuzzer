@@ -54,14 +54,14 @@ class Monitor(object):
         self.listen_conn = socket.socket(socket_family, socket.SOCK_STREAM)
         self.listen_conn.bind((target_ip, target_port-1500))
         self.listen_conn.listen()
+
+        # accepting the agent connection
         self.communication_conn = self.listen_conn.accept()[0]
-        print('accepted agent connection!')
 
 
         while True:
             data = self.communication_conn.recv(1024)
             decoded = data.decode('utf-8')
-            print('decoded: ', decoded)
             if decoded =='crashed':
                 exception = LogCrashException('crashed')
                 signal_main(LogCrashException(exception))
