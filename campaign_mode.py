@@ -631,5 +631,4 @@ if __name__ == '__main__':
         manager = CampaignManager(config_file, args.lines, seeds) 
     
     # begin campaign with curses interface
-
     curses.wrapper(manager.start_campaign)
