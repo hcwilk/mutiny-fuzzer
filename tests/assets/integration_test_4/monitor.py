@@ -60,9 +60,12 @@ class Monitor(object):
 
 
         while True:
+            
             data = self.communication_conn.recv(1024)
+            print('received data')
             decoded = data.decode('utf-8')
             if decoded =='crashed':
+                print('got crashed')
                 exception = LogCrashException('crashed')
                 signal_main(LogCrashException(exception))
                 signal_main(PauseFuzzingException('Sleeping for 10 seconds'))
