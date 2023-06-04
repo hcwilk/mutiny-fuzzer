@@ -606,7 +606,7 @@ class CampaignManager(object):
 
 if __name__ == '__main__':
     # Just to debug incase you need somewhere to dump output
-    logging.basicConfig(filename='logfile.log', level=logging.INFO)
+    # logging.basicConfig(filename='logfile.log', level=logging.INFO)
     desc =  '======== The Mutiny Fuzzing Framework ==========' 
     epi = '==' * 24 + '\n'
     parser = argparse.ArgumentParser(prog='./campaign_mode.py', description=desc,epilog=epi)
