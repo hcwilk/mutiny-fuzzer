@@ -123,16 +123,14 @@ class Mutiny(object):
         is_paused = False
 
 
-        print('proto',self.fuzzer_data.proto)
-        print('server host',self.target_host)
-        print('server port',self.fuzzer_data.target_port)
-
         if self.server:
             self.connection = FuzzerConnection(self.fuzzer_data.proto, self.target_host, self.fuzzer_data.target_port, self.fuzzer_data.source_ip, self.fuzzer_data.source_port, self.server)
-
-
+        
+        
 
         while True:
+            # This is good for testing new agent strategies
+            # time.sleep(.5)
             last_message_collection = deepcopy(self.fuzzer_data.message_collection)
             was_crash_detected = False
             if not is_paused and self.sleep_time > 0.0:

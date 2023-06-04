@@ -4,6 +4,7 @@ import subprocess
 import sys
 import argparse
 import time
+import psutil
 
 
 class Agent:
@@ -26,22 +27,43 @@ class Agent:
         # create a single thread to report the status of the process to the server
         self.server_heartbeat_thread = Thread(target=self.monitor_program_logs)
 
+        self.monitor_process_thread = Thread(target=self.monitor_process)
+        self.cpu = None
+        self.mem = None
+
+
         # The number of times we check for a pulse without a response
         self.checking_pulse_attempts = 0
 
     def start(self) -> None:
         self.server_heartbeat_thread.start()
+        self.monitor_process_thread.start()
 
-    def check_process_running(self) -> bool:
-        # Isn't being used now, but I want this to be able to work for local PIDs
-        # Not sure exactly what I should be calling to get this done
+    def monitor_process(self) -> bool:
         try:
-            subprocess.check_output('ps -p '+str(self.pid)+' -o comm=', shell=True)
-        except subprocess.CalledProcessError as e: 
-            print("Process not found")
-            return False
-        else:
-            return True
+            process = psutil.Process(self.pid)
+        except psutil.NoSuchProcess:
+            print(f"No process found with PID={self.pid}")
+            return
+
+        while True:
+            try:
+                if self.cpu != None:
+                    cpu_percent = process.cpu_percent(interval=1)
+                    if abs(cpu_percent - self.cpu) >= self.cpu/10:
+                        print(f"Unusual CPU percent: {cpu_percent}%")     
+                        break
+                # Get process details
+                self.cpu = process.cpu_percent(interval=1)
+                self.mem = process.memory_info()
+
+                print(f"CPU percent: {self.cpu}%")
+                print(f"Memory usage: {self.mem.rss / (1024**2)} MB")
+
+                time.sleep(.01)  # Sleep for 5 seconds before next check
+            except psutil.NoSuchProcess:
+                print(f"Process with PID={self.pid} has terminated")
+                break
         
 
     def monitor_program_logs(self) -> None:
