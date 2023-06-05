@@ -9,12 +9,10 @@ COPY util/ util/
 COPY backend/ backend/
 COPY mutiny.py .
 COPY mutiny_classes/ mutiny_classes/
-COPY tcp.pcap .
 
-COPY radamsa-v0.6.tar.gz radamsa-v0.6.tar.gz
+ADD radamsa-v0.6.tar.gz .
 
-RUN tar -xzf radamsa-v0.6.tar.gz &&\
-    cd radamsa-0.6 && \
+RUN cd radamsa-0.6 && \
     make
 
 CMD ["/bin/bash"]

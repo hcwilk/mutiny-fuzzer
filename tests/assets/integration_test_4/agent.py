@@ -11,6 +11,10 @@ class Agent:
     def __init__(self, server_ip: str, server_port: int, pid: int, host, port) -> None:
         # Only needs to be one way communication, so I think we can cut down on some of the code here
 
+        self.agent_logfile = open('./tests/assets/integration_test_4/agent.log', 'w')
+        self.agent_logfile.write('Agent log file\n')
+        self.agent_logfile.close()
+
         # The PID of the process to monitor
         self.pid = pid
 
@@ -19,7 +23,7 @@ class Agent:
 
         # Init the connection with the server
         self.conn.connect((server_ip, server_port-1500))
-        print('agent connected to server')
+        print('agent connected to monitor server')
 
         # Instantiates the active bool that changes to false when the target process is dead
         self.active = True
@@ -58,7 +62,11 @@ class Agent:
                 if self.cpu != None:
                     cpu_percent = process.cpu_percent(interval=.1)
                     if abs(cpu_percent - self.cpu) >= self.cpu/10:
-                        print(f"Unusual CPU percent: {cpu_percent}%, check these last three messages: ", self.log[-3:])     
+                        print(f"Unusual CPU percent: {cpu_percent}%, check these last three messages: ", self.log[-3:])   
+                        self.agent_logfile = open('./tests/assets/integration_test_4/agent.log', 'a')
+                        self.agent_logfile.write('here are the inputs that couldve caused a CPU fluctuation: {}'.format(self.log[-3:]))
+                        self.agent_logfile.close()
+  
                         break
                 else:
                     self.cpu = process.cpu_percent(interval=.1)
@@ -78,6 +86,9 @@ class Agent:
             log_file = open('./tests/assets/integration_test_4/crash.log', 'r')
             if 'crashed' in log_file.readlines():
                 print('process crashed, check these last three messages: ', self.log[-3:])
+                # self.agent_logfile = open('./tests/assets/integration_test_4/agent.log', 'a')
+                # self.agent_logfile.write('here are the inputs that couldve caused a crash: {}'.format(self.log[-3:]))
+                # self.agent_logfile.close()
                 message = 'crashed'
                 self.conn.sendall(str.encode(message))  
                 log_file.close()
@@ -93,8 +104,7 @@ class Agent:
             with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
                 # Bind to the server address
                 s.bind((self.host, self.port))
-                print('agent bound to receive fuzz messages')
-                print(f"Server started at {self.host}:{self.port}")
+                print(f"Agent started at {self.host}:{self.port}")
                 while True:
                     # Receive message
                     message, addr = s.recvfrom(1024)
