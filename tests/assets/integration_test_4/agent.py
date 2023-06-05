@@ -55,18 +55,18 @@ class Agent:
         while True:
             try:
                 if self.cpu != None:
-                    cpu_percent = process.cpu_percent(interval=1)
+                    cpu_percent = process.cpu_percent(interval=.1)
                     if abs(cpu_percent - self.cpu) >= self.cpu/10:
-                        print(f"Unusual CPU percent: {cpu_percent}%")     
+                        print(f"Unusual CPU percent: {cpu_percent}%, check these last three messages: ", self.log[-3:])     
                         break
-                # Get process details
-                self.cpu = process.cpu_percent(interval=1)
-                self.mem = process.memory_info()
+                else:
+                    self.cpu = process.cpu_percent(interval=.1)
+                    self.mem = process.memory_info()
 
-                # print(f"CPU percent: {self.cpu}%")
+                print(f"CPU percent: {self.cpu}%")
                 # print(f"Memory usage: {self.mem.rss / (1024**2)} MB")
 
-                time.sleep(.01)  # Sleep for 5 seconds before next check
+                time.sleep(.1)
             except psutil.NoSuchProcess:
                 print(f"Process with PID={self.pid} has terminated")
                 break

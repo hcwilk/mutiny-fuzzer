@@ -46,9 +46,6 @@ class FuzzerConnection(object):
         self.incoming_buffer = []
         self.connection = None
 
-        print('this is testing',self.testing)
-
-        print('this is proto',self.proto)
 
         self.agent_host = agent_host
         self.agent_port = agent_port
@@ -65,7 +62,6 @@ class FuzzerConnection(object):
         self._get_addr()
 
         if self.proto == 'tcp':
-            print('its tcp')
             self._connect_to_tcp_socket()
         elif self.proto == 'udp':
             self._connect_to_udp_socket()
@@ -165,11 +161,9 @@ class FuzzerConnection(object):
             self.list_connection.listen()
             self.connection = self.list_connection.accept()[0]
         else:
-            print('hitting here')
             self.connection = socket.socket(self.socket_family, socket.SOCK_STREAM)
             self._bind_to_interface()
             self.connection.connect(self.addr)
-            print('connected to target')
 
 
     def _connect_to_udp_socket(self):
