@@ -39,8 +39,8 @@ class Mutiny(object):
         self.quiet = args.quiet # dont log the outputs 
         self.testing = args.testing if args.testing else False
         self.server = args.server
-        self.agent = args.agent if args.agent else None
-        self.agent_port = args.agent_port if args.agent_port else 0
+        self.agent_host = args.agent_host
+        self.agent_port = args.agent_port
         self.log_all = args.log_all if not self.quiet else False # kinda weird/redundant verbosity flags? 
         self.fuzzer_folder = os.path.abspath(os.path.dirname(self.fuzzer_file_path))
         self.output_data_folder_path = os.path.join("%s_%s" % (os.path.splitext(self.fuzzer_file_path)[0], "logs"), datetime.datetime.now().strftime("%Y-%m-%d,%H%M%S"))
@@ -302,7 +302,8 @@ class Mutiny(object):
 
         # create a connection to the target process
         if not self.server:
-            self.connection = FuzzerConnection(self.fuzzer_data.proto, self.target_host, self.fuzzer_data.target_port, self.fuzzer_data.source_ip, self.fuzzer_data.source_port, self.server)
+            print('hitting here')
+            self.connection = FuzzerConnection(self.fuzzer_data.proto, self.target_host, self.fuzzer_data.target_port, self.fuzzer_data.source_ip, self.fuzzer_data.source_port, self.server,None, self.agent_host, self.agent_port)
         
 
         message_num = 0   

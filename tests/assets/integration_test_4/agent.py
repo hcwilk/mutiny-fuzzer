@@ -62,8 +62,8 @@ class Agent:
                 self.cpu = process.cpu_percent(interval=1)
                 self.mem = process.memory_info()
 
-                print(f"CPU percent: {self.cpu}%")
-                print(f"Memory usage: {self.mem.rss / (1024**2)} MB")
+                # print(f"CPU percent: {self.cpu}%")
+                # print(f"Memory usage: {self.mem.rss / (1024**2)} MB")
 
                 time.sleep(.01)  # Sleep for 5 seconds before next check
             except psutil.NoSuchProcess:

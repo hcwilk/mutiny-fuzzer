@@ -61,7 +61,7 @@ class IntegrationSuite(object):
             self.target_if = '127.0.0.1'
 
 
-        args = Namespace(prepped_fuzz = prepped_fuzzer_file, target_host = self.target_if, sleep_time = 0, range = '0-10', loop = None, dump_raw = None, quiet = False, log_all = False, testing = True, server = False)
+        args = Namespace(prepped_fuzz = prepped_fuzzer_file, target_host = self.target_if, sleep_time = 0, range = '0-10', loop = None, dump_raw = None, quiet = False, log_all = False, testing = True, server = False, agent_host = None, agent_port = None)
 
         log_dir = prepped_fuzzer_file.split('.')[0] + '_logs'
         # stand up target server
@@ -255,7 +255,7 @@ class IntegrationSuite(object):
             self.target_if = '127.0.0.1'
 
         # initialize args for Fuzzing
-        args = Namespace(prepped_fuzz = prepped_fuzzer_file, target_host = self.target_if, sleep_time = 0, range = '0-10', loop = None, dump_raw = None, quiet = False, log_all = False, testing = True, server = False)
+        args = Namespace(prepped_fuzz = prepped_fuzzer_file, target_host = self.target_if, sleep_time = 0, range = '0-10', loop = None, dump_raw = None, quiet = False, log_all = False, testing = True, server = False, agent_host = '127.0.0.1', agent_port = 4321)
         
         # set up log file
         log_dir = prepped_fuzzer_file.split('.')[0] + '_logs'
@@ -271,13 +271,13 @@ class IntegrationSuite(object):
         # start listening for the fuzz sessions
         target_thread = threading.Thread(target=target.accept_fuzz, args=())
         target_thread.start()
-        time.sleep(3)
+        time.sleep(1)
 
         # start the agent
-        agent = Agent(self.target_if, target_port, pid = target.pid)
+        agent = Agent(self.target_if, target_port, pid = target.pid, host='127.0.0.1', port=4321)
         agent_thread = threading.Thread(target=agent.start, args=())
         agent_thread.start()
-        time.sleep(5)
+        time.sleep(2)
 
         # start the fuzzer
         fuzz_thread = threading.Thread(target=fuzzer.fuzz, args=())

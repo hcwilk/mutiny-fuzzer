@@ -21,7 +21,7 @@ class FuzzerConnection(object):
     - creating connections to the target process
     - sending/receiving packets to the target process
     '''
-    def __init__(self, proto, host, port, src_ip, src_port, server, testing=False, agent=None, agent_port=None):
+    def __init__(self, proto, host, port, src_ip, src_port, server, testing=False, agent_host=None, agent_port=None):
         '''
         handles the creation of a network connection for the fuzzing session and returns the connection
         
@@ -46,18 +46,27 @@ class FuzzerConnection(object):
         self.incoming_buffer = []
         self.connection = None
 
-        # self.agent = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) if agent else None
+        print('this is testing',self.testing)
+
+        print('this is proto',self.proto)
+
+        self.agent_host = agent_host
+        self.agent_port = agent_port
+
+        self.agent = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) if self.agent_host else None
 
         if self.proto != "L2raw" and self.proto != 'tls' and self.proto not in PROTO:
             print_error(f'Unknown protocol: {self.proto}')
             sys.exit(-1)
         if self.testing:
+            print('whywould you do this')
             return
 
         # determine format of address to use based on protocol
         self._get_addr()
 
         if self.proto == 'tcp':
+            print('its tcp')
             self._connect_to_tcp_socket()
         elif self.proto == 'udp':
             self._connect_to_udp_socket()
@@ -85,6 +94,9 @@ class FuzzerConnection(object):
                             data))                     # Payload
         else:
             self.connection.sendto(data, self.addr)
+        
+        if self.agent:
+            self.agent.sendto(data, (self.agent, self.agent_port))
 
         print("\tSent %d byte packet" % (len(data)))
 
@@ -154,9 +166,11 @@ class FuzzerConnection(object):
             self.list_connection.listen()
             self.connection = self.list_connection.accept()[0]
         else:
+            print('hitting here')
             self.connection = socket.socket(self.socket_family, socket.SOCK_STREAM)
             self._bind_to_interface()
             self.connection.connect(self.addr)
+            print('connected to target')
 
 
     def _connect_to_udp_socket(self):
