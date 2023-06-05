@@ -8,7 +8,7 @@ import psutil
 
 
 class Agent:
-    def __init__(self, server_ip: str, server_port: int, pid: int) -> None:
+    def __init__(self, server_ip: str, server_port: int, pid: int, host, port) -> None:
         # Only needs to be one way communication, so I think we can cut down on some of the code here
 
         # The PID of the process to monitor
@@ -30,6 +30,11 @@ class Agent:
         self.monitor_process_thread = Thread(target=self.monitor_process)
         self.cpu = None
         self.mem = None
+
+        self.host = host
+        self.port = port
+        self.log = []
+        self.receive_fuzz_messages = Thread(target=self.receive_fuzz_messages)
 
 
         # The number of times we check for a pulse without a response
@@ -67,12 +72,7 @@ class Agent:
         
 
     def monitor_program_logs(self) -> None:
-
         while self.active:
-            # Check if the process is still running
-            # ideally, this will revolve around the PID instead of reading a log file
-            # Is there a 'webhook' for PID events? I feel like querying the PID over and over will be computationally intensive
-            # It could also lag behind the actual process state
             log_file = open('./tests/assets/integration_test_4/crash.log', 'r')
             if 'crashed' in log_file.readlines():
                 print('agent says crashed!')
@@ -84,4 +84,15 @@ class Agent:
                 log_file.close()
                 self.active = False
             log_file.close()
+
+    def receive_fuzz_messages(self) -> None:
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
+            # Bind to the server address
+            s.bind((self.host, self.port))
+            print(f"Server started at {self.host}:{self.port}")
+            while True:
+                # Receive message
+                message, addr = s.recvfrom(1024)
+                print(f"Received message from {addr}: {message.decode('utf-8')}")
+                self.log.append(message.decode('utf-8'))
 
