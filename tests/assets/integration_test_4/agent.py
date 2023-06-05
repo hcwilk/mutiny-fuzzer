@@ -45,6 +45,7 @@ class Agent:
         self.monitor_process_thread.start()
         self.receive_fuzz_messages.start()
 
+    # Monitors the programs's CPU and memory usage. Right now it just uses CPU, but if we can decide on a solid rule for memory usage, we can add that in too
     def monitor_process(self) -> bool:
         try:
             process = psutil.Process(self.pid)
@@ -61,7 +62,7 @@ class Agent:
                         break
                 else:
                     self.cpu = process.cpu_percent(interval=.1)
-                    self.mem = process.memory_info()
+                    # self.mem = process.memory_info()
 
                 print(f"CPU percent: {self.cpu}%")
                 # print(f"Memory usage: {self.mem.rss / (1024**2)} MB")
@@ -71,7 +72,7 @@ class Agent:
                 print(f"Process with PID={self.pid} has terminated")
                 break
         
-
+    # This would probably just be a syslog monitor in the real world, but this is a good enough solution for now
     def monitor_program_logs(self) -> None:
         while self.active:
             log_file = open('./tests/assets/integration_test_4/crash.log', 'r')
@@ -86,6 +87,7 @@ class Agent:
                 self.active = False
             log_file.close()
 
+    # This allows the agent to receive copies of the fuzz messages so we're able to tell what could've caused a problem
     def receive_fuzz_messages(self) -> None:
         while self.active:
             with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:

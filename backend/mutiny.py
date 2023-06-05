@@ -39,8 +39,6 @@ class Mutiny(object):
         self.quiet = args.quiet # dont log the outputs 
         self.testing = args.testing if args.testing else False
         self.server = args.server
-        self.agent_host = args.agent_host
-        self.agent_port = args.agent_port
         self.log_all = args.log_all if not self.quiet else False # kinda weird/redundant verbosity flags? 
         self.fuzzer_folder = os.path.abspath(os.path.dirname(self.fuzzer_file_path))
         self.output_data_folder_path = os.path.join("%s_%s" % (os.path.splitext(self.fuzzer_file_path)[0], "logs"), datetime.datetime.now().strftime("%Y-%m-%d,%H%M%S"))
@@ -52,6 +50,10 @@ class Mutiny(object):
         if self.campaign_mode:
             self.campaign_event_queue = queue.SimpleQueue()
         self.connected = False
+
+        self.agent_host = getattr(args, 'agent_host', None) # Add default value None if 'agent_host' doesn't exist
+        self.agent_port = getattr(args, 'agent_port', None) # Add default value None if 'agent_port' doesn't exist
+
 
         #Assign Lower/Upper bounds on test cases as needed
         if args.range:
