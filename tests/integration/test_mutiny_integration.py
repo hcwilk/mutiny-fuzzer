@@ -124,7 +124,7 @@ class IntegrationSuite(object):
             self.target_if = '127.0.0.1'
         #self.block_print() 
         # populate args
-        args = Namespace(prepped_fuzz = prepped_fuzzer_file, target_host = self.target_if, sleep_time = 0, range = '0-', loop = None, dump_raw = None, quiet = False, log_all = False, testing = True, server=False)
+        args = Namespace(prepped_fuzz = prepped_fuzzer_file, target_host = self.target_if, sleep_time = 0, range = '0-', loop = None, dump_raw = None, quiet = False, log_all = False, testing = True, server=False, agent_host = None, agent_port = None)
 
         log_dir = prepped_fuzzer_file.split('.')[0] + '_logs'
         # stand up target server
@@ -189,7 +189,7 @@ class IntegrationSuite(object):
             cli_if = '127.0.0.1'
 
         
-        args = Namespace(prepped_fuzz = prepped_fuzzer_file, source_ip = cli_if, source_port = cli_port, target_host = self.target_if, sleep_time = 0, range = '0-10', loop = None, dump_raw = None, quiet = False, log_all = False, testing = True, server = True)
+        args = Namespace(prepped_fuzz = prepped_fuzzer_file, source_ip = cli_if, source_port = cli_port, target_host = self.target_if, sleep_time = 0, range = '0-10', loop = None, dump_raw = None, quiet = False, log_all = False, testing = True, server = True, agent_host = None, agent_port = None)
         log_dir = prepped_fuzzer_file.split('.')[0] + '_logs'
         # stand up target client
         target = Target3(proto, cli_if, cli_port, self.target_if, target_port)

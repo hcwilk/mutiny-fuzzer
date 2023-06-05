@@ -87,7 +87,9 @@ class MockServer(object):
 
     def receive_packet(self, packet_len):
         if self.communication_conn.type == socket.SOCK_STREAM :
-            self.incoming_buffer.append(bytearray(self.communication_conn.recv(packet_len)))
+            response = self.communication_conn.recv(packet_len)
+
+            self.incoming_buffer.append(bytearray(response))
         elif self.communication_conn.type == socket.SOCK_RAW:
             frame = self.communication_conn.recv(ETH_FRAME_LEN)
             # Extract a header

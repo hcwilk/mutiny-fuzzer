@@ -43,6 +43,7 @@ class Agent:
     def start(self) -> None:
         self.server_heartbeat_thread.start()
         self.monitor_process_thread.start()
+        self.receive_fuzz_messages.start()
 
     def monitor_process(self) -> bool:
         try:
@@ -75,7 +76,7 @@ class Agent:
         while self.active:
             log_file = open('./tests/assets/integration_test_4/crash.log', 'r')
             if 'crashed' in log_file.readlines():
-                print('agent says crashed!')
+                print('process crashed, check these last three messages: ', self.log[-3:])
                 message = 'crashed'
                 self.conn.sendall(str.encode(message))  
                 log_file.close()
@@ -90,10 +91,11 @@ class Agent:
             with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
                 # Bind to the server address
                 s.bind((self.host, self.port))
+                print('agent bound to receive fuzz messages')
                 print(f"Server started at {self.host}:{self.port}")
                 while True:
                     # Receive message
                     message, addr = s.recvfrom(1024)
-                    print(f"Received message from {addr}: {message.decode('utf-8')}")
-                    self.log.append(message.decode('utf-8'))
+                    print(f"Received message from {addr}: {message}")
+                    self.log.append(message)
 

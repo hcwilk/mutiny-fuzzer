@@ -59,7 +59,6 @@ class FuzzerConnection(object):
             print_error(f'Unknown protocol: {self.proto}')
             sys.exit(-1)
         if self.testing:
-            print('whywould you do this')
             return
 
         # determine format of address to use based on protocol
@@ -96,7 +95,7 @@ class FuzzerConnection(object):
             self.connection.sendto(data, self.addr)
         
         if self.agent:
-            self.agent.sendto(data, (self.agent, self.agent_port))
+            self.agent.sendto(data, (self.agent_host, self.agent_port))
 
         print("\tSent %d byte packet" % (len(data)))
 
