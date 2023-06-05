@@ -51,9 +51,6 @@ class Mutiny(object):
             self.campaign_event_queue = queue.SimpleQueue()
         self.connected = False
 
-        self.agent_host = getattr(args, 'agent_host', None) # Add default value None if 'agent_host' doesn't exist
-        self.agent_port = getattr(args, 'agent_port', None) # Add default value None if 'agent_port' doesn't exist
-
 
         #Assign Lower/Upper bounds on test cases as needed
         if args.range:
@@ -304,7 +301,7 @@ class Mutiny(object):
 
         # create a connection to the target process
         if not self.server:
-            self.connection = FuzzerConnection(self.fuzzer_data.proto, self.target_host, self.fuzzer_data.target_port, self.fuzzer_data.source_ip, self.fuzzer_data.source_port, self.server,None, self.agent_host, self.agent_port)
+            self.connection = FuzzerConnection(self.fuzzer_data.proto, self.target_host, self.fuzzer_data.target_port, self.fuzzer_data.source_ip, self.fuzzer_data.source_port, self.server,None)
         
 
         message_num = 0   
