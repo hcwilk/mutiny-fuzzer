@@ -92,7 +92,6 @@ class Agent:
         while self.active:
             log_file = open('./tests/assets/integration_test_4/crash.log', 'r')
             if 'crashed' in log_file.readlines():
-                print('process crashed, check these last three messages: ', self.log[-3:])
                 message = 'crashed'
                 self.conn.sendall(str.encode(message))  
                 log_file.close()
@@ -102,7 +101,7 @@ class Agent:
                 self.active = False
                 with self.lock:
                     self.agent_logfile = open('./tests/assets/integration_test_4/agent.log', 'a')
-                    self.agent_logfile.write('here are the inputs that couldve caused a crash: {}\n'.format(self.log[-3:]))
+                    self.agent_logfile.write('here is the input that most likely caused a crash: {}\n'.format(self.log[-1]))
                     self.agent_logfile.close()
             log_file.close()
 
