@@ -207,3 +207,16 @@ All PRs which include the addition of features or functionality are expected
 to include relevant unit tests.
 
 
+## Docker Images
+
+There are three different sizes of Docker Images you can build based on the desired output size. Build any of these by running the following command
+```
+docker build -f docker/Dockerfile.<desired_size> -t <name_of_image> .
+```
+
+Once it's built, you can either generate a .pcap file using Wireshark or other network monitoring tools, or generate a .fuzzer file directly using the Decept Proxy.
+Once you have this file, you can run the image using this command
+```
+docker run -it -v /path/to/tcp-or-fuzzer:/mutiny/tcp-or-fuzzer <name_of_image>
+```
+
