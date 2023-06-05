@@ -264,7 +264,10 @@ class IntegrationSuite(object):
         # set up log file
         log_dir = prepped_fuzzer_file.split('.')[0] + '_logs'
         # stand up target server
-        target = Target4(proto, self.target_if, target_port)
+        target1 = Target4(proto, self.target_if, target_port)
+        target2 = Target4(proto, self.target_if, target_port-100)
+        target3 = Target4(proto, self.target_if, target_port-200)
+        target4 = Target4(proto, self.target_if, target_port-300)
     
         # run mutiny
         fuzzer = Mutiny(args)
@@ -273,11 +276,29 @@ class IntegrationSuite(object):
         fuzzer.debug = False
 
         # start listening for the fuzz sessions
-        target_thread = threading.Thread(target=target.accept_fuzz, args=())
+        target_thread = threading.Thread(target=target1.accept_fuzz, args=())
+        target_thread.start()
+        target_thread = threading.Thread(target=target2.accept_fuzz, args=())
+        target_thread.start()
+        target_thread = threading.Thread(target=target3.accept_fuzz, args=())
+        target_thread.start()
+        target_thread = threading.Thread(target=target4.accept_fuzz, args=())
         target_thread.start()
         time.sleep(1)
 
         # start the agent
+        agent1 = Agent(self.target_if, target_port, pid = target1.pid, host='127.0.0.1', port=4321)
+        agent_thread_1 = threading.Thread(target=agent1.start, args=())
+        agent_thread_1.start()
+
+        agent2 = Agent(self.target_if, target_port, pid = target2.pid, host='127.0.0.1', port=4321)
+        agent_thread_2 = threading.Thread(target=agent2.start, args=())
+        agent_thread_2.start()
+
+        agent = Agent(self.target_if, target_port, pid = target.pid, host='127.0.0.1', port=4321)
+        agent_thread = threading.Thread(target=agent.start, args=())
+        agent_thread.start()
+
         agent = Agent(self.target_if, target_port, pid = target.pid, host='127.0.0.1', port=4321)
         agent_thread = threading.Thread(target=agent.start, args=())
         agent_thread.start()
