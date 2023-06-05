@@ -86,13 +86,14 @@ class Agent:
             log_file.close()
 
     def receive_fuzz_messages(self) -> None:
-        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
-            # Bind to the server address
-            s.bind((self.host, self.port))
-            print(f"Server started at {self.host}:{self.port}")
-            while True:
-                # Receive message
-                message, addr = s.recvfrom(1024)
-                print(f"Received message from {addr}: {message.decode('utf-8')}")
-                self.log.append(message.decode('utf-8'))
+        while self.active:
+            with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
+                # Bind to the server address
+                s.bind((self.host, self.port))
+                print(f"Server started at {self.host}:{self.port}")
+                while True:
+                    # Receive message
+                    message, addr = s.recvfrom(1024)
+                    print(f"Received message from {addr}: {message.decode('utf-8')}")
+                    self.log.append(message.decode('utf-8'))
 
