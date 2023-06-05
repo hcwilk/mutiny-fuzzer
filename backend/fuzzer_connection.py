@@ -21,7 +21,7 @@ class FuzzerConnection(object):
     - creating connections to the target process
     - sending/receiving packets to the target process
     '''
-    def __init__(self, proto, host, port, src_ip, src_port, server, testing=False, agent_host=None, agent_port=None):
+    def __init__(self, proto, host, port, src_ip, src_port, server, testing=False):
         '''
         handles the creation of a network connection for the fuzzing session and returns the connection
         
@@ -47,10 +47,6 @@ class FuzzerConnection(object):
         self.connection = None
 
 
-        self.agent_host = agent_host
-        self.agent_port = agent_port
-
-        self.agent = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) if self.agent_host else None
 
         if self.proto != "L2raw" and self.proto != 'tls' and self.proto not in PROTO:
             print_error(f'Unknown protocol: {self.proto}')
@@ -90,8 +86,6 @@ class FuzzerConnection(object):
         else:
             self.connection.sendto(data, self.addr)
         
-        if self.agent:
-            self.agent.sendto(data, (self.agent_host, self.agent_port))
 
         print("\tSent %d byte packet" % (len(data)))
 
