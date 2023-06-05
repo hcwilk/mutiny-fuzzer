@@ -50,7 +50,6 @@ class Monitor(object):
         while True:
             log_file = open('./tests/assets/integration_test_1/crash.log', 'r')
             if 'crashed' in log_file.readlines():
-                print('please dont show this one')
                 exception = LogCrashException('crashed')
                 signal_main(LogCrashException(exception))
                 signal_main(PauseFuzzingException('Sleeping for 10 seconds'))

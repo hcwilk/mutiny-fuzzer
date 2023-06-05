@@ -1,5 +1,5 @@
 import socket
-from threading import Thread
+from threading import Thread, Lock
 import subprocess
 import sys
 import argparse
@@ -9,8 +9,10 @@ import psutil
 
 class Agent:
     def __init__(self, server_ip: str, server_port: int, pid: int, host, port) -> None:
-        # Only needs to be one way communication, so I think we can cut down on some of the code here
 
+        self.lock = Lock()
+
+        # Only needs to be one way communication, so I think we can cut down on some of the code here
         self.agent_logfile = open('./tests/assets/integration_test_4/agent.log', 'w')
         self.agent_logfile.write('Agent log file\n')
         self.agent_logfile.close()
@@ -38,7 +40,7 @@ class Agent:
         self.host = host
         self.port = port
         self.log = []
-        self.receive_fuzz_messages = Thread(target=self.receive_fuzz_messages)
+        self.receive_fuzz_messages_thread = Thread(target=self.receive_fuzz_messages)
 
 
         # The number of times we check for a pulse without a response
@@ -47,7 +49,11 @@ class Agent:
     def start(self) -> None:
         self.server_heartbeat_thread.start()
         self.monitor_process_thread.start()
-        self.receive_fuzz_messages.start()
+        self.receive_fuzz_messages_thread.start()
+
+        self.server_heartbeat_thread.join()
+        self.monitor_process_thread.join()
+        self.receive_fuzz_messages_thread.join()
 
     # Monitors the programs's CPU and memory usage. Right now it just uses CPU, but if we can decide on a solid rule for memory usage, we can add that in too
     def monitor_process(self) -> bool:
@@ -63,9 +69,10 @@ class Agent:
                     cpu_percent = process.cpu_percent(interval=.1)
                     if abs(cpu_percent - self.cpu) >= self.cpu/10:
                         print(f"Unusual CPU percent: {cpu_percent}%, check these last three messages: ", self.log[-3:])   
-                        self.agent_logfile = open('./tests/assets/integration_test_4/agent.log', 'a')
-                        self.agent_logfile.write('here are the inputs that couldve caused a CPU fluctuation: {}'.format(self.log[-3:]))
-                        self.agent_logfile.close()
+                        with self.lock:
+                            self.agent_logfile = open('./tests/assets/integration_test_4/agent.log', 'a')
+                            self.agent_logfile.write('here are the inputs that couldve caused a CPU fluctuation: {}\n'.format(self.log[-3:]))
+                            self.agent_logfile.close()
   
                         break
                 else:
@@ -86,9 +93,6 @@ class Agent:
             log_file = open('./tests/assets/integration_test_4/crash.log', 'r')
             if 'crashed' in log_file.readlines():
                 print('process crashed, check these last three messages: ', self.log[-3:])
-                # self.agent_logfile = open('./tests/assets/integration_test_4/agent.log', 'a')
-                # self.agent_logfile.write('here are the inputs that couldve caused a crash: {}'.format(self.log[-3:]))
-                # self.agent_logfile.close()
                 message = 'crashed'
                 self.conn.sendall(str.encode(message))  
                 log_file.close()
@@ -96,6 +100,10 @@ class Agent:
                 log_file.write('')
                 log_file.close()
                 self.active = False
+                with self.lock:
+                    self.agent_logfile = open('./tests/assets/integration_test_4/agent.log', 'a')
+                    self.agent_logfile.write('here are the inputs that couldve caused a crash: {}\n'.format(self.log[-3:]))
+                    self.agent_logfile.close()
             log_file.close()
 
     # This allows the agent to receive copies of the fuzz messages so we're able to tell what could've caused a problem
@@ -105,9 +113,16 @@ class Agent:
                 # Bind to the server address
                 s.bind((self.host, self.port))
                 print(f"Agent started at {self.host}:{self.port}")
+
+                s.settimeout(1)
                 while True:
-                    # Receive message
-                    message, addr = s.recvfrom(1024)
-                    print(f"Received message from {addr}: {message}")
-                    self.log.append(message)
+                    try:
+                        # Receive message
+                        message, addr = s.recvfrom(1024)
+                        print(f"Received message from {addr}: {message}")
+                        self.log.append(message)
+                    except socket.timeout:
+                        # If no message arrives within the timeout, check if the thread should still be active
+                        if not self.active:
+                            break
 
