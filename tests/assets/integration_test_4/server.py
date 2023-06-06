@@ -93,5 +93,6 @@ class Server(Thread):
         for conn in self.connections:
             if conn.active:
                 conn.send_quit()
+                conn.join()
         self.active = False
         sys.exit(0)

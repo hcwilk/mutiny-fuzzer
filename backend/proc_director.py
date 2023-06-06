@@ -87,7 +87,7 @@ class ProcDirector(object):
         self.crash_queue = Event()
     
     class MonitorWrapper(object):
-        def __init__(self, target_ip, target_port, channel, monitor):
+        def __init__(self, target_ip, target_port, channel, server_ip, server_port, monitor):
             # This queue is read from the main thread after each fuzz run
             # If it contains an exception, that is passed to the exception processor
             self.queue = queue.SimpleQueue()
@@ -101,7 +101,7 @@ class ProcDirector(object):
             
             # Immediately start monitor and allow it to run until Mutiny stops if enabled
             if self.monitor.is_enabled:
-                self.task = threading.Thread(target=self.monitor_target,args=(self.monitor.monitor_target, target_ip, target_port, self.signal_crash_detected_on_main, channel))
+                self.task = threading.Thread(target=self.monitor_target,args=(self.monitor.monitor_target, target_ip, target_port, self.signal_crash_detected_on_main, channel, server_ip, server_port))
                 # Daemon thread won't stop main thread from exiting
                 self.task.daemon = True
                 self.task.start()
@@ -134,8 +134,8 @@ class ProcDirector(object):
                 self.queue.put(HaltException('Monitor threw an exception.'))
             self.queue.put(exception)
     
-    def start_monitor(self, host, port, channel = None):
-        self.monitor_wrapper = self.MonitorWrapper(host, port, channel, self.monitor())
+    def start_monitor(self, host, port, channel = None, server_ip = None, server_port = None):
+        self.monitor_wrapper = self.MonitorWrapper(host, port, channel, server_ip, server_port, self.monitor())
         return self.monitor_wrapper
 
     def checkMonitor(self):

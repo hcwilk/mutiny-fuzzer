@@ -30,8 +30,6 @@ class Agent:
 
         self.channel = channel
 
-        print('here is the pid of the process Im monitoring: ' + str(self.pid))
-
         # Instantiates the active bool that changes to false when the target process is dead
         self.active = True
 
@@ -71,7 +69,6 @@ class Agent:
                 if self.cpu != None:
                     cpu_percent = process.cpu_percent(interval=.1)
                     if abs(cpu_percent - self.cpu) >= self.cpu/10:
-                        print(f"Unusual CPU percent: {cpu_percent}%, check these last three messages")   
                         message = f'!CPU'
                         self.conn.sendall(str.encode(message))  
 

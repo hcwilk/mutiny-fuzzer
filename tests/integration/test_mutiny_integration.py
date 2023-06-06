@@ -7,6 +7,7 @@ import threading
 from multiprocessing import Process
 import sys
 
+
 sys.path.append('../mutiny-fuzzer')
 from tests.assets.mock_targets import MockServer
 from getmac import get_mac_address as gma
@@ -15,6 +16,7 @@ from tests.assets.integration_test_2.target import Target2
 from tests.assets.integration_test_3.target import Target3
 from tests.assets.integration_test_4.target import Target4
 from tests.assets.integration_test_4.agent import Agent
+from tests.assets.integration_test_4.server import Server
 from backend.mutiny import Mutiny
 # Integration test to simulate a complete interaction between a target 
 # and mutiny in order to evaluate the stability of the fuzzer as a whole.
@@ -248,10 +250,16 @@ class IntegrationSuite(object):
             sleeps, then sends a resume. Fuzzing stops on seed 10, since a
             range of 0-10 was specified
         '''
+
+
+
         print('test 4: {}'.format(proto))
         self.total_tests += 1
         # self.block_print() 
         # populate args
+
+        server_ip = '127.0.0.1'
+        server_port = 4321
 
         prepped_fuzzer_files = ['tests/assets/integration_test_4/tcp.fuzzer1', 'tests/assets/integration_test_4/tcp.fuzzer2', 'tests/assets/integration_test_4/tcp.fuzzer3', 'tests/assets/integration_test_4/tcp.fuzzer4']
 
@@ -270,9 +278,17 @@ class IntegrationSuite(object):
         target_processes = []
         agent_threads = []
 
-        # Create targets, agents, and threads of both
+        # Create a server object
+        server = Server(server_ip, server_port)  # Use appropriate IP and port
+        server_thread = threading.Thread(target=server.run)
+        server_thread.start()
+
+
+
+
+        # Imitate campaign mode and integrate X amount of targets with different PIDs
         for i in range(4):
-            args = Namespace(prepped_fuzz = prepped_fuzzer_files[i], target_host = self.target_if, sleep_time = 0, range = '0-10', loop = None, dump_raw = None, quiet = False, log_all = False, testing = True, server = False, channel = str(i))
+            args = Namespace(prepped_fuzz = prepped_fuzzer_files[i], target_host = self.target_if, sleep_time = 0, range = '0-10', loop = None, dump_raw = None, quiet = False, log_all = False, testing = True, server = False, channel = str(i), server_ip = server_ip, server_port = server_port)
             port_decrement = 100 * i
             target = Target4(proto, self.target_if, target_port - port_decrement)
             targets.append(target)
@@ -285,7 +301,8 @@ class IntegrationSuite(object):
 
             time.sleep(1)
             
-            agent = Agent(self.target_if, 4321, target_process.pid, str(i))
+
+            agent = Agent(server_ip, server_port, target_process.pid, str(i))
             agent_thread = threading.Thread(target=agent.start)
             agent_thread.start()
             agent_threads.append(agent_thread)
@@ -307,15 +324,9 @@ class IntegrationSuite(object):
         for target_process in target_processes:
             target_process.join(timeout=5)
 
-        # print('threads')
-        # for thread in threading.enumerate():
-        #     print(thread)
+        server.shutdown()
+        server_thread.join()
 
-        # for target in targets:
-        #     if target.communication_conn:
-        #         target.communication_conn.close()
-        #     else:
-        #         target.listen_conn.close()
         shutil.rmtree(log_dir)
         # self.enable_print()
         self.passed_tests += 1

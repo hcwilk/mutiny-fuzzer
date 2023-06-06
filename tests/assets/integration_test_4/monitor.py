@@ -47,12 +47,12 @@ class Monitor(object):
     is_enabled = True
     
     # This function will run asynchronously in a different thread to monitor the host
-    def monitor_target(self, target_ip, target_port, signal_main, channel = None):
+    def monitor_target(self, target_ip, target_port, signal_main, channel, server_ip, server_port):
 
 
         # initialize the socket for the agent to connect to
         self.communication_conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.communication_conn.connect(('127.0.0.1', 4321))
+        self.communication_conn.connect((server_ip, server_port))
         self.communication_conn.sendall(str.encode(f"{channel}|mutiny"))
 
         while True:
