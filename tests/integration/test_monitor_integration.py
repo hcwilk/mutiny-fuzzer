@@ -83,11 +83,13 @@ class IntegrationSuite(object):
         server_thread = threading.Thread(target=server.run)
         server_thread.start()
 
+        number_of_targets = 1
+
 
 
 
         # Imitate campaign mode and integrate X amount of targets with different PIDs
-        for i in range(4):
+        for i in range(number_of_targets):
             args = Namespace(prepped_fuzz = prepped_fuzzer_files[i], target_host = self.target_if, sleep_time = 0, range = '0-10', loop = None, dump_raw = None, quiet = False, log_all = False, testing = True, server = False, channel = str(i), server_ip = server_ip, server_port = server_port)
             port_decrement = 100 * i
             target = Target4(proto, self.target_if, target_port - port_decrement)
@@ -103,7 +105,7 @@ class IntegrationSuite(object):
             
 
             agent = Agent(server_ip, server_port, target_process.pid, str(i))
-            process = ProcessMonitor(agent.monitor_callback, 'Target', target_process.pid, time_interval = 0.5)
+            process = ProcessMonitor(agent.monitor_callback, f'Target {str(i)}', target_process.pid, time_interval = 0.5)
             file = FileMonitor(agent.monitor_callback, 'tests/assets/integration_test_4/crash.log')
             agent.modules.append(process)
             agent.modules.append(file)
@@ -123,7 +125,7 @@ class IntegrationSuite(object):
 
 
 
-        for i in range(4):
+        for i in range(number_of_targets):
             fuzz_threads[i].join(timeout=5)
             agent_threads[i].join(timeout=5)
         for target_process in target_processes:

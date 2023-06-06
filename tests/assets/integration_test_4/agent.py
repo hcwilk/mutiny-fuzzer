@@ -20,22 +20,28 @@ class ProcessMonitor(Thread):
     def check_process_running(self) -> bool:
         try:
             if self.pid:
+                # Check if a process with the given PID is running
                 subprocess.check_output(
-                    'ps -p '+self.pid+' -o comm=', shell=True)
+                    'ps -p '+str(self.pid), shell=True)
             else:
-                subprocess.check_output('pidof '+self.name, shell=True)
+                # Get the PID of the process by name
+                pid = subprocess.check_output(
+                    'pgrep '+self.name, shell=True)
+                if not pid:
+                    raise subprocess.CalledProcessError()
         except subprocess.CalledProcessError as e:
             return False
         else:
             return True
 
+
     def run(self) -> None:
         try:
             while self.active:
                 if self.check_process_running():
-                    self.callback(0, "Process is running")
+                    self.callback(0, f"{self.name} is running")
                 else:
-                    self.callback(1, "Process has terminated")
+                    self.callback(1, f"{self.name} has terminated")
                 time.sleep(self.time_interval)
         except Exception as e:
             print(e)
