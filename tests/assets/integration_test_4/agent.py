@@ -5,109 +5,120 @@ import sys
 import argparse
 import time
 import psutil
+import os
+import re
+
+class ProcessMonitor(Thread):
+    def __init__(self, callback, process_name: str, process_id: int, time_interval: float = 5) -> None:
+        Thread.__init__(self)
+        self.active = True
+        self.name = process_name
+        self.pid = process_id
+        self.callback = callback
+        self.time_interval = time_interval
+
+    def check_process_running(self) -> bool:
+        try:
+            if self.pid:
+                subprocess.check_output(
+                    'ps -p '+self.pid+' -o comm=', shell=True)
+            else:
+                subprocess.check_output('pidof '+self.name, shell=True)
+        except subprocess.CalledProcessError as e:
+            return False
+        else:
+            return True
+
+    def run(self) -> None:
+        try:
+            while self.active:
+                if self.check_process_running():
+                    self.callback(0, "Process is running")
+                else:
+                    self.callback(1, "Process has terminated")
+                time.sleep(self.time_interval)
+        except Exception as e:
+            print(e)
+            self.callback(1, "Error in process monitor")
+
+
+class FileMonitor(Thread):
+    def __init__(self, callback, filename: str, f_regex: str = '', time_interval: int = 1) -> None:
+        Thread.__init__(self)
+        self.active = True
+        self.filename = filename
+        self.callback = callback
+        self.last_modified = os.path.getmtime(filename)
+        self.time_interval = time_interval
+        self.regex = False
+        if f_regex:
+            try:
+                self.regex = re.compile(f_regex)
+            except Exception as e:
+                print(e)
+                print("Error parsing regex expression")
+
+    def run(self) -> None:
+        try:
+            while self.active:
+                modified = os.path.getmtime(self.filename)
+                if modified != self.last_modified:
+                    self.last_modified = modified
+                    if not self.regex:
+                        self.callback(1, "Log file modified")
+                    else:
+                        f = open(self.filename, 'r')
+                        data = '\n'.join(f.readlines())
+                        f.close()
+                        if self.regex.search(data):
+                            self.callback(
+                                1, f"Error logged in log file ({self.regex})")
+                            # clear log file
+                            open(self.filename, 'w').close()    
+                        else:
+                            self.callback(0, "No error logged in log file")
+                else:
+                    self.callback(0, "Log file not modified")
+                time.sleep(self.time_interval)
+        except Exception as e:
+            print(e)
+            self.callback(1, "Error in file monitor")
 
 
 class Agent:
-    def __init__(self, server_ip: str, server_port: int, pid: int, channel: str, type: str = 'remote-agent') -> None:
-
-        self.lock = Lock()
-
-        # # Only needs to be one way communication, so I think we can cut down on some of the code here
-        # self.agent_logfile = open('./tests/assets/integration_test_4/agent.log', 'w')
-        # self.agent_logfile.write('Agent log file\n')
-        # self.agent_logfile.close()
-
-        # The PID of the process to monitor
-        self.pid = pid
-
-        # connection with the 'monitor' server (this is a middle-man between Mutiny and the agent)
+    def __init__(self, host_ip: str, host_port: int, channel: str, minimal_mode: bool, type: str = 'remote-agent') -> None:
+        # established connection with server and sends initial packed containing channel and type
         self.conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-        # Init the connection with the server
-        self.conn.connect((server_ip, server_port))
-
+        self.conn.connect((host_ip, host_port))
         self.conn.sendall(str.encode(f'{channel}|{type}'))
-
-        self.channel = channel
-
-        # Instantiates the active bool that changes to false when the target process is dead
         self.active = True
 
-        # create a single thread to report the status of the process to the server
-        self.server_heartbeat_thread = Thread(target=self.monitor_program_logs)
+        # creates three threads to be used for monitoring server input, user input, and sending server heartbeats every 5 seconds
+        self.server_heartbeat_thread = Thread(
+            target=self.send_server_heartbeat)
 
-        self.monitor_process_thread = Thread(target=self.monitor_process)
-        self.cpu = None
-        self.mem = None
-
-        # self.host = host
-        # self.port = port
-        # self.log = []
-        # self.receive_fuzz_messages_thread = Thread(target=self.receive_fuzz_messages)
-
-
-        # The number of times we check for a pulse without a response
-        self.checking_pulse_attempts = 0
+        self.minimal_mode = minimal_mode
+        self.modules: list[Thread] = []
 
     def start(self) -> None:
         self.server_heartbeat_thread.start()
-        self.monitor_process_thread.start()
+        for module in self.modules:
+            module.start()
 
-        self.server_heartbeat_thread.join()
-        self.monitor_process_thread.join()
-
-    # Monitors the programs's CPU and memory usage. Right now it just uses CPU, but if we can decide on a solid rule for memory usage, we can add that in too
-    def monitor_process(self) -> bool:
+    def monitor_callback(self, exception_type: int, exception_info: str) -> None:
+        print('got callback, here is the info:', exception_info)
         try:
-            process = psutil.Process(self.pid)
-        except psutil.NoSuchProcess:
-            print(f"No process found with PID={self.pid}")
-            return
+            if exception_type == 0:
+                if not self.minimal_mode:
+                    self.conn.sendall(str.encode(exception_info))
+            else:
+                self.conn.sendall(str.encode('!'+exception_info))
+        except Exception as e:
+            print(e)
+            print("Error sending exception data to server")
 
-        while True:
-            try:
-                if self.cpu != None:
-                    cpu_percent = process.cpu_percent(interval=.1)
-                    if abs(cpu_percent - self.cpu) >= self.cpu/10:
-                        message = f'!CPU'
-                        self.conn.sendall(str.encode(message))  
 
-                        # with self.lock:
-                        #     self.agent_logfile = open('./tests/assets/integration_test_4/agent.log', 'a')
-                        #     self.agent_logfile.write('here are the inputs that couldve caused a CPU fluctuation: {}\n'.format(self.log[-3:]))
-                        #     self.agent_logfile.close()
-  
-                        break
-                else:
-                    self.cpu = process.cpu_percent(interval=.1)
-                    print('cpu percent: ' + str(self.cpu))
-                    # self.mem = process.memory_info()
-
-                print(f"CPU percent: {self.cpu}%")
-                # print(f"Memory usage: {self.mem.rss / (1024**2)} MB")
-
-                time.sleep(.1)
-            except psutil.NoSuchProcess:
-                print(f"Process with PID={self.pid} has terminated")
-                break
-        
-    # This would probably just be a syslog monitor in the real world, but this is a good enough solution for now
-    def monitor_program_logs(self) -> None:
+    def send_server_heartbeat(self) -> None:
         while self.active:
-            log_file = open('./tests/assets/integration_test_4/crash.log', 'r')
-            if 'crashed' in log_file.readlines():
-                print('trying to send')
-                message = f'!crashed'
-                self.conn.sendall(str.encode(message))  
-                log_file.close()
-                log_file = open('./tests/assets/integration_test_4/crash.log', 'w')
-                log_file.write('')
-                log_file.close()
-                self.active = False
-                # with self.lock:
-                #     self.agent_logfile = open('./tests/assets/integration_test_4/agent.log', 'a')
-                #     self.agent_logfile.write('here is the input that most likely caused a crash: {}\n'.format(self.log[-1]))
-                #     self.agent_logfile.close()
-            log_file.close()
-
-
+            self.conn.sendall(str.encode(":heartbeat"))
+            time.sleep(5)

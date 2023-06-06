@@ -278,8 +278,9 @@ class IntegrationSuite(object):
         target_processes = []
         agent_threads = []
 
-        # Create a server object
-        server = Server(server_ip, server_port)  # Use appropriate IP and port
+
+        # create Montitor Server object
+        server = Server(server_ip, server_port)
         server_thread = threading.Thread(target=server.run)
         server_thread.start()
 
@@ -298,8 +299,6 @@ class IntegrationSuite(object):
             target_process.start()
             target_processes.append(target_process)
             target_process.join(timeout=5)
-
-            time.sleep(1)
             
 
             agent = Agent(server_ip, server_port, target_process.pid, str(i))

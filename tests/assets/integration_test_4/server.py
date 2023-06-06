@@ -2,10 +2,8 @@ import socket
 from threading import Thread
 import argparse
 import sys
-import json
 
 
-# Class that handles each client connection (both mutiny and remote-agent)
 class ClientThread(Thread):
 
     def __init__(self, connection: socket.socket, address, id: int, exception_callback, type: str = "", channel: list[str] = []) -> None:
@@ -26,12 +24,13 @@ class ClientThread(Thread):
             print(e)
             print("Could not send :quit signal")
 
-    def send_exception(self, exception_info:str) -> None:
+    def send_exception(self, exception_info: str) -> None:
         try:
             self.conn.sendall(exception_info.encode())
         except Exception as e:
             print(e)
             print("Could not send exception data to mutiny client")
+            self.send_quit()
 
     def run(self) -> None:
         try:
@@ -50,17 +49,26 @@ class ClientThread(Thread):
                     self.conn.settimeout(15)
                     data = self.conn.recv(1024)
                     decoded = data.decode('utf-8')
-                    if decoded == ':quit' or decoded == '':
-                        print(f"[{self.id}] Client Disconnecting")
-                        self.send_quit()
-                        return
-                    print(
-                        f"[{self.id}] {self.channel} {self.address} ({self.type}): {decoded}")
-                    if decoded[0] == '!':
-                        self.exception_callback(decoded, self.id, self.channel[0])
+                    if decoded[0] == ':':
+                        decoded = decoded[1:]
+                        if decoded == 'quit':
+                            print(f"[{self.id}] Client Disconnecting")
+                            self.send_quit()
+                            return
+                        if decoded == 'heartbeat':
+                            pass
+                    elif decoded[0] == '!':
+                        message = decoded[1:]
+                        print(
+                            f"\033[91m[{self.id}] {self.channel} {self.address} ({self.type}): {message}\033[0m")
+                        self.exception_callback(
+                            message, self.id, self.channel[0])
+                    else:
+                        print(
+                            f"[{self.id}] {self.channel} {self.address} ({self.type}): {decoded}")
                 except Exception as e:
                     print(
-                        f"Could not receive data from client {self.id}. Disconnecting with error: {e}")
+                        f"Could not receive data from client {self.id}. Disconnecting.")
                     self.send_quit()
 
 
@@ -78,12 +86,13 @@ class Server(Thread):
 
     def add_exception(self, exception_info, agent_id, channel):
         for conn in self.connections:
-            if conn.type == 'mutiny' and (channel in conn.channel or 'all' in conn.channel):
+            if conn.active and conn.type == 'mutiny' and (channel in conn.channel or 'all' in conn.channel):
                 conn.send_exception(exception_info)
 
     def run(self) -> None:
         while self.active:
             new_conn, address = self.socket.accept()
+            print('new connection')
             self.connections.append(ClientThread(
                 new_conn, address, self.total_connections, self.add_exception, channel=[]))
             self.total_connections += 1
@@ -93,6 +102,5 @@ class Server(Thread):
         for conn in self.connections:
             if conn.active:
                 conn.send_quit()
-                conn.join()
         self.active = False
         sys.exit(0)
