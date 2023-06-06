@@ -5,10 +5,12 @@ from time import sleep
 class Target4(MockServer):
 
     def accept_fuzz(self):
+        print('target started on port ' + str(self.listen_port))
         #TODO: make message_processor.preconnect available, assert its being called
         # accept initial connection
         self.accept_connection()
        
+        print('heres the pid: ' + str(self.pid))
         while True:
             # receive hi
             self.receive_packet(2)

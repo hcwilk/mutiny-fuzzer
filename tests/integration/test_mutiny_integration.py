@@ -4,6 +4,7 @@ import shutil
 import traceback
 import os
 import threading
+from multiprocessing import Process
 import sys
 
 sys.path.append('../mutiny-fuzzer')
@@ -252,6 +253,8 @@ class IntegrationSuite(object):
         # self.block_print() 
         # populate args
 
+        prepped_fuzzer_files = ['tests/assets/integration_test_4/tcp.fuzzer1', 'tests/assets/integration_test_4/tcp.fuzzer2', 'tests/assets/integration_test_4/tcp.fuzzer3', 'tests/assets/integration_test_4/tcp.fuzzer4']
+
         # set IP to loopback if L2raw, else set to localhost
         if proto=='L2raw':
             self.target_if = gma()
@@ -259,66 +262,64 @@ class IntegrationSuite(object):
             self.target_if = '127.0.0.1'
 
         # initialize args for Fuzzing
-        args = Namespace(prepped_fuzz = prepped_fuzzer_file, target_host = self.target_if, sleep_time = 0, range = '0-10', loop = None, dump_raw = None, quiet = False, log_all = False, testing = True, server = False)
         
         # set up log file
         log_dir = prepped_fuzzer_file.split('.')[0] + '_logs'
         # stand up target server
-        target1 = Target4(proto, self.target_if, target_port)
-        target2 = Target4(proto, self.target_if, target_port-100)
-        target3 = Target4(proto, self.target_if, target_port-200)
-        target4 = Target4(proto, self.target_if, target_port-300)
+       # Initial configuration
+        fuzz_threads = []
+        targets = []
+        target_processes = []
+        agents = []
+        agent_threads = []
+
+        # Create targets, agents, and threads of both
+        for i in range(2):
+            args = Namespace(prepped_fuzz = prepped_fuzzer_files[i], target_host = self.target_if, sleep_time = 0, range = '0-10', loop = None, dump_raw = None, quiet = False, log_all = False, testing = True, server = False)
+            port_decrement = 100 * i
+            target = Target4(proto, self.target_if, target_port - port_decrement)
+            targets.append(target)
+            
+               # Start target.accept_fuzz() in new process instead of thread
+            target_process = Process(target=target.accept_fuzz)
+            target_process.start()
+            target_processes.append(target_process)
+            target_process.join(timeout=5)
+
+            time.sleep(1)
+            
+            agent = Agent(self.target_if, 4321, target_process.pid, str(port_decrement))
     
-        # run mutiny
-        fuzzer = Mutiny(args)
-        fuzzer.radamsa = os.path.abspath( os.path.join(__file__, '../../../radamsa-0.6/bin/radamsa'))
-        fuzzer.import_custom_processors()
-        fuzzer.debug = False
+            agent_thread = threading.Thread(target=agent.start)
+            agent_thread.start()
+            agent_threads.append(agent_thread)
 
-        # start listening for the fuzz sessions
-        target_thread = threading.Thread(target=target1.accept_fuzz, args=())
-        target_thread.start()
-        target_thread = threading.Thread(target=target2.accept_fuzz, args=())
-        target_thread.start()
-        target_thread = threading.Thread(target=target3.accept_fuzz, args=())
-        target_thread.start()
-        target_thread = threading.Thread(target=target4.accept_fuzz, args=())
-        target_thread.start()
-        time.sleep(1)
+            fuzzer = Mutiny(args)
+            fuzzer.radamsa = os.path.abspath(os.path.join(__file__, '../../../radamsa-0.6/bin/radamsa'))
+            fuzzer.import_custom_processors()
+            fuzzer.debug = False
 
-        # start the agent
-        agent1 = Agent(self.target_if, target_port, pid = target1.pid, host='127.0.0.1', port=4321)
-        agent_thread_1 = threading.Thread(target=agent1.start, args=())
-        agent_thread_1.start()
-
-        agent2 = Agent(self.target_if, target_port, pid = target2.pid, host='127.0.0.1', port=4321)
-        agent_thread_2 = threading.Thread(target=agent2.start, args=())
-        agent_thread_2.start()
-
-        agent = Agent(self.target_if, target_port, pid = target.pid, host='127.0.0.1', port=4321)
-        agent_thread = threading.Thread(target=agent.start, args=())
-        agent_thread.start()
-
-        agent = Agent(self.target_if, target_port, pid = target.pid, host='127.0.0.1', port=4321)
-        agent_thread = threading.Thread(target=agent.start, args=())
-        agent_thread.start()
-        time.sleep(2)
-
-        # start the fuzzer
-        fuzz_thread = threading.Thread(target=fuzzer.fuzz, args=())
-        fuzz_thread.start() # connect to target and begin fuzzing
-        target_thread.join()
-        fuzz_thread.join()
-        # agent_thread.join()
-        print('threads')
-        for thread in threading.enumerate():
-            print(thread)
+            fuzz_thread = threading.Thread(target=fuzzer.fuzz)
+            fuzz_thread.start()
+            fuzz_threads.append(fuzz_thread)
 
 
-        if target.communication_conn:
-            target.communication_conn.close()
-        else:
-            target.listen_conn.close()
+
+        for i in range(2):
+            fuzz_threads[i].join(timeout=5)
+            agent_threads[i].join(timeout=5)
+        for target_process in target_processes:
+            target_process.join(timeout=5)
+
+        # print('threads')
+        # for thread in threading.enumerate():
+        #     print(thread)
+
+        # for target in targets:
+        #     if target.communication_conn:
+        #         target.communication_conn.close()
+        #     else:
+        #         target.listen_conn.close()
         shutil.rmtree(log_dir)
         # self.enable_print()
         self.passed_tests += 1
@@ -344,18 +345,18 @@ def main():
     print('-' * 53)
     start_time = time.perf_counter()
     suite = IntegrationSuite()
-    try: # SINGLE CRASH -> PAUSE -> RESUME -> FINISH SPECIFIED RANGE
-        # #tcp
-        suite.test_1(target_port= 7772, proto = 'tcp', prepped_fuzzer_file = 'tests/assets/integration_test_1/tcp.fuzzer')
-        # # udp 
-        # suite.test_1(target_port= 7773, proto = 'udp', prepped_fuzzer_file = 'tests/assets/integration_test_1/udp.fuzzer')
-        # # tls
-        # suite.test_1(target_port= 7774, proto = 'tls', prepped_fuzzer_file = 'tests/assets/integration_test_1/tls.fuzzer')
-        # raw
-        # suite.test_1(target_port= -1, proto = 'L2raw', prepped_fuzzer_file = 'tests/assets/integration_test_1/raw.fuzzer')
-    except Exception as e:
-        print(repr(e))
-        traceback.print_exc()
+    # try: # SINGLE CRASH -> PAUSE -> RESUME -> FINISH SPECIFIED RANGE
+    #     # #tcp
+    #     suite.test_1(target_port= 7772, proto = 'tcp', prepped_fuzzer_file = 'tests/assets/integration_test_1/tcp.fuzzer')
+    #     # # udp 
+    #     # suite.test_1(target_port= 7773, proto = 'udp', prepped_fuzzer_file = 'tests/assets/integration_test_1/udp.fuzzer')
+    #     # # tls
+    #     # suite.test_1(target_port= 7774, proto = 'tls', prepped_fuzzer_file = 'tests/assets/integration_test_1/tls.fuzzer')
+    #     # raw
+    #     # suite.test_1(target_port= -1, proto = 'L2raw', prepped_fuzzer_file = 'tests/assets/integration_test_1/raw.fuzzer')
+    # except Exception as e:
+    #     print(repr(e))
+    #     traceback.print_exc()
 
     # try: # SINGLE OUTBOUND LINE -> CRASH -> HALT
     #     #tcp
