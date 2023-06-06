@@ -28,6 +28,8 @@ class Agent:
 
         self.conn.sendall(str.encode(f'{channel}|{type}'))
 
+        self.channel = channel
+
         print('here is the pid of the process Im monitoring: ' + str(self.pid))
 
         # Instantiates the active bool that changes to false when the target process is dead
@@ -66,12 +68,13 @@ class Agent:
 
         while True:
             try:
-                print('trying to get CPU percent')
                 if self.cpu != None:
-                    print('making comparison')
                     cpu_percent = process.cpu_percent(interval=.1)
                     if abs(cpu_percent - self.cpu) >= self.cpu/10:
                         print(f"Unusual CPU percent: {cpu_percent}%, check these last three messages")   
+                        message = f'!CPU'
+                        self.conn.sendall(str.encode(message))  
+
                         # with self.lock:
                         #     self.agent_logfile = open('./tests/assets/integration_test_4/agent.log', 'a')
                         #     self.agent_logfile.write('here are the inputs that couldve caused a CPU fluctuation: {}\n'.format(self.log[-3:]))
@@ -79,8 +82,8 @@ class Agent:
   
                         break
                 else:
-                    print('setting')
                     self.cpu = process.cpu_percent(interval=.1)
+                    print('cpu percent: ' + str(self.cpu))
                     # self.mem = process.memory_info()
 
                 print(f"CPU percent: {self.cpu}%")
@@ -97,7 +100,7 @@ class Agent:
             log_file = open('./tests/assets/integration_test_4/crash.log', 'r')
             if 'crashed' in log_file.readlines():
                 print('trying to send')
-                message = 'crashed'
+                message = f'!crashed'
                 self.conn.sendall(str.encode(message))  
                 log_file.close()
                 log_file = open('./tests/assets/integration_test_4/crash.log', 'w')

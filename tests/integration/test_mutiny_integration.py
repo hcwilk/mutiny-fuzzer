@@ -265,22 +265,19 @@ class IntegrationSuite(object):
         
         # set up log file
         log_dir = prepped_fuzzer_file.split('.')[0] + '_logs'
-        # stand up target server
-       # Initial configuration
         fuzz_threads = []
         targets = []
         target_processes = []
-        agents = []
         agent_threads = []
 
         # Create targets, agents, and threads of both
-        for i in range(2):
-            args = Namespace(prepped_fuzz = prepped_fuzzer_files[i], target_host = self.target_if, sleep_time = 0, range = '0-10', loop = None, dump_raw = None, quiet = False, log_all = False, testing = True, server = False)
+        for i in range(4):
+            args = Namespace(prepped_fuzz = prepped_fuzzer_files[i], target_host = self.target_if, sleep_time = 0, range = '0-10', loop = None, dump_raw = None, quiet = False, log_all = False, testing = True, server = False, channel = str(i))
             port_decrement = 100 * i
             target = Target4(proto, self.target_if, target_port - port_decrement)
             targets.append(target)
             
-               # Start target.accept_fuzz() in new process instead of thread
+            # Start target.accept_fuzz() in new process instead of thread
             target_process = Process(target=target.accept_fuzz)
             target_process.start()
             target_processes.append(target_process)
@@ -288,8 +285,7 @@ class IntegrationSuite(object):
 
             time.sleep(1)
             
-            agent = Agent(self.target_if, 4321, target_process.pid, str(port_decrement))
-    
+            agent = Agent(self.target_if, 4321, target_process.pid, str(i))
             agent_thread = threading.Thread(target=agent.start)
             agent_thread.start()
             agent_threads.append(agent_thread)
@@ -305,7 +301,7 @@ class IntegrationSuite(object):
 
 
 
-        for i in range(2):
+        for i in range(4):
             fuzz_threads[i].join(timeout=5)
             agent_threads[i].join(timeout=5)
         for target_process in target_processes:

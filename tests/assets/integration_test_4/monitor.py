@@ -47,25 +47,23 @@ class Monitor(object):
     is_enabled = True
     
     # This function will run asynchronously in a different thread to monitor the host
-    def monitor_target(self, target_ip, target_port, signal_main):
+    def monitor_target(self, target_ip, target_port, signal_main, channel = None):
+
 
         # initialize the socket for the agent to connect to
-        socket_family = socket.AF_INET if '.' in target_ip else socket.AF_INET6
-        self.listen_conn = socket.socket(socket_family, socket.SOCK_STREAM)
-        self.listen_conn.bind((target_ip, target_port-1500))
-        self.listen_conn.listen()
-
-        # accepting the agent connection
-        self.communication_conn = self.listen_conn.accept()[0]
-
+        self.communication_conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.communication_conn.connect(('127.0.0.1', 4321))
+        self.communication_conn.sendall(str.encode(f"{channel}|mutiny"))
 
         while True:
             
             data = self.communication_conn.recv(1024)
             decoded = data.decode('utf-8')
-            if decoded =='crashed':
+            if decoded =='!crashed':
                 exception = LogCrashException('crashed')
                 signal_main(LogCrashException(exception))
                 signal_main(PauseFuzzingException('Sleeping for 10 seconds'))
                 sleep(.05)
                 signal_main(ResumeFuzzingException())
+            elif decoded == '!CPU':
+                print('handle CPU exception')

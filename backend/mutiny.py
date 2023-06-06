@@ -51,6 +51,9 @@ class Mutiny(object):
             self.campaign_event_queue = queue.SimpleQueue()
         self.connected = False
 
+        self.channel = getattr(args, 'channel', None) # Add default value None if 'channel' doesn't exist
+
+
 
         #Assign Lower/Upper bounds on test cases as needed
         if args.range:
@@ -109,7 +112,7 @@ class Mutiny(object):
         ########## Launch child monitor thread
             ### monitor.task = spawned thread
             ### monitor.queue = enqueued exceptions
-        self.monitor = proc_director.start_monitor(self.target_host, self.fuzzer_data.target_port)
+        self.monitor = proc_director.start_monitor(self.target_host, self.fuzzer_data.target_port, self.channel)
         self.exception_processor = proc_director.exception_processor()
         self.message_processor = proc_director.message_processor()
 
@@ -131,7 +134,7 @@ class Mutiny(object):
 
         while True:
             # This is good for testing new agent strategies
-            # time.sleep(.5)
+            time.sleep(.5)
             last_message_collection = deepcopy(self.fuzzer_data.message_collection)
             was_crash_detected = False
             if not is_paused and self.sleep_time > 0.0:
