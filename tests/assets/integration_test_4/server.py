@@ -65,6 +65,9 @@ class ClientThread(Thread):
                             f"\033[91m[{self.id}] {self.channel} {self.address} ({self.type}): {message}\033[0m")
                         self.exception_callback(
                             message, self.id, self.channel[0])
+                    elif decoded[0] == '#':
+                        self.exception_callback(message, self.id, 'all')
+                        
 
 
                     else:

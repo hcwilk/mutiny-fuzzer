@@ -1,5 +1,5 @@
 import socket
-from threading import Thread, Lock
+from threading import Thread
 import subprocess
 import sys
 import argparse
@@ -7,10 +7,10 @@ import time
 import psutil
 import os
 import re
-from ping3 import ping, verbose_ping
+from ping3 import ping
 
 class ProcessMonitor(Thread):
-    def __init__(self, callback, process_name: str, process_id: int, time_interval: float = 5) -> None:
+    def __init__(self, callback, kill_callback, process_name: str, process_id: int, time_interval: float = 5) -> None:
         Thread.__init__(self)
         self.active = True
         self.name = process_name
@@ -18,7 +18,9 @@ class ProcessMonitor(Thread):
         self.callback = callback
         self.time_interval = time_interval
         self.terminated_counts = 0
+        self.kill_callback = kill_callback
 
+    # platform-agnostic way to check if a process is running
     def check_process_running(self) -> bool:
         try:
             if self.pid:
@@ -43,10 +45,14 @@ class ProcessMonitor(Thread):
                 if self.check_process_running():
                     self.callback(0, f"{self.name} is running")
                 else:
-                    self.callback(1, f"Process has terminated")
-                    self.terminated_counts += 1
-                    if self.terminated_counts > 3:
-                        self.active = False
+                    self.callback(1, f"Killed")
+                    # Should kill the rest of the modules
+                    self.kill_callback()
+
+                    # self.terminated_counts += 1
+                    # # If the process has terminated 3 times in a row, we'll assume it's not coming back and shut down this module
+                    # if self.terminated_counts > 3:
+                    #     self.active = False
 
                 time.sleep(self.time_interval)
         except Exception as e:
@@ -56,7 +62,7 @@ class ProcessMonitor(Thread):
 
 class StatsMonitor(Thread):
     def __init__(self, callback, process_name: str, process_id: int, host: str, time_interval: float = 5) -> None:
-        print("Initializing Statsonitor")
+        print("Initializing StatsMonitor")
         Thread.__init__(self)
         self.active = True
         self.name = process_name
@@ -64,15 +70,17 @@ class StatsMonitor(Thread):
         self.callback = callback
         self.host = host
         self.time_interval = time_interval
-        self.terminated_counts = 0
+        self.cpu_high_counts = 0
         self.process = psutil.Process(self.pid)
+
+        
 
 
         # Setting ground truth for CPU, Ping, Memory, and Disk usage
         self.cpu = self.process.cpu_percent(interval=self.time_interval)
         self.ping = ping(self.host)
         self.memory = self.process.memory_info().rss
-        # not platform independent
+        # No easy way to fetch Disk Usage (which is really just I/O usage) in platform-agnostic setting, so we'll ignore it if there's an error
         try:
             self.disk = self.process.io_counters().read_bytes + self.process.io_counters().write_bytes
         except AttributeError:
@@ -83,27 +91,38 @@ class StatsMonitor(Thread):
         {
             "check_func": self.check_cpu_usage,
             "error_message": "CPU usage is high",
+            "success_message": "CPU usage is normal",
         },
         {
             "check_func": self.check_ping_response,
             "error_message": "Ping response time is slow",
+            "success_message": "Ping response time is normal",
         },
         {
             "check_func": self.check_memory_usage,
             "error_message": "Memory usage is high",
+            "success_message": "Memory usage is normal",
         },
         {
             "check_func": self.check_disk_usage,
             "error_message": "Disk usage is high",
+            "success_message": "Disk usage is normal",
         },
     ]
 
     def check_cpu_usage(self) -> bool:
-        return self.process.cpu_percent(interval=self.time_interval) > (self.cpu*1.1)
+        if self.process.cpu_percent(interval=self.time_interval) > (self.cpu*1.1):
+            self.cpu_high_counts += 1
+            if self.cpu_high_counts >= 3:
+                # recalibrate what a high CPU usage is after 3 consecutive high CPU usage readings
+                self.cpu = self.process.cpu_percent(interval=self.time_interval)
+            return True
 
+    # Running locally, this will obviously never throw an error, but it's here for when the host is remote
     def check_ping_response(self) -> bool:
         return ping(self.host) > (self.ping * 2)
 
+    # Wasn't too sure what the rule for this should be 
     def check_memory_usage(self) -> bool:
         return self.process.memory_info().rss > (self.memory * 1.1)
 
@@ -121,8 +140,11 @@ class StatsMonitor(Thread):
                 try:
                     if monitor["check_func"]():
                         self.callback(1, monitor["error_message"])
+                    else:
+                        self.callback(0, monitor["success_message"])
+                
                 except Exception as e:
-                    print(e)
+                    print('Likely process has ended, coming from StatsMonitor',e)
                     self.callback(1, "Error in process monitor")
 
             time.sleep(self.time_interval)
@@ -199,7 +221,9 @@ class Agent:
                 elif exception_type == 1:
                     message = f"!{exception_info}"
                     self.conn.sendall(str.encode(message))
-            
+                else:
+                    message = f"#{exception_info}"
+                    self.conn.sendall(str.encode(message))            
             except Exception as e:
                 print(e)
                 print("Error sending exception data to server")
@@ -209,3 +233,8 @@ class Agent:
         while self.active:
             self.conn.sendall(str.encode(":heartbeat"))
             time.sleep(5)
+
+    def kill_callback(self) -> None:
+        print('kill callback called')
+        for module in self.modules:
+            module.active = False

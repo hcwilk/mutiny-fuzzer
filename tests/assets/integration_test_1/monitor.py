@@ -46,7 +46,7 @@ class Monitor(object):
     is_enabled = True
     
     # This function will run asynchronously in a different thread to monitor the host
-    def monitor_target(self, target_ip, target_port, signal_main):
+    def monitor_target(self, server_ip, server_port, signal_main, channel = None):
         while True:
             log_file = open('./tests/assets/integration_test_1/crash.log', 'r')
             if 'crashed' in log_file.readlines():

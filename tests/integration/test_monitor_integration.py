@@ -106,9 +106,9 @@ class IntegrationSuite(object):
             
 
             agent = Agent(server_ip, server_port, str(i), False)
-            process = ProcessMonitor(agent.monitor_callback, f'Target {str(i)}', target_process.pid, time_interval = 0.5)
+            process = ProcessMonitor(agent.monitor_callback, agent.kill_callback, f'Target {str(i)}', target_process.pid, time_interval = 0.5)
             file = FileMonitor(agent.monitor_callback, 'tests/assets/integration_test_4/crash.log')
-            stats = StatsMonitor(agent.monitor_callback, f'Target {str(i)}', target_process.pid, host=self.target_if, time_interval = 0.5)
+            stats = StatsMonitor(agent.monitor_callback, f'Target {str(i)}', target_process.pid, self.target_if, .5)
             agent.modules.append(process)
             agent.modules.append(file)
             agent.modules.append(stats)

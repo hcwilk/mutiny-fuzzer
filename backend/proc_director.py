@@ -101,7 +101,7 @@ class ProcDirector(object):
             
             # Immediately start monitor and allow it to run until Mutiny stops if enabled
             if self.monitor.is_enabled:
-                self.task = threading.Thread(target=self.monitor_target,args=(self.monitor.monitor_target, target_ip, target_port, self.signal_crash_detected_on_main, channel, server_ip, server_port))
+                self.task = threading.Thread(target=self.monitor_target,args=(self.monitor.monitor_target, server_ip, server_port, self.signal_crash_detected_on_main, channel))
                 # Daemon thread won't stop main thread from exiting
                 self.task.daemon = True
                 self.task.start()
@@ -127,6 +127,7 @@ class ProcDirector(object):
 
         # Don't override this function
         def signal_crash_detected_on_main(self, exception: Exception):
+            print('putting exception on queue')
             if not isinstance(exception, Exception):
                 print_error('Invalid monitor behavior - signal_main() must be sent an exception, usually a Mutiny exception.')
                 print(f'Received: {str(exception)}')

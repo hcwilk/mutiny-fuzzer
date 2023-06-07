@@ -134,6 +134,7 @@ class Mutiny(object):
 
         while True:
             # This is good for testing new agent strategies
+            time.sleep(1)
             last_message_collection = deepcopy(self.fuzzer_data.message_collection)
             was_crash_detected = False
             if not is_paused and self.sleep_time > 0.0:
@@ -207,7 +208,6 @@ class Mutiny(object):
                 if failure_count == 0:
                     try:
                         print_success("Mutiny detected a crash")
-                        print('hitting here from mutiny backend')
                         self.logger.output_log(self.seed, self.fuzzer_data.message_collection, str(e))
                     except AttributeError:  
                         pass   
@@ -231,6 +231,9 @@ class Mutiny(object):
                 print_warning("Retrying current run: %s" % (str(e)))
                 # Slightly sketchy - a continue *should* just go to the top of the while without changing i
                 continue
+
+            except TargetLogFileModifiedException as e:
+                print('Target log file modified, restarting target')
 
             except LogAndHaltException as e:
                 if self.logger:
@@ -437,6 +440,7 @@ class Mutiny(object):
         if not self.monitor.queue.empty():
             print_warning('Monitor event detected')
             exception = self.monitor.queue.get()
+            print('this is the getted exception: ', exception)
             if self.campaign_mode:
                 self.campaign_event_queue.put(exception)
 

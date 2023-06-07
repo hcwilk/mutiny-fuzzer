@@ -47,7 +47,7 @@ class Monitor(object):
     is_enabled = True
     
     # This function will run asynchronously in a different thread to monitor the host
-    def monitor_target(self, target_ip, target_port, signal_main, channel, server_ip, server_port):
+    def monitor_target(self, server_ip, server_port, signal_main, channel):
 
         # initialize the socket for the agent to connect to
         self.communication_conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -60,9 +60,13 @@ class Monitor(object):
             decoded = data.decode('utf-8')
             print('mutiny monitor received', decoded)
             if decoded == 'Log file modified':
-                signal_main(TargetLogFileModifiedException('Log file modified'))
-            if decoded =='Process has terminated':
+                print('trying to raise exception here')
+                exception = TargetLogFileModifiedException('Log file modified')
+                signal_main(TargetLogFileModifiedException(exception))
+            if decoded =='Killed':
+                print('trying to raise ProcessTerminatedException here')
                 exception = LogCrashException('crashed')
+                print('exception', exception)
                 signal_main(LogCrashException(exception))
                 signal_main(PauseFuzzingException('Sleeping for 10 seconds'))
                 sleep(.05)
