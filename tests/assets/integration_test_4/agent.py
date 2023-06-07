@@ -7,7 +7,6 @@ import time
 import psutil
 import os
 import re
-import process
 from ping3 import ping, verbose_ping
 
 class ProcessMonitor(Thread):
@@ -55,7 +54,7 @@ class ProcessMonitor(Thread):
             self.callback(1, "Error in process monitor")
 
 
-class Statsonitor(Thread):
+class StatsMonitor(Thread):
     def __init__(self, callback, process_name: str, process_id: int, host: str, time_interval: float = 5) -> None:
         print("Initializing Statsonitor")
         Thread.__init__(self)
@@ -70,10 +69,15 @@ class Statsonitor(Thread):
 
 
         # Setting ground truth for CPU, Ping, Memory, and Disk usage
-        self.cpu = process.cpu_percent(interval=self.time_interval)
+        self.cpu = self.process.cpu_percent(interval=self.time_interval)
         self.ping = ping(self.host)
         self.memory = self.process.memory_info().rss
-        self.disk = self.process.io_counters().read_bytes + self.process.io_counters().write_bytes
+        # not platform independent
+        try:
+            self.disk = self.process.io_counters().read_bytes + self.process.io_counters().write_bytes
+        except AttributeError:
+            self.disk = None
+
 
         self.monitoring_list = [
         {
@@ -104,8 +108,12 @@ class Statsonitor(Thread):
         return self.process.memory_info().rss > (self.memory * 1.1)
 
     def check_disk_usage(self) -> bool:
-        io_info = self.process.io_counters()
-        return (io_info.read_bytes + io_info.write_bytes) > self.disk * 1.1
+        try:
+            io_info = self.process.io_counters()
+            return (io_info.read_bytes + io_info.write_bytes) > self.disk * 1.1
+        except AttributeError:
+            # platform issues handled here
+            return False
 
     def run(self) -> None:
         while self.active:

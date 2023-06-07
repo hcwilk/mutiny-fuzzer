@@ -59,7 +59,9 @@ class Monitor(object):
             data = self.communication_conn.recv(1024)
             decoded = data.decode('utf-8')
             print('mutiny monitor received', decoded)
-            if decoded =='!crashed':
+            if decoded == 'Log file modified':
+                signal_main(TargetLogFileModifiedException('Log file modified'))
+            if decoded =='Process has terminated':
                 exception = LogCrashException('crashed')
                 signal_main(LogCrashException(exception))
                 signal_main(PauseFuzzingException('Sleeping for 10 seconds'))

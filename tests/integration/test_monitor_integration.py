@@ -14,6 +14,7 @@ from tests.assets.integration_test_4.target import Target4
 from tests.assets.integration_test_4.agent import Agent
 from tests.assets.integration_test_4.agent import FileMonitor
 from tests.assets.integration_test_4.agent import ProcessMonitor
+from tests.assets.integration_test_4.agent import StatsMonitor
 from tests.assets.integration_test_4.server import Server
 from backend.mutiny import Mutiny
 # Integration test to simulate a complete interaction between a target 
@@ -107,8 +108,10 @@ class IntegrationSuite(object):
             agent = Agent(server_ip, server_port, str(i), False)
             process = ProcessMonitor(agent.monitor_callback, f'Target {str(i)}', target_process.pid, time_interval = 0.5)
             file = FileMonitor(agent.monitor_callback, 'tests/assets/integration_test_4/crash.log')
+            stats = StatsMonitor(agent.monitor_callback, f'Target {str(i)}', target_process.pid, host=self.target_if, time_interval = 0.5)
             agent.modules.append(process)
             agent.modules.append(file)
+            agent.modules.append(stats)
 
             agent_thread = threading.Thread(target=agent.start)
             agent_thread.start()
