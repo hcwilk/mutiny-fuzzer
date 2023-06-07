@@ -104,7 +104,7 @@ class IntegrationSuite(object):
             
             
 
-            agent = Agent(server_ip, server_port, target_process.pid, str(i))
+            agent = Agent(server_ip, server_port, str(i), False)
             process = ProcessMonitor(agent.monitor_callback, f'Target {str(i)}', target_process.pid, time_interval = 0.5)
             file = FileMonitor(agent.monitor_callback, 'tests/assets/integration_test_4/crash.log')
             agent.modules.append(process)
@@ -131,7 +131,6 @@ class IntegrationSuite(object):
         for target_process in target_processes:
             target_process.join(timeout=5)
 
-        server.shutdown()
         server_thread.join()
 
         shutil.rmtree(log_dir)

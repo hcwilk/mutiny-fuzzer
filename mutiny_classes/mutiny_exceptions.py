@@ -16,6 +16,14 @@
 class LogCrashException(Exception):
     pass
 
+# Raise this to indicate that the CPU is fluctuating too much
+class CPUFluctuationException(Exception):
+    pass
+
+# Raise this to indicate that the target log file has been modified
+class TargetLogFileModifiedException(Exception):
+    pass
+
 # Raise this to indicate the current test shouldn't continue, skip to next
 class AbortCurrentRunException(Exception):
     pass

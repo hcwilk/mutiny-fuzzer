@@ -17,6 +17,7 @@ class ClientThread(Thread):
         self.exception_callback = exception_callback
 
     def send_quit(self) -> None:
+        print('turning off client')
         self.active = False
         try:
             self.conn.sendall(':quit'.encode())
@@ -36,6 +37,7 @@ class ClientThread(Thread):
         try:
             data = self.conn.recv(1024)
             decoded = data.decode('utf-8').split("|")
+            print('this is first message from client', decoded)
             self.channel.append(decoded[0])
             self.type = decoded[1]
         except Exception as e:
@@ -63,6 +65,8 @@ class ClientThread(Thread):
                             f"\033[91m[{self.id}] {self.channel} {self.address} ({self.type}): {message}\033[0m")
                         self.exception_callback(
                             message, self.id, self.channel[0])
+
+
                     else:
                         print(
                             f"[{self.id}] {self.channel} {self.address} ({self.type}): {decoded}")

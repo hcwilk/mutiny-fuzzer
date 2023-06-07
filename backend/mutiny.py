@@ -207,6 +207,7 @@ class Mutiny(object):
                 if failure_count == 0:
                     try:
                         print_success("Mutiny detected a crash")
+                        print('hitting here from mutiny backend')
                         self.logger.output_log(self.seed, self.fuzzer_data.message_collection, str(e))
                     except AttributeError:  
                         pass   

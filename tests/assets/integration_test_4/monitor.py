@@ -58,6 +58,7 @@ class Monitor(object):
             
             data = self.communication_conn.recv(1024)
             decoded = data.decode('utf-8')
+            print('mutiny monitor received', decoded)
             if decoded =='!crashed':
                 exception = LogCrashException('crashed')
                 signal_main(LogCrashException(exception))
