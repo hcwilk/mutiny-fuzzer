@@ -137,7 +137,7 @@ class Mutiny(object):
 
         while True:
             # This is good for testing new agent strategies
-            time.sleep(1)
+            # time.sleep(1)
             last_message_collection = deepcopy(self.fuzzer_data.message_collection)
             was_crash_detected = False
             if not is_paused and self.sleep_time > 0.0:
@@ -223,6 +223,16 @@ class Mutiny(object):
 
                 failure_count = failure_count + 1
                 was_crash_detected = True
+
+            except TargetLogFileModifiedException as e:
+                print_warning("Target log file modified, check the logs for more information")
+                print_warning("Heres the exception: %s" % (str(e)))
+                try:
+                    self.logger.output_log(self.seed, self.fuzzer_data.message_collection, str(e))
+                except AttributeError:
+                    pass
+
+                # add more functionality ehre
 
             except AbortCurrentRunException as e:
                 # Give up on the run early, but continue to the next test

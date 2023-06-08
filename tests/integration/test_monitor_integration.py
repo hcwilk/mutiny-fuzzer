@@ -83,33 +83,42 @@ class IntegrationSuite(object):
         server_thread = threading.Thread(target=server.run)
         server_thread.start()
 
-        number_of_targets = 1
+        number_of_targets = 4
 
-        # Just stand up targets
         for i in range(number_of_targets):
-            # This these are the same ports that are in the fuzzer files
             port_decrement = 100 * i
             target = Target4(proto, self.target_if, target_port - port_decrement)
-            targets.append(target)            
-            # Start target.accept_fuzz() in new process instead of threa (this way it has it's own pidd
-            target_process = Process(target=target.accept_fuzz)
-            target_process.start()
-            target_processes.append(target_process)
+            targets.append(target)
 
+            print('appended')
+
+            
+            # Start target.accept_fuzz() in new process instead of thread
+            target_process = Process(target=target.accept_fuzz)
+
+            target_processes.append(target_process)
+            target_process.start()
+            print('started')
+
+
+       # Stand up agents
+        for i in range(number_of_targets):
 
             agent = Agent(server_ip, server_port, str(i), False)
-            process = ProcessMonitor(agent.monitor_callback, agent.kill_callback, f'Target {str(i)}', target_process.pid, time_interval = 1)
+            process = ProcessMonitor(agent.monitor_callback, agent.kill_callback, f'Target {str(i)}', target_processes[i].pid, time_interval = 1)
             file = FileMonitor(agent.monitor_callback, 'tests/assets/monitor_test_1/crash.log')
-            stats = StatsMonitor(agent.monitor_callback, f'Target {str(i)}', target_process.pid, self.target_if, 1)
+            stats = StatsMonitor(agent.monitor_callback, f'Target {str(i)}', target_processes[i].pid, self.target_if, 1)
             agent.modules.append(process)
             agent.modules.append(file)
             agent.modules.append(stats)
+
             agent_thread = threading.Thread(target=agent.start)
             agent_thread.start()
             agent_threads.append(agent_thread)
 
 
-            # attach fuzzers to target processes
+        # Imitate campaign mode and integrate X amount of targets with different PIDs
+        for i in range(number_of_targets):
             args = Namespace(prepped_fuzz = prepped_fuzzer_files[i], target_host = self.target_if, sleep_time = 0, range = '0-10', loop = None, dump_raw = None, quiet = False, log_all = False, testing = True, server = False, channel = str(i), server_ip = server_ip, server_port = server_port)
 
             fuzzer = Mutiny(args)

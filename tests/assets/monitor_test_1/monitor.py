@@ -60,17 +60,16 @@ class Monitor(object):
             data = self.communication_conn.recv(1024)
             decoded = data.decode('utf-8')
             print('mutiny monitor received', decoded)
-            # if decoded == 'Log file modified':
-            #     print('trying to raise exception here')
-            #     exception = TargetLogFileModifiedException('Log file modified')
-            #     signal_main(TargetLogFileModifiedException(exception))
+            if decoded == 'Log file modified':
+                exception = TargetLogFileModifiedException('Log file modified')
+                signal_main(TargetLogFileModifiedException(exception))
             if decoded =='Process has crashed':
-                print('Mutiny Client ', channel, ' received crash message from monitor')
                 exception = LogCrashException('crashed')
-                print('exception', exception)
                 signal_main(LogCrashException(exception))
                 signal_main(PauseFuzzingException('Sleeping for 10 seconds'))
                 sleep(.05)
                 signal_main(ResumeFuzzingException())
-            elif decoded == '!CPU':
+            elif decoded == 'CPU':
+                print('Mutiny monitor received CPU exception')
+                # Need to properly handle CPU exceptions
                 print('handle CPU exception')

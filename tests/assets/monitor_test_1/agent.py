@@ -56,7 +56,7 @@ class ProcessMonitor(Thread):
 
                 time.sleep(self.time_interval)
         except Exception as e:
-            print(e)
+            print('This is the exception',e)
             self.callback(2, "Error in process monitor")
 
 
@@ -147,7 +147,7 @@ class StatsMonitor(Thread):
                 
                 except Exception as e:
                     print('Likely process has ended, coming from StatsMonitor',e)
-                    self.callback(2, "Error in process monitor")
+                    self.callback(2, "Error in Health monitor")
 
             time.sleep(self.time_interval)
 
@@ -228,8 +228,8 @@ class Agent:
                     message = f"!{exception_info}"
                     self.conn.sendall(str.encode(message))
                 else:
-                    print('here is message')
                     message = f"#{exception_info}"
+                    print('here is message',message)
                     self.conn.sendall(str.encode(message))            
             except Exception as e:
                 print(e)
