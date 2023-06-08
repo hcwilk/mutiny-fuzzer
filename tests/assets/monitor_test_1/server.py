@@ -66,10 +66,7 @@ class ClientThread(Thread):
                         self.exception_callback(
                             message, self.id, self.channel[0])
                     elif decoded[0] == '#':
-                        self.exception_callback(message, self.id, 'all')
-                        
-
-
+                        print('Something went wrong with one of the Monitoring Modules',message)                        
                     else:
                         print(
                             f"[{self.id}] {self.channel} {self.address} ({self.type}): {decoded}")

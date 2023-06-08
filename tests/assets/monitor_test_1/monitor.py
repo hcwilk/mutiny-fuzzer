@@ -51,6 +51,7 @@ class Monitor(object):
 
         # initialize the socket for the agent to connect to
         self.communication_conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        print('mutiny trying to bind to', server_ip, server_port)
         self.communication_conn.connect((server_ip, server_port))
         self.communication_conn.sendall(str.encode(f"{channel}|mutiny"))
 
@@ -59,12 +60,12 @@ class Monitor(object):
             data = self.communication_conn.recv(1024)
             decoded = data.decode('utf-8')
             print('mutiny monitor received', decoded)
-            if decoded == 'Log file modified':
-                print('trying to raise exception here')
-                exception = TargetLogFileModifiedException('Log file modified')
-                signal_main(TargetLogFileModifiedException(exception))
-            if decoded =='Killed':
-                print('trying to raise ProcessTerminatedException here')
+            # if decoded == 'Log file modified':
+            #     print('trying to raise exception here')
+            #     exception = TargetLogFileModifiedException('Log file modified')
+            #     signal_main(TargetLogFileModifiedException(exception))
+            if decoded =='Process has crashed':
+                print('Mutiny Client ', channel, ' received crash message from monitor')
                 exception = LogCrashException('crashed')
                 print('exception', exception)
                 signal_main(LogCrashException(exception))

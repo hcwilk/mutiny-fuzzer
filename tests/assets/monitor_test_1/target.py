@@ -7,6 +7,7 @@ class Target4(MockServer):
     def accept_fuzz(self):
         #TODO: make message_processor.preconnect available, assert its being called
         # accept initial connection
+        print('were here')
         self.accept_connection()
        
         while True:
@@ -20,7 +21,7 @@ class Target4(MockServer):
                 # 7th iteration should cause a crash
                 # write to file that monitor_target is reading
                 assert result == bytearray(b'magic phrase:passworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassworpassword')
-                with open('./tests/assets/integration_test_4/crash.log', 'w') as file:
+                with open('./tests/assets/monitor_test_1/crash.log', 'w') as file:
                     # file.write('crashed on input: ' + str(result))
                     file.write('crashed')
                     if self.communication_conn.type == socket.SOCK_STREAM:

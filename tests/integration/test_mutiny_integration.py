@@ -14,9 +14,9 @@ from getmac import get_mac_address as gma
 from tests.assets.integration_test_1.target import Target1
 from tests.assets.integration_test_2.target import Target2
 from tests.assets.integration_test_3.target import Target3
-from tests.assets.integration_test_4.target import Target4
-from tests.assets.integration_test_4.agent import Agent
-from tests.assets.integration_test_4.server import Server
+from tests.assets.monitor_test_1.target import Target4
+from tests.assets.monitor_test_1.agent import Agent
+from tests.assets.monitor_test_1.server import Server
 from backend.mutiny import Mutiny
 # Integration test to simulate a complete interaction between a target 
 # and mutiny in order to evaluate the stability of the fuzzer as a whole.

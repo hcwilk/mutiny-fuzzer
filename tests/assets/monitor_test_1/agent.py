@@ -45,8 +45,8 @@ class ProcessMonitor(Thread):
                 if self.check_process_running():
                     self.callback(0, f"{self.name} is running")
                 else:
-                    self.callback(1, f"Killed")
-                    # Should kill the rest of the modules
+                    self.callback(1, f"Process has crashed")
+                    # Should kill the rest of the modules (no reason to be monitoring vitals if it's dead)
                     self.kill_callback()
 
                     # self.terminated_counts += 1
@@ -57,7 +57,7 @@ class ProcessMonitor(Thread):
                 time.sleep(self.time_interval)
         except Exception as e:
             print(e)
-            self.callback(1, "Error in process monitor")
+            self.callback(2, "Error in process monitor")
 
 
 class StatsMonitor(Thread):
@@ -116,6 +116,7 @@ class StatsMonitor(Thread):
             if self.cpu_high_counts >= 3:
                 # recalibrate what a high CPU usage is after 3 consecutive high CPU usage readings
                 self.cpu = self.process.cpu_percent(interval=self.time_interval)
+                self.cpu_high_counts = 0
             return True
 
     # Running locally, this will obviously never throw an error, but it's here for when the host is remote
@@ -142,10 +143,11 @@ class StatsMonitor(Thread):
                         self.callback(1, monitor["error_message"])
                     else:
                         self.callback(0, monitor["success_message"])
+                    time.sleep(.1)
                 
                 except Exception as e:
                     print('Likely process has ended, coming from StatsMonitor',e)
-                    self.callback(1, "Error in process monitor")
+                    self.callback(2, "Error in process monitor")
 
             time.sleep(self.time_interval)
 
@@ -189,7 +191,7 @@ class FileMonitor(Thread):
                 time.sleep(self.time_interval)
         except Exception as e:
             print(e)
-            self.callback(1, "Error in file monitor")
+            self.callback(2, "Error in file monitor")
 
 
 class Agent:
@@ -199,6 +201,7 @@ class Agent:
         self.conn.connect((host_ip, host_port))
         self.conn.sendall(str.encode(f'{channel}|{type}'))
         self.active = True
+        self.channel = channel
 
         # creates three threads to be used for monitoring server input, user input, and sending server heartbeats every 5 seconds
         self.server_heartbeat_thread = Thread(
@@ -211,6 +214,9 @@ class Agent:
         self.server_heartbeat_thread.start()
         for module in self.modules:
             module.start()
+            offset = ((module.time_interval * 10)//3) / 10
+            print('offset',offset)
+            time.sleep(offset)
 
     def monitor_callback(self, exception_type: int, exception_info: str) -> None:
 
@@ -222,6 +228,7 @@ class Agent:
                     message = f"!{exception_info}"
                     self.conn.sendall(str.encode(message))
                 else:
+                    print('here is message')
                     message = f"#{exception_info}"
                     self.conn.sendall(str.encode(message))            
             except Exception as e:
@@ -235,6 +242,16 @@ class Agent:
             time.sleep(5)
 
     def kill_callback(self) -> None:
-        print('kill callback called')
+        print('kill callback called, shutting down channel', self.channel)
         for module in self.modules:
             module.active = False
+
+    # Here's a version that keeps FileMonitor alive
+
+    # def kill_callback(self) -> None:
+    #     print('kill callback called')
+    #     for module in self.modules:
+    #         if not isinstance(module, FileMonitor):
+    #             print(module)
+    #             module.active = False
+           

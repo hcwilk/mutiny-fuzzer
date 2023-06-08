@@ -64,9 +64,9 @@ class Mutiny(object):
 
         #TODO make it so logging message does not appear if reproducing (i.e. -r x-y cmdline arg is set)
         self.logger = None 
-        if not self.quiet:
-            print("Logging to %s" % (self.output_data_folder_path))
-            self.logger = Logger(self.output_data_folder_path)
+        # if not self.quiet:
+        #     print("Logging to %s" % (self.output_data_folder_path))
+        #     self.logger = Logger(self.output_data_folder_path)
 
         if self.dump_raw:
             if not self.quiet:
@@ -125,6 +125,10 @@ class Mutiny(object):
         failure_count = 0
         loop_len = len(self.seed_loop) # if --loop
         is_paused = False
+
+        # Sleeping only because of multiple stuff running
+        print('heavy sleep here')
+        time.sleep(1.9)
 
 
         if self.server:
