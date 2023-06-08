@@ -1,10 +1,10 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 #------------------------------------------------------------------
 # November 2014, created within ASIG
 # Author James Spadaro (jaspadar)
 # Co-Author Lilith Wyatt (liwyatt)
 #------------------------------------------------------------------
-# Copyright (c) 2014-2023 by Cisco Systems, Inc.
+# Copyright (c) 2014-2017 by Cisco Systems, Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -30,30 +30,45 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #------------------------------------------------------------------
 #
+# This file handles all custom errors that are raised
 # Copy this file to your project's mutiny classes directory to
-# implement a long-running thread to monitor your target
-# This is useful for watching files, logs, remote connections,
-# PIDs, etc in parallel while mutiny is operating
-# This parallel thread can signal Mutiny when it detects a crash
+# change exception handling
+# This is useful for telling Mutiny how to interpret the server
+# closing a connection, and so on
 #
 #------------------------------------------------------------------
 
+import errno
+import socket
+import traceback
 from mutiny_classes.mutiny_exceptions import *
-from time import sleep
 
-class Monitor(object):
-    # Set to True to use the monitor
-    is_enabled = True
-    
-    # This function will run asynchronously in a different thread to monitor the host
-    def monitor_target(self, target_ip, target_port, signal_main, channel = None):
-        while True:
-            log_file = open('./tests/assets/campaign_mode_test/target_3/crash.log', 'r')
-            if 'crashed' in log_file.readlines():
-                exception = LogCrashException('Crash Detected!!')
-                signal_main(LogCrashException(exception))
-                log_file.close()
-                log_file = open('./tests/assets/campaign_mode_test/target_3/crash.log', 'w')
-                log_file.write('')
-                log_file.close()
-            log_file.close()
+class ExceptionProcessor(object):
+
+    def __init__(self):
+        pass
+
+    # Determine how to handle a given exception
+    # Raise the exceptions defined in mutiny_exceptions to cause Mutiny
+    # to do different things based on what has occurred
+    def process_exception(self, exception):
+        print(f'{type(exception)}: {str(exception)}')
+        if isinstance(exception, socket.error):
+            if exception.errno == errno.ECONNREFUSED:
+                # Default to assuming this means server is crashed so we're done
+                raise LogLastAndHaltException("Connection refused: Assuming we crashed the server, logging previous run and halting")
+                pass
+            elif "timed out" in str(exception):
+                raise AbortCurrentRunException("Server closed the connection")
+            else:
+                if exception.errno:
+                    raise AbortCurrentRunException("Unknown socket error: %d" % (exception.errno))
+                else:
+                    raise AbortCurrentRunException("Unknown socket error: %s" % (str(exception)))
+        elif isinstance(exception, ConnectionClosedException):
+            raise AbortCurrentRunException("Server closed connection: %s" % (str(exception)))
+        elif exception.__class__ not in MessageProcessorExceptions.all:
+            # Default to logging a crash if we don't recognize the error
+            print('Unknown exception received - not Mutiny exception or socket error, backtrace:')
+            traceback.print_exc()
+            raise LogCrashException(str(exception))

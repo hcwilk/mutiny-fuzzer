@@ -112,7 +112,7 @@ class Mutiny(object):
         ########## Launch child monitor thread
             ### monitor.task = spawned thread
             ### monitor.queue = enqueued exceptions
-        self.monitor = proc_director.start_monitor(self.target_host, self.fuzzer_data.target_port, self.channel, self.server_ip, self.server_port)
+        self.monitor = proc_director.start_monitor(self.server_ip, self.server_port, self.channel)
         self.exception_processor = proc_director.exception_processor()
         self.message_processor = proc_director.message_processor()
 
@@ -127,8 +127,7 @@ class Mutiny(object):
         is_paused = False
 
         # Sleeping only because of multiple stuff running
-        print('heavy sleep here')
-        time.sleep(1.9)
+        time.sleep(2)
 
 
         if self.server:

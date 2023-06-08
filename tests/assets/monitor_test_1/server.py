@@ -83,6 +83,8 @@ class Server(Thread):
         self.socket.bind((ip, port))
         self.socket.listen()
 
+        print('monitor server listening on', ip, port)
+
         self.connections: list[ClientThread] = []
         self.total_connections = 0
 

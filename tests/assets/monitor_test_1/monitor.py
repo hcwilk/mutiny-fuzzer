@@ -51,7 +51,7 @@ class Monitor(object):
 
         # initialize the socket for the agent to connect to
         self.communication_conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        print('mutiny trying to bind to', server_ip, server_port)
+        print('mutiny trying to connect to', server_ip, server_port)
         self.communication_conn.connect((server_ip, server_port))
         self.communication_conn.sendall(str.encode(f"{channel}|mutiny"))
 
