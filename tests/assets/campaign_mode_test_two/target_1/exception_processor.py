@@ -15,7 +15,7 @@ class ExceptionProcessor(object):
             print(f'Socket error: {exception.errno}', file=sys.stderr)
             if exception.errno == errno.ECONNREFUSED:
                 # Default to assuming this means server is crashed so we're done
-                print(f'Probably crashed, logging LogCrashException to trigger campaign mode showing: {exception.errno}', file=sys.stderr)
+                print(f'Probably crashed, sleeping so Agent picks up on problem first: {exception.errno}', file=sys.stderr)
 
                 # Sleep for a bit to give the server time to write the log file
                 time.sleep(.1)

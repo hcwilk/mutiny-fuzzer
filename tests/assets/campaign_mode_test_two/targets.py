@@ -2,6 +2,7 @@
 # campaign mode tests
 from tests.assets.mock_targets import MockServer
 import socket
+import sys
 
 class Target1(MockServer):
     
@@ -23,7 +24,7 @@ class Target1(MockServer):
                 print('[target 1] crash inducing input: {}'.format(result))
                 print('[target 1] error: illegal memory access')
                 if(len(result) == 118):
-                    print('[target 1] error: will now crash')    
+                    print(f'[target 1] error: will now crash. Here shte input: {result}')    
                     if self.communication_conn.type == socket.SOCK_STREAM:
                         self.listen_conn.close()
                     self.communication_conn.close()

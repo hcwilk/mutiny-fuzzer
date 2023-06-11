@@ -58,14 +58,11 @@ class Monitor(object):
             
             data = self.communication_conn.recv(1024)
             decoded = data.decode('utf-8')
-            logging.basicConfig(filename='debug2.log', level=logging.DEBUG)
-            logging.debug('Mutiny received: ' + decoded)            
        
             if decoded == 'Log file modified':
                 exception = TargetLogFileModifiedException('Log file modified')
                 signal_main(TargetLogFileModifiedException(exception))
             if decoded =='Process has crashed':
-                logging.debug('Mutiny monitor received crash')
                 exception = LogCrashException('Crash Detected!!')
                 signal_main(LogCrashException(exception))
             elif decoded == 'CPU':

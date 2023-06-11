@@ -5,3 +5,5 @@ radamsa-*/*
 *_logs*
 sadsox
 fuzzer_seeds.json
+server._logs
+help.txt

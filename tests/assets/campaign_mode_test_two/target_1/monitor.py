@@ -62,16 +62,14 @@ class Monitor(object):
             
             data = self.communication_conn.recv(1024)
             decoded = data.decode('utf-8')
-            logging.basicConfig(filename='debug.log', level=logging.DEBUG)
-            logging.debug('Mutiny received: ' + decoded)            
             if decoded == 'Log file modified':
                 exception = TargetLogFileModifiedException('Log file modified')
                 signal_main(TargetLogFileModifiedException(exception))
             # Maybe this should be what actually shuts down mutiny, while a conn-refused is just a warning that leaves it running until this is detected
             elif decoded == 'Process has crashed':
                 print(f'This is the agent telling us its gone (this shouldnt show up, Mutiny should already be closed bruh)', file=sys.stderr)
-                exception = LogAndHaltException('This is Agent telling us its dead')
-                signal_main(LogAndHaltException(exception))
+                exception = LogCrashException('This is Agent telling us its dead')
+                signal_main(LogCrashException(exception))
             elif decoded == 'CPU':
                 print('Mutiny monitor received CPU exception')
                 # Need to properly handle CPU exceptions

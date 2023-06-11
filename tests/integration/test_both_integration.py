@@ -36,6 +36,14 @@ class CampaignIntegrationSuite(object):
         server_ip = '127.0.0.1'
         server_port = 9876
 
+        health_config = {
+            'cpu_multiplier': 1.5,
+            'ping_multiplier': 2.5,
+            'memory_multiplier': 1.3,
+            'disk_multiplier': 1.2
+        }
+
+
 
 
         ports = []
@@ -76,7 +84,7 @@ class CampaignIntegrationSuite(object):
             print('init with pid',processes[i].pid)
             process = ProcessMonitor(agent.monitor_callback, agent.kill_callback, f'Target {str(i)}', processes[i].pid, time_interval = 1)
             file = FileMonitor(agent.monitor_callback, f'tests/assets/campaign_mode_test_two/target_{i+1}/crash.log')
-            stats = StatsMonitor(agent.monitor_callback, f'Target {str(i)}', processes[i].pid, '127.0.0.1', 1)
+            stats = StatsMonitor(agent.monitor_callback, f'Target {str(i)}', processes[i].pid, '127.0.0.1', 1, health_config)
             agent.modules.append(process)
             agent.modules.append(file)
             agent.modules.append(stats)

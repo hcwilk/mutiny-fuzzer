@@ -150,6 +150,10 @@ class CampaignManager(object):
         self.distributed = config['distributed']
         if self.distributed:
             self.distributed_type = config['distributed_type']
+
+        self.health_config = config['health_config']
+
+        
         
 
     def start_campaign(self, stdscr):
@@ -518,7 +522,7 @@ class CampaignManager(object):
         if isinstance(exception, LogCrashException):
             print('Campaign Mode Received Log Crash Exception', file=sys.stderr)
             self.crashes += 1
-            self.log_pad.attron(curses.color_pair(self.TextColors.Green))
+            self.log_pad.attron(curses.color_pair(self.TextColors.Red))
             exception = str(exception) + ' see {} for details'.format(log_file)
 
         # Probably need to include the regex stuff here as well
@@ -535,8 +539,9 @@ class CampaignManager(object):
                 isinstance(exception, LogLastAndHaltException) or \
                 isinstance(exception, LogAndHaltException):
             print('Campaign mode got halt after connection refused', file=sys.stderr)
-            
-            self.log_pad.attron(curses.color_pair(self.TextColors.Green))
+            self.log_pad.attron(curses.color_pair(self.TextColors.Magenta))
+            exception = str(exception) + ' see {} for details'.format(log_file)
+
         self.log_pad.addstr(str(exception))
         self.log_pad.attron(curses.color_pair(self.TextColors.White))
         self.log_pad_write_y, _ = self.log_pad.getyx()
@@ -622,7 +627,7 @@ class CampaignManager(object):
 
 if __name__ == '__main__':
     # Just to debug incase you need somewhere to dump output
-    logging.basicConfig(filename='logfile.log', level=logging.DEBUG)
+    # logging.basicConfig(filename='logfile.log', level=logging.DEBUG)
     desc =  '======== The Mutiny Fuzzing Framework ==========' 
     epi = '==' * 24 + '\n'
     parser = argparse.ArgumentParser(prog='./campaign_mode.py', description=desc,epilog=epi)

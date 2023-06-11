@@ -66,9 +66,9 @@ class Mutiny(object):
 
         #TODO make it so logging message does not appear if reproducing (i.e. -r x-y cmdline arg is set)
         self.logger = None 
-        # if not self.quiet:
-        #     print("Logging to %s" % (self.output_data_folder_path))
-        #     self.logger = Logger(self.output_data_folder_path)
+        if not self.quiet:
+            print("Logging to %s" % (self.output_data_folder_path))
+            self.logger = Logger(self.output_data_folder_path)
 
         if self.dump_raw:
             if not self.quiet:
@@ -149,7 +149,6 @@ class Mutiny(object):
                 # Check for any exceptions from Monitor
                 # Intentionally do this before and after a run in case we have back-to-back exceptions
                 # (Example: Crash, then Pause, then Resume
-                print('Checking for exceptions', file=sys.stderr)
                 self._raise_next_monitor_event_if_any(is_paused)
 
                 if is_paused:

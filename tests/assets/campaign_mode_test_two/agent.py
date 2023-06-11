@@ -62,7 +62,7 @@ class ProcessMonitor(Thread):
 
 
 class StatsMonitor(Thread):
-    def __init__(self, callback, process_name: str, process_id: int, host: str, time_interval: float = 5) -> None:
+    def __init__(self, callback, process_name: str, process_id: int, host: str, time_interval: float = 5, health_config=None) -> None:
         print("Initializing StatsMonitor")
         Thread.__init__(self)
         self.active = True
@@ -73,6 +73,16 @@ class StatsMonitor(Thread):
         self.time_interval = time_interval
         self.cpu_high_counts = 0
         self.process = psutil.Process(self.pid)
+
+        if health_config is None:
+            health_config = {
+                "cpu_multiplier": 1.1,
+                "ping_multiplier": 2,
+                "memory_multiplier": 1.1,
+                "disk_multiplier": 1.1
+            }
+
+        self.health_config = health_config
 
         
 
@@ -114,7 +124,7 @@ class StatsMonitor(Thread):
         # let these be default, let user input to change them
 
     def check_cpu_usage(self) -> bool:
-        if self.process.cpu_percent(interval=self.time_interval) > (self.cpu*1.1):
+        if self.process.cpu_percent(interval=self.time_interval) > (self.cpu * self.health_config["cpu_multiplier"]):
             self.cpu_high_counts += 1
             if self.cpu_high_counts >= 3:
                 # recalibrate what a high CPU usage is after 3 consecutive high CPU usage readings
@@ -124,16 +134,16 @@ class StatsMonitor(Thread):
 
     # Running locally, this will obviously never throw an error, but it's here for when the host is remote
     def check_ping_response(self) -> bool:
-        return ping(self.host) > (self.ping * 2)
+        return ping(self.host) > (self.ping * self.health_config["ping_multiplier"])
 
     # Wasn't too sure what the rule for this should be 
     def check_memory_usage(self) -> bool:
-        return self.process.memory_info().rss > (self.memory * 1.1)
+        return self.process.memory_info().rss > (self.memory * self.health_config["memory_multiplier"])
 
     def check_disk_usage(self) -> bool:
         try:
             io_info = self.process.io_counters()
-            return (io_info.read_bytes + io_info.write_bytes) > self.disk * 1.1
+            return (io_info.read_bytes + io_info.write_bytes) > self.disk * self.health_config["disk_multiplier"]
         except AttributeError:
             # platform issues handled here
             return False
