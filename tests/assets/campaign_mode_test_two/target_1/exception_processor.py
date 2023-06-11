@@ -3,24 +3,32 @@ import socket
 import traceback
 from mutiny_classes.mutiny_exceptions import *
 import logging
+import time
 import sys
 
 class ExceptionProcessor(object):
 
-    logging.basicConfig(filename='debug2.log', level=logging.DEBUG)
 
-    print('Comeing from exception', file=sys.stderr)
-
-    def process_exception(self, exception):
-        print(f'Inside function {str(exception)}', file=sys.stderr)
+    def process_exception(self, exception, signal_main = None):
 
         if isinstance(exception, socket.error):
             print(f'Socket error: {exception.errno}', file=sys.stderr)
             if exception.errno == errno.ECONNREFUSED:
                 # Default to assuming this means server is crashed so we're done
-                print(f'Probably crashed, logging LogLastAndHalt (and calling logcrash before it exits): {exception.errno}', file=sys.stderr)
-                raise LogCrashException('Crash Detected!!')
-                raise LogLastAndHaltException("Connection refused: Assuming we crashed the server, logging previous run and halting")
+                print(f'Probably crashed, logging LogCrashException to trigger campaign mode showing: {exception.errno}', file=sys.stderr)
+
+                # Sleep for a bit to give the server time to write the log file
+                time.sleep(.1)
+
+                # 'Signaling main' here is what allows the Campaign Mode UI to show and log the error right after it happens
+                # There was no handling for if a target crashes before this, and now this helps for sure
+                new_exception = LogLastAndHaltException("Connection refused: Assuming we crashed the server, logging previous run and halting")
+                signal_main(LogLastAndHaltException(new_exception))
+
+
+                # Don't need to raise it if we're signaling main
+
+                # raise LogLastAndHaltException('Connection refused: Assuming we crashed the server, logging previous run and halting')
                 pass
             elif "timed out" in str(exception):
                 raise AbortCurrentRunException("Server closed the connection")

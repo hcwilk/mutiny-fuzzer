@@ -501,7 +501,6 @@ class CampaignManager(object):
             - log_file(string): name of fuzzer log file 
             the exception
         '''
-        self.log_pad.addstr('adding exception')
 
         timestamp = datetime.datetime.now()
         timestamp = timestamp.strftime("%d-%m-%y %H:%M:%S")
@@ -514,11 +513,15 @@ class CampaignManager(object):
         self.log_pad.attron(curses.A_BOLD)
         self.log_pad.addstr('[{}] '.format(fuzz_file.split('/')[-1]))
         self.log_pad.attroff(curses.A_BOLD)
+
+        # This shouldn't be anywhere in the 'help.txt' file now
         if isinstance(exception, LogCrashException):
             print('Campaign Mode Received Log Crash Exception', file=sys.stderr)
             self.crashes += 1
             self.log_pad.attron(curses.color_pair(self.TextColors.Green))
             exception = str(exception) + ' see {} for details'.format(log_file)
+
+        # Probably need to include the regex stuff here as well
         if isinstance(exception, TargetLogFileModifiedException):
             print('Campaign Mode Received Target Log File Modified Exception', file=sys.stderr)
             self.crashes += 1
@@ -526,13 +529,14 @@ class CampaignManager(object):
             exception = str(exception) + ' see {} for details'.format(log_file)
         if isinstance(exception, ConnectionClosedException):
             self.log_pad.attron(curses.color_pair(self.TextColors.Red))
+
+        # Now this hits whenver a connection refused error comes in
         if isinstance(exception, HaltException) or \
                 isinstance(exception, LogLastAndHaltException) or \
                 isinstance(exception, LogAndHaltException):
-            print(f'Inside the HaltException thing: {exception.errno}', file=sys.stderr)
-
-            self.log_pad.attron(curses.color_pair(self.TextColors.Yellow))
-        # BRUH
+            print('Campaign mode got halt after connection refused', file=sys.stderr)
+            
+            self.log_pad.attron(curses.color_pair(self.TextColors.Green))
         self.log_pad.addstr(str(exception))
         self.log_pad.attron(curses.color_pair(self.TextColors.White))
         self.log_pad_write_y, _ = self.log_pad.getyx()

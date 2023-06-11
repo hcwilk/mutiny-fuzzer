@@ -138,8 +138,6 @@ class Mutiny(object):
         
 
         while True:
-            # This is good for testing new agent strategies
-            logging.basicConfig(filename='mutiny.log', level=logging.DEBUG)
 
             last_message_collection = deepcopy(self.fuzzer_data.message_collection)
             was_crash_detected = False
@@ -151,6 +149,7 @@ class Mutiny(object):
                 # Check for any exceptions from Monitor
                 # Intentionally do this before and after a run in case we have back-to-back exceptions
                 # (Example: Crash, then Pause, then Resume
+                print('Checking for exceptions', file=sys.stderr)
                 self._raise_next_monitor_event_if_any(is_paused)
 
                 if is_paused:
@@ -191,7 +190,8 @@ class Mutiny(object):
                         # Otherwise, let the MP know about the exception
                         raise e
                     else:
-                        self.exception_processor.process_exception(e)
+                        # passing  without parenthesis means you're passing the function, not calling it. Good to know
+                        self.exception_processor.process_exception(e, self.monitor.signal_crash_detected_on_main)
                         # Will not get here if processException raises another exception
                         print_warning("Exception ignored: %s" % (repr(e)))
 
@@ -211,7 +211,8 @@ class Mutiny(object):
                     print_warning('Mutiny received a resume exception but wasn\'t paused, ignoring and continuing.')
 
             except LogCrashException as e:
-                print('Log Crash inside of Mutiny (looking for this one)', file=sys.stderr)
+                print('This also should not be in the logfile bruh', file=sys.stderr)
+
 
                 if failure_count == 0:
                     try:
@@ -276,7 +277,10 @@ class Mutiny(object):
                 else:
                     print_warning("Received LogLastAndHaltException, halting but not logging (quiet mode)")
                 if self.testing: return
-                else: exit()
+                else:
+                    print(f'Exiting', file=sys.stderr)
+
+                    exit()
 
             except HaltException as e:
                 print_warning("Received HaltException, halting the fuzzing campaign")
@@ -457,7 +461,7 @@ class Mutiny(object):
         if not self.monitor.queue.empty():
             print_warning('Monitor event detected')
             exception = self.monitor.queue.get()
-            print('this is the getted exception: ', exception)
+            print(f'This is the exception off the queue: {exception}', file=sys.stderr)
             if self.campaign_mode:
                 self.campaign_event_queue.put(exception)
 
