@@ -1,3 +1,4 @@
+
 #!/usr/bin/env python3
 from argparse import Namespace
 import time
@@ -48,6 +49,9 @@ class CampaignIntegrationSuite(object):
             thread.start()
             print('[target {}] listening'.format(i),'on port',ports[i])
 
+             # Stand up agents
+       
+
 
 def main():
     
@@ -72,3 +76,6 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+
+

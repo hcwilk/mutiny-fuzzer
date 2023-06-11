@@ -1,0 +1,35 @@
+Comeing from exception
+Campaign Mode Received Target Log File Modified Exception
+Campaign Mode Received Target Log File Modified Exception
+Campaign Mode Received Target Log File Modified Exception
+Campaign Mode Received Target Log File Modified Exception
+Campaign Mode Received Target Log File Modified Exception
+Campaign Mode Received Target Log File Modified Exception
+Campaign Mode Received Target Log File Modified Exception
+Campaign Mode Received Target Log File Modified Exception
+Campaign Mode Received Target Log File Modified Exception
+Campaign Mode Received Target Log File Modified Exception
+Campaign Mode Received Target Log File Modified Exception
+Inside function Server has closed the connection
+Inside function [Errno 61] Connection refused
+Socket error: 61
+Probably crashed, logging LogLastAndHalt: 61
+Socket error: were here
+Campaign Mode Received Target Log File Modified Exception
+Campaign Mode Received Target Log File Modified Exception
+Campaign Mode Received Target Log File Modified Exception
+Campaign Mode Received Target Log File Modified Exception
+Campaign Mode Received Target Log File Modified Exception
+Campaign Mode Received Target Log File Modified Exception
+Socket error: were here
+Socket error: were here
+Traceback (most recent call last):
+  File "/Users/cowilkin/Projects/mutiny-fuzzer/monitor_campaign_mode.py", line 646, in <module>
+    curses.wrapper(manager.start_campaign)
+  File "/Library/Frameworks/Python.framework/Versions/3.10/lib/python3.10/curses/__init__.py", line 94, in wrapper
+    return func(stdscr, *args, **kwds)
+  File "/Users/cowilkin/Projects/mutiny-fuzzer/monitor_campaign_mode.py", line 207, in start_campaign
+    self.refresh_display()
+  File "/Users/cowilkin/Projects/mutiny-fuzzer/monitor_campaign_mode.py", line 550, in refresh_display
+    self.log_pad.refresh(self.log_pad_view_y, 0, \
+KeyboardInterrupt

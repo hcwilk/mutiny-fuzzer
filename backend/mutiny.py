@@ -51,6 +51,8 @@ class Mutiny(object):
             self.campaign_event_queue = queue.SimpleQueue()
         self.connected = False
 
+        
+
         self.channel = getattr(args, 'channel', None) # Add default value None if 'channel' doesn't exist
         self.server_ip = getattr(args, 'server_ip', None) # Add default value None if 'server_ip' doesn't exist
         self.server_port = getattr(args, 'server_port', None) # Add default value None if 'server_port' doesn't exist
@@ -127,7 +129,7 @@ class Mutiny(object):
         is_paused = False
 
         # Sleeping only because of multiple stuff running
-        time.sleep(2)
+        # time.sleep(20)
 
 
         if self.server:
@@ -137,7 +139,8 @@ class Mutiny(object):
 
         while True:
             # This is good for testing new agent strategies
-            # time.sleep(1)
+            logging.basicConfig(filename='mutiny.log', level=logging.DEBUG)
+
             last_message_collection = deepcopy(self.fuzzer_data.message_collection)
             was_crash_detected = False
             if not is_paused and self.sleep_time > 0.0:
@@ -208,6 +211,8 @@ class Mutiny(object):
                     print_warning('Mutiny received a resume exception but wasn\'t paused, ignoring and continuing.')
 
             except LogCrashException as e:
+                print('Log Crash inside of Mutiny (looking for this one)', file=sys.stderr)
+
                 if failure_count == 0:
                     try:
                         print_success("Mutiny detected a crash")
@@ -225,8 +230,8 @@ class Mutiny(object):
                 was_crash_detected = True
 
             except TargetLogFileModifiedException as e:
-                print_warning("Target log file modified, check the logs for more information")
-                print_warning("Heres the exception: %s" % (str(e)))
+                logging.debug('Inside target log modified functuion: ')            
+
                 try:
                     self.logger.output_log(self.seed, self.fuzzer_data.message_collection, str(e))
                 except AttributeError:
@@ -258,6 +263,8 @@ class Mutiny(object):
                 else: exit()
 
             except LogLastAndHaltException as e:
+                print(f'Socket error: were here', file=sys.stderr)
+
                 if self.logger:
                     if self.seed > self.min_run_number:
                         print_warning("Received LogLastAndHaltException, logging last run and halting")

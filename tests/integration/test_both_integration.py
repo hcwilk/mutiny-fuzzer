@@ -7,9 +7,15 @@ import os
 import threading
 import sys
 sys.path.append('../mutiny-fuzzer')
-from tests.assets.campaign_mode_test.targets import Target1, Target2, Target3
+from tests.assets.campaign_mode_test_two.targets import Target1, Target2, Target3
 from backend.mutiny import Mutiny
+from tests.assets.campaign_mode_test_two.server import Server
+from tests.assets.campaign_mode_test_two.agent import FileMonitor
+from tests.assets.campaign_mode_test_two.agent import ProcessMonitor
+from tests.assets.campaign_mode_test_two.agent import StatsMonitor
+from tests.assets.campaign_mode_test_two.agent import Agent
 import multiprocessing
+
 
 class CampaignIntegrationSuite(object):
 
@@ -27,8 +33,14 @@ class CampaignIntegrationSuite(object):
             target3: 
         '''
 
+        server_ip = '127.0.0.1'
+        server_port = 9876
+
+
+
         ports = []
         targets = []
+        agent_threads = []
         if proto == 'tcp':
             ports = [6660,6661,6662]
         elif proto == 'udp':
@@ -41,6 +53,11 @@ class CampaignIntegrationSuite(object):
             print('unrecognized protocol')
             exit(-1)
 
+                # create Montitor Server object
+        server = Server(server_ip, server_port)
+        server_thread = threading.Thread(target=server.run)
+        server_thread.start()
+
         targets.append(Target1(proto, '127.0.0.1', ports[0]))
         targets.append(Target2(proto, '127.0.0.1', ports[1]))
         targets.append(Target3(proto, '127.0.0.1', ports[2]))
@@ -50,6 +67,32 @@ class CampaignIntegrationSuite(object):
             processes.append(process)
             process.start()
             print('[target {}] listening'.format(i),'on port',ports[i])
+
+        time.sleep(4)
+
+        for i in range(0, len(targets)):
+
+            agent = Agent(server_ip, server_port, str(i), False)
+            print('init with pid',processes[i].pid)
+            process = ProcessMonitor(agent.monitor_callback, agent.kill_callback, f'Target {str(i)}', processes[i].pid, time_interval = 1)
+            file = FileMonitor(agent.monitor_callback, f'tests/assets/campaign_mode_test_two/target_{i+1}/crash.log')
+            stats = StatsMonitor(agent.monitor_callback, f'Target {str(i)}', processes[i].pid, '127.0.0.1', 1)
+            agent.modules.append(process)
+            agent.modules.append(file)
+            agent.modules.append(stats)
+
+            agent_thread = threading.Thread(target=agent.start)
+            agent_thread.start()
+            agent_threads.append(agent_thread)
+            print('[agent {}] started'.format(i))
+
+        
+        for i in range(0, len(targets)):
+            #joining targets
+            processes[i].join()
+
+
+        
 
 
 def main():

@@ -173,7 +173,7 @@ class CampaignManager(object):
         for i, (fuzz_file, target) in enumerate(self.workers):
             self.block_print()
             # initialize a child mutiny thread for each worker
-            fuzzer_args = argparse.Namespace(prepped_fuzz = fuzz_file, target_host = target, sleep_time = 0, range = None, loop = None, dump_raw = None, quiet = False, log_all = False, server = self.server_mode, testing = False, campaign_mode = True)
+            fuzzer_args = argparse.Namespace(prepped_fuzz = fuzz_file, target_host = target, sleep_time = 0, range = None, loop = None, dump_raw = None, quiet = False, log_all = False, server = self.server_mode, testing = False, campaign_mode = True, channel=str(i), server_ip = '127.0.0.1', server_port = 9876)
             fuzzer = Mutiny(fuzzer_args)
             if seeds and str(i) in seeds:
                 fuzzer.seed = seeds[str(i)]
@@ -199,6 +199,7 @@ class CampaignManager(object):
             self.log_pad_write_y += 1
         self.status = self.CampaignStatus.Running
         quit_requested = False
+
         # poll for user input in seperate thread
         while not quit_requested:
             try:
@@ -488,6 +489,7 @@ class CampaignManager(object):
             self.status_bar = new_status_bar
 
     def parse_event(self, exception, fuzz_file, log_file):
+
         '''
         parses mutiny event and displays 
         relevant information to self.log_pad
@@ -499,6 +501,8 @@ class CampaignManager(object):
             - log_file(string): name of fuzzer log file 
             the exception
         '''
+        self.log_pad.addstr('adding exception')
+
         timestamp = datetime.datetime.now()
         timestamp = timestamp.strftime("%d-%m-%y %H:%M:%S")
         # write timestamp
@@ -511,6 +515,12 @@ class CampaignManager(object):
         self.log_pad.addstr('[{}] '.format(fuzz_file.split('/')[-1]))
         self.log_pad.attroff(curses.A_BOLD)
         if isinstance(exception, LogCrashException):
+            print('Campaign Mode Received Log Crash Exception', file=sys.stderr)
+            self.crashes += 1
+            self.log_pad.attron(curses.color_pair(self.TextColors.Green))
+            exception = str(exception) + ' see {} for details'.format(log_file)
+        if isinstance(exception, TargetLogFileModifiedException):
+            print('Campaign Mode Received Target Log File Modified Exception', file=sys.stderr)
             self.crashes += 1
             self.log_pad.attron(curses.color_pair(self.TextColors.Green))
             exception = str(exception) + ' see {} for details'.format(log_file)
@@ -519,6 +529,8 @@ class CampaignManager(object):
         if isinstance(exception, HaltException) or \
                 isinstance(exception, LogLastAndHaltException) or \
                 isinstance(exception, LogAndHaltException):
+            print(f'Inside the HaltException thing: {exception.errno}', file=sys.stderr)
+
             self.log_pad.attron(curses.color_pair(self.TextColors.Yellow))
         # BRUH
         self.log_pad.addstr(str(exception))
@@ -606,7 +618,7 @@ class CampaignManager(object):
 
 if __name__ == '__main__':
     # Just to debug incase you need somewhere to dump output
-    # logging.basicConfig(filename='logfile.log', level=logging.INFO)
+    logging.basicConfig(filename='logfile.log', level=logging.DEBUG)
     desc =  '======== The Mutiny Fuzzing Framework ==========' 
     epi = '==' * 24 + '\n'
     parser = argparse.ArgumentParser(prog='./campaign_mode.py', description=desc,epilog=epi)

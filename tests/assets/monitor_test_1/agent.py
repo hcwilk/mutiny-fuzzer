@@ -22,6 +22,7 @@ class ProcessMonitor(Thread):
 
     # platform-agnostic way to check if a process is running
     def check_process_running(self) -> bool:
+        # conditional based on Darwin or not
         try:
             if self.pid:
                 # Check if a process with the given PID is running
@@ -45,7 +46,7 @@ class ProcessMonitor(Thread):
                 if self.check_process_running():
                     self.callback(0, f"{self.name} is running")
                 else:
-                    self.callback(1, f"Process has crashed")
+                    self.callback(1, f"Process {self.pid} has crashed")
                     # Should kill the rest of the modules (no reason to be monitoring vitals if it's dead)
                     self.kill_callback()
 
@@ -109,6 +110,8 @@ class StatsMonitor(Thread):
             "success_message": "Disk usage is normal",
         },
     ]
+        
+        # let these be default, let user input to change them
 
     def check_cpu_usage(self) -> bool:
         if self.process.cpu_percent(interval=self.time_interval) > (self.cpu*1.1):
@@ -226,6 +229,7 @@ class Agent:
                         self.conn.sendall(str.encode(exception_info))
                 elif exception_type == 1:
                     message = f"!{exception_info}"
+                    print('sending to mutiny',message)
                     self.conn.sendall(str.encode(message))
                 else:
                     message = f"#{exception_info}"

@@ -1,0 +1,104 @@
+2023-06-11 12:24:58,557 - ServerLogger - ERROR - Exception in target 1: Log file modified
+2023-06-11 12:24:59,561 - ServerLogger - ERROR - Exception in target 1: Log file modified
+2023-06-11 12:24:59,561 - ServerLogger - ERROR - Exception in target 2: Log file modified
+2023-06-11 12:25:00,564 - ServerLogger - ERROR - Exception in target 2: Log file modified
+2023-06-11 12:25:00,564 - ServerLogger - ERROR - Exception in target 1: Log file modified
+2023-06-11 12:25:01,568 - ServerLogger - ERROR - Exception in target 1: Log file modified
+2023-06-11 12:25:01,569 - ServerLogger - ERROR - Exception in target 2: Log file modified
+2023-06-11 12:25:02,568 - ServerLogger - ERROR - Exception in target 1: Log file modified
+2023-06-11 12:25:03,398 - ServerLogger - ERROR - Exception in target 2: Ping response time is slow
+2023-06-11 12:25:03,576 - ServerLogger - ERROR - Exception in target 2: Log file modified
+2023-06-11 12:25:04,579 - ServerLogger - ERROR - Exception in target 1: Log file modified
+2023-06-11 12:25:04,702 - ServerLogger - ERROR - Exception in target 1: CPU usage is high
+2023-06-11 12:25:05,582 - ServerLogger - ERROR - Exception in target 1: Log file modified
+2023-06-11 12:25:05,590 - ServerLogger - ERROR - Exception in target 2: Log file modified
+2023-06-11 12:25:05,712 - ServerLogger - ERROR - Exception in target 2: CPU usage is high
+2023-06-11 12:25:05,815 - ServerLogger - ERROR - Exception in target 2: Ping response time is slow
+2023-06-11 12:25:06,583 - ServerLogger - ERROR - Exception in target 1: Log file modified
+2023-06-11 12:25:06,599 - ServerLogger - ERROR - Exception in target 2: Log file modified
+2023-06-11 12:25:07,587 - ServerLogger - ERROR - Exception in target 1: Log file modified
+2023-06-11 12:25:07,601 - ServerLogger - ERROR - Exception in target 2: Log file modified
+2023-06-11 12:25:08,242 - ServerLogger - ERROR - Exception in target 2: Ping response time is slow
+2023-06-11 12:25:08,589 - ServerLogger - ERROR - Exception in target 1: Log file modified
+2023-06-11 12:25:08,605 - ServerLogger - ERROR - Exception in target 2: Log file modified
+2023-06-11 12:25:09,590 - ServerLogger - ERROR - Exception in target 1: Log file modified
+2023-06-11 12:25:09,609 - ServerLogger - ERROR - Exception in target 2: Log file modified
+2023-06-11 12:25:10,596 - ServerLogger - ERROR - Exception in target 1: Log file modified
+2023-06-11 12:25:10,611 - ServerLogger - ERROR - Exception in target 2: Log file modified
+2023-06-11 12:25:11,614 - ServerLogger - ERROR - Exception in target 2: Log file modified
+2023-06-11 12:25:12,601 - ServerLogger - ERROR - Exception in target 1: Log file modified
+2023-06-11 12:25:12,619 - ServerLogger - ERROR - Exception in target 2: Log file modified
+2023-06-11 12:25:13,073 - ServerLogger - ERROR - Exception in target 2: Ping response time is slow
+2023-06-11 12:25:13,605 - ServerLogger - ERROR - Exception in target 1: Log file modified
+2023-06-11 12:25:13,622 - ServerLogger - ERROR - Exception in target 2: Log file modified
+2023-06-11 12:25:14,609 - ServerLogger - ERROR - Exception in target 1: Log file modified
+2023-06-11 12:25:15,613 - ServerLogger - ERROR - Exception in target 1: Log file modified
+2023-06-11 12:25:15,630 - ServerLogger - ERROR - Exception in target 2: Log file modified
+2023-06-11 12:25:16,633 - ServerLogger - ERROR - Exception in target 2: Log file modified
+2023-06-11 12:25:17,619 - ServerLogger - ERROR - Exception in target 1: Log file modified
+2023-06-11 12:25:17,921 - ServerLogger - ERROR - Exception in target 2: Ping response time is slow
+2023-06-11 12:28:01,272 - ServerLogger - ERROR - Exception in target 2: Log file modified
+2023-06-11 12:28:01,382 - ServerLogger - ERROR - Exception in target 1: CPU usage is high
+2023-06-11 12:28:02,261 - ServerLogger - ERROR - Exception in target 1: Log file modified
+2023-06-11 12:28:02,277 - ServerLogger - ERROR - Exception in target 2: Log file modified
+2023-06-11 12:28:02,405 - ServerLogger - ERROR - Exception in target 2: CPU usage is high
+2023-06-11 12:28:02,775 - ServerLogger - ERROR - Exception in target 0: CPU usage is high
+2023-06-11 12:28:03,282 - ServerLogger - ERROR - Exception in target 2: Log file modified
+2023-06-11 12:28:03,798 - ServerLogger - ERROR - Exception in target 1: CPU usage is high
+2023-06-11 12:28:04,269 - ServerLogger - ERROR - Exception in target 1: Log file modified
+2023-06-11 12:28:04,283 - ServerLogger - ERROR - Exception in target 2: Log file modified
+2023-06-11 12:28:04,821 - ServerLogger - ERROR - Exception in target 2: CPU usage is high
+2023-06-11 12:28:05,195 - ServerLogger - ERROR - Exception in target 0: CPU usage is high
+2023-06-11 12:28:05,274 - ServerLogger - ERROR - Exception in target 1: Log file modified
+2023-06-11 12:28:06,277 - ServerLogger - ERROR - Exception in target 1: Log file modified
+2023-06-11 12:28:06,289 - ServerLogger - ERROR - Exception in target 2: Log file modified
+2023-06-11 12:28:07,220 - ServerLogger - ERROR - Exception in target 1: CPU usage is high
+2023-06-11 12:28:07,278 - ServerLogger - ERROR - Exception in target 1: Log file modified
+2023-06-11 12:28:07,294 - ServerLogger - ERROR - Exception in target 2: Log file modified
+2023-06-11 12:28:08,252 - ServerLogger - ERROR - Exception in target 2: CPU usage is high
+2023-06-11 12:28:08,297 - ServerLogger - ERROR - Exception in target 2: Log file modified
+2023-06-11 12:28:08,615 - ServerLogger - ERROR - Exception in target 0: CPU usage is high
+2023-06-11 12:28:09,255 - ServerLogger - ERROR - Exception in target 0: Log file modified
+2023-06-11 12:28:09,285 - ServerLogger - ERROR - Exception in target 1: Log file modified
+2023-06-11 12:28:09,359 - ServerLogger - ERROR - Exception in target 0: Process has crashed
+2023-06-11 12:28:10,285 - ServerLogger - ERROR - Exception in target 1: Log file modified
+2023-06-11 12:28:10,301 - ServerLogger - ERROR - Exception in target 2: Log file modified
+2023-06-11 12:28:11,290 - ServerLogger - ERROR - Exception in target 1: Log file modified
+2023-06-11 12:28:11,311 - ServerLogger - ERROR - Exception in target 2: Log file modified
+2023-06-11 12:28:12,063 - ServerLogger - ERROR - Exception in target 1: CPU usage is high
+2023-06-11 12:28:12,292 - ServerLogger - ERROR - Exception in target 1: Log file modified
+2023-06-11 12:28:12,312 - ServerLogger - ERROR - Exception in target 2: Log file modified
+2023-06-11 12:28:13,091 - ServerLogger - ERROR - Exception in target 2: CPU usage is high
+2023-06-11 12:28:13,296 - ServerLogger - ERROR - Exception in target 1: Log file modified
+2023-06-11 12:28:13,315 - ServerLogger - ERROR - Exception in target 2: Log file modified
+2023-06-11 12:28:14,298 - ServerLogger - ERROR - Exception in target 1: Log file modified
+2023-06-11 12:28:14,319 - ServerLogger - ERROR - Exception in target 2: Log file modified
+2023-06-11 12:28:15,301 - ServerLogger - ERROR - Exception in target 1: Log file modified
+2023-06-11 12:28:15,324 - ServerLogger - ERROR - Exception in target 2: Log file modified
+2023-06-11 12:28:16,330 - ServerLogger - ERROR - Exception in target 2: Log file modified
+2023-06-11 12:36:12,086 - ServerLogger - ERROR - Exception in target 2: Log file modified
+2023-06-11 12:36:12,802 - ServerLogger - ERROR - Exception in target 2: CPU usage is high
+2023-06-11 12:36:13,086 - ServerLogger - ERROR - Exception in target 1: Log file modified
+2023-06-11 12:36:13,086 - ServerLogger - ERROR - Exception in target 2: Log file modified
+2023-06-11 12:36:13,205 - ServerLogger - ERROR - Exception in target 0: CPU usage is high
+2023-06-11 12:36:14,092 - ServerLogger - ERROR - Exception in target 2: Log file modified
+2023-06-11 12:36:14,222 - ServerLogger - ERROR - Exception in target 1: CPU usage is high
+2023-06-11 12:36:15,093 - ServerLogger - ERROR - Exception in target 1: Log file modified
+2023-06-11 12:36:15,102 - ServerLogger - ERROR - Exception in target 2: Log file modified
+2023-06-11 12:36:15,222 - ServerLogger - ERROR - Exception in target 2: CPU usage is high
+2023-06-11 12:36:15,623 - ServerLogger - ERROR - Exception in target 0: CPU usage is high
+2023-06-11 12:36:16,094 - ServerLogger - ERROR - Exception in target 1: Log file modified
+2023-06-11 12:36:16,102 - ServerLogger - ERROR - Exception in target 2: Log file modified
+2023-06-11 12:36:16,646 - ServerLogger - ERROR - Exception in target 1: CPU usage is high
+2023-06-11 12:36:17,094 - ServerLogger - ERROR - Exception in target 1: Log file modified
+2023-06-11 12:36:17,107 - ServerLogger - ERROR - Exception in target 2: Log file modified
+2023-06-11 12:36:18,099 - ServerLogger - ERROR - Exception in target 1: Log file modified
+2023-06-11 12:36:18,654 - ServerLogger - ERROR - Exception in target 2: CPU usage is high
+2023-06-11 12:36:19,041 - ServerLogger - ERROR - Exception in target 0: Process has crashed
+2023-06-11 12:36:19,112 - ServerLogger - ERROR - Exception in target 2: Log file modified
+2023-06-11 12:36:20,074 - ServerLogger - ERROR - Exception in target 1: CPU usage is high
+2023-06-11 12:36:20,107 - ServerLogger - ERROR - Exception in target 1: Log file modified
+2023-06-11 12:36:21,110 - ServerLogger - ERROR - Exception in target 1: Log file modified
+2023-06-11 12:36:21,117 - ServerLogger - ERROR - Exception in target 2: Log file modified
+2023-06-11 12:36:22,117 - ServerLogger - ERROR - Exception in target 1: Log file modified
+2023-06-11 12:36:22,121 - ServerLogger - ERROR - Exception in target 2: Log file modified

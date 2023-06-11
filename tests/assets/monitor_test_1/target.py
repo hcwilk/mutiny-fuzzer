@@ -24,9 +24,9 @@ class Target4(MockServer):
                 with open('./tests/assets/monitor_test_1/crash.log', 'w') as file:
                     # file.write('crashed on input: ' + str(result))
                     file.write('crashed')
-                    if self.communication_conn.type == socket.SOCK_STREAM:
-                        self.listen_conn.close()
-                    self.communication_conn.close()
+                if self.communication_conn.type == socket.SOCK_STREAM:
+                    self.listen_conn.close()
+                self.communication_conn.close()
                 return
             self.send_packet(bytearray('incorrect magic phrase, try again!', 'utf-8'))
             if self.communication_conn.type == socket.SOCK_STREAM:

@@ -2,6 +2,7 @@ import socket
 from threading import Thread
 import argparse
 import sys
+import logging
 
 
 class ClientThread(Thread):
@@ -83,16 +84,32 @@ class Server(Thread):
         self.socket.bind((ip, port))
         self.socket.listen()
 
-        print('monitor server listening on', ip, port)
-
         self.connections: list[ClientThread] = []
         self.total_connections = 0
 
         self.active = True
 
+          # Create a logger
+        self.logger = logging.getLogger('ServerLogger')
+        self.logger.setLevel(logging.ERROR)  # Log only error and above
+
+        # Create a file handler
+        handler = logging.FileHandler('server.log')  # Log to server.log in current directory
+        handler.setLevel(logging.ERROR)
+
+        # Create a logging format
+        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        handler.setFormatter(formatter)
+
+        # Add the handler to the logger
+        self.logger.addHandler(handler)
+
     def add_exception(self, exception_info, agent_id, channel):
+        print('heres the exception info', exception_info, 'and the channel', channel, 'and activevalue', self.active, 'and type')
+        self.logger.error(f'Exception in target {channel}: {exception_info}')
         for conn in self.connections:
             if conn.active and conn.type == 'mutiny' and (channel in conn.channel or 'all' in conn.channel):
+                print('this should be going to mutiny')
                 conn.send_exception(exception_info)
 
     def run(self) -> None:

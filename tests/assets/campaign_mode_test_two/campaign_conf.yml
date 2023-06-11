@@ -13,9 +13,9 @@ workers:
   #
   # or, if using round robin:
   # ['</path/to/folder/containing/.fuzzers>', '<target host>']
-  - ['tests/assets/campaign_mode_test/target_1/target1_tcp.fuzzer', '127.0.0.1']
-  - ['tests/assets/campaign_mode_test/target_2/target2_tcp.fuzzer', '127.0.0.1']
-  - ['tests/assets/campaign_mode_test/target_3/target3_tcp.fuzzer', '127.0.0.1']
+  - ['tests/assets/campaign_mode_test_two/target_1/target1_tcp.fuzzer', '127.0.0.1']
+  - ['tests/assets/campaign_mode_test_two/target_2/target2_tcp.fuzzer', '127.0.0.1']
+  - ['tests/assets/campaign_mode_test_two/target_3/target3_tcp.fuzzer', '127.0.0.1']
 
 # -------- ROUND ROBIN CONFIGURATION
 round_robin: False

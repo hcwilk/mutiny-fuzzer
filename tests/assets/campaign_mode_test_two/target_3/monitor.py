@@ -1,10 +1,10 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 #------------------------------------------------------------------
 # November 2014, created within ASIG
 # Author James Spadaro (jaspadar)
 # Co-Author Lilith Wyatt (liwyatt)
 #------------------------------------------------------------------
-# Copyright (c) 2014-2023 by Cisco Systems, Inc.
+# Copyright (c) 2014-2017 by Cisco Systems, Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -40,20 +40,33 @@
 
 from mutiny_classes.mutiny_exceptions import *
 from time import sleep
+import socket
+import logging
 
 class Monitor(object):
     # Set to True to use the monitor
     is_enabled = True
     
     # This function will run asynchronously in a different thread to monitor the host
-    def monitor_target(self, target_ip, target_port, signal_main, channel = None):
+    def monitor_target(self, server_ip, server_port, signal_main, channel=0):
+  # initialize the socket for the agent to connect to
+        self.communication_conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.communication_conn.connect((server_ip, server_port))
+        self.communication_conn.sendall(str.encode(f"{channel}|mutiny"))
+        print('mutiny connected to monitor server')
+
         while True:
-            log_file = open('./tests/assets/campaign_mode_test/target_3/crash.log', 'r')
-            if 'crashed' in log_file.readlines():
+            
+            data = self.communication_conn.recv(1024)
+            decoded = data.decode('utf-8')
+         
+            if decoded == 'Log file modified':
+                exception = TargetLogFileModifiedException('Log file modified')
+                signal_main(TargetLogFileModifiedException(exception))
+            if decoded =='Process has crashed':
                 exception = LogCrashException('Crash Detected!!')
                 signal_main(LogCrashException(exception))
-                log_file.close()
-                log_file = open('./tests/assets/campaign_mode_test/target_3/crash.log', 'w')
-                log_file.write('')
-                log_file.close()
-            log_file.close()
+            elif decoded == 'CPU':
+                print('Mutiny monitor received CPU exception')
+                # Need to properly handle CPU exceptions
+                print('handle CPU exception')
