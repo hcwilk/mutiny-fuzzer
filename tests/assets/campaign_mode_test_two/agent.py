@@ -72,6 +72,9 @@ class StatsMonitor(Thread):
         self.host = host
         self.time_interval = time_interval
         self.cpu_high_counts = 0
+        self.ping_high_counts = 0
+        self.memory_high_counts = 0
+        self.disk_high_counts = 0
         self.process = psutil.Process(self.pid)
 
         if health_config is None:
@@ -84,11 +87,9 @@ class StatsMonitor(Thread):
 
         self.health_config = health_config
 
-        
-
 
         # Setting ground truth for CPU, Ping, Memory, and Disk usage
-        self.cpu = self.process.cpu_percent(interval=self.time_interval)
+        self.cpu = None
         self.ping = ping(self.host)
         self.memory = self.process.memory_info().rss
         # No easy way to fetch Disk Usage (which is really just I/O usage) in platform-agnostic setting, so we'll ignore it if there's an error
@@ -99,64 +100,103 @@ class StatsMonitor(Thread):
 
 
         self.monitoring_list = [
-        {
-            "check_func": self.check_cpu_usage,
-            "error_message": "CPU usage is high",
-            "success_message": "CPU usage is normal",
-        },
-        {
-            "check_func": self.check_ping_response,
-            "error_message": "Ping response time is slow",
-            "success_message": "Ping response time is normal",
-        },
-        {
-            "check_func": self.check_memory_usage,
-            "error_message": "Memory usage is high",
-            "success_message": "Memory usage is normal",
-        },
-        {
-            "check_func": self.check_disk_usage,
-            "error_message": "Disk usage is high",
-            "success_message": "Disk usage is normal",
-        },
-    ]
+    {
+        "check_func": self.check_cpu_usage,
+        "error_message": "CPU usage is higher than {}x the baseline of {}",
+        "success_message": "CPU usage is normal",
+    },
+    {
+        "check_func": self.check_ping_response,
+        "error_message": "Ping response time is higher than {}x the baseline of {}",
+        "success_message": "Ping response time is normal",
+    },
+    {
+        "check_func": self.check_memory_usage,
+        "error_message": "Memory usage is higher than {}x the baseline of {}",
+        "success_message": "Memory usage is normal",
+    },
+    {
+        "check_func": self.check_disk_usage,
+        "error_message": "Disk usage is high",
+        "success_message": "Disk usage is normal",
+    },
+]
+
         
         # let these be default, let user input to change them
 
     def check_cpu_usage(self) -> bool:
-        if self.process.cpu_percent(interval=self.time_interval) > (self.cpu * self.health_config["cpu_multiplier"]):
+        cpu_usage = self.process.cpu_percent(interval=1)
+        if self.cpu is None:
+            self.cpu = cpu_usage
+            return  # Skip this check, as we have just set the baseline CPU usage
+
+        if cpu_usage > (self.cpu * self.health_config["cpu_multiplier"]):
             self.cpu_high_counts += 1
             if self.cpu_high_counts >= 3:
                 # recalibrate what a high CPU usage is after 3 consecutive high CPU usage readings
-                self.cpu = self.process.cpu_percent(interval=self.time_interval)
+                self.cpu = cpu_usage
                 self.cpu_high_counts = 0
             return True
+        return False
 
-    # Running locally, this will obviously never throw an error, but it's here for when the host is remote
+
+        # Running locally, this will obviously never throw an error, but it's here for when the host is remote
     def check_ping_response(self) -> bool:
-        return ping(self.host) > (self.ping * self.health_config["ping_multiplier"])
+        ping_response = ping(self.host)
+        if ping_response > (self.ping * self.health_config["ping_multiplier"]):
+            self.ping_high_counts += 1
+            if self.ping_high_counts >= 3:
+                self.ping = ping_response
+                self.ping_high_counts = 0
+            return True
+        return False
 
-    # Wasn't too sure what the rule for this should be 
     def check_memory_usage(self) -> bool:
-        return self.process.memory_info().rss > (self.memory * self.health_config["memory_multiplier"])
+        memory_info = self.process.memory_info().rss
+        if memory_info > (self.memory * self.health_config["memory_multiplier"]):
+            self.memory_high_counts += 1
+            if self.memory_high_counts >= 3:
+                self.memory = memory_info
+                self.memory_high_counts = 0
+            return True
+        return False
 
     def check_disk_usage(self) -> bool:
         try:
             io_info = self.process.io_counters()
-            return (io_info.read_bytes + io_info.write_bytes) > self.disk * self.health_config["disk_multiplier"]
+            disk_usage = io_info.read_bytes + io_info.write_bytes
+            if disk_usage > self.disk * self.health_config["disk_multiplier"]:
+                self.disk_high_counts += 1
+                if self.disk_high_counts >= 3:
+                    self.disk = disk_usage
+                    self.disk_high_counts = 0
+                return True
         except AttributeError:
-            # platform issues handled here
             return False
+        return False
+    
 
     def run(self) -> None:
         while self.active:
             for monitor in self.monitoring_list:
                 try:
                     if monitor["check_func"]():
-                        self.callback(1, monitor["error_message"])
-                    else:
-                        self.callback(0, monitor["success_message"])
-                    time.sleep(.1)
+                        # If we are checking CPU usage
+                        if monitor["check_func"] == self.check_cpu_usage:
+                            self.callback(1, monitor["error_message"].format(self.health_config["cpu_multiplier"], self.cpu))
+                        # If we are checking ping response
+                        elif monitor["check_func"] == self.check_ping_response:
+                            self.callback(1, monitor["error_message"].format(self.health_config["ping_multiplier"], self.ping))
+                        # If we are checking memory usage
+                        elif monitor["check_func"] == self.check_memory_usage:
+                            self.callback(1, monitor["error_message"].format(self.health_config["memory_multiplier"], self.memory))
+                        # If we are checking disk usage
+                        elif monitor["check_func"] == self.check_disk_usage:
+                            self.callback(1, monitor["error_message"].format(self.health_config["disk_multiplier"], self.disk))
+                        else:
+                            self.callback(0, monitor["success_message"])
+                        time.sleep(.1)
                 
                 except Exception as e:
                     print('Likely process has ended, coming from StatsMonitor',e)
@@ -260,12 +300,13 @@ class Agent:
         for module in self.modules:
             module.active = False
 
-    # Here's a version that keeps FileMonitor alive
 
-    # def kill_callback(self) -> None:
-    #     print('kill callback called')
-    #     for module in self.modules:
-    #         if not isinstance(module, FileMonitor):
-    #             print(module)
-    #             module.active = False
+    # Here's a version that keeps FileMonitor alive
+    def kill_callback(self) -> None:
+        print('kill callback called')
+        for module in self.modules:
+            # Leave file monitor alive incase useful debug / crash information is logged
+            if not isinstance(module, FileMonitor):
+                print(module)
+                module.active = False
            

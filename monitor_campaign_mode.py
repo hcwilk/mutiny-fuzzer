@@ -151,8 +151,6 @@ class CampaignManager(object):
         if self.distributed:
             self.distributed_type = config['distributed_type']
 
-        self.health_config = config['health_config']
-
         
         
 
