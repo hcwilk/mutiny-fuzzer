@@ -230,7 +230,7 @@ class Mutiny(object):
                 was_crash_detected = True
 
             except TargetLogFileModifiedException as e:
-                logging.debug('Inside target log modified functuion: ')            
+                print(f'Mutiny version of targetlogfile here', file=sys.stderr)
 
                 try:
                     self.logger.output_log(self.seed, self.fuzzer_data.message_collection, str(e))
@@ -250,9 +250,6 @@ class Mutiny(object):
                 # Slightly sketchy - a continue *should* just go to the top of the while without changing i
                 continue
 
-            except TargetLogFileModifiedException as e:
-                print('Target log file modified, restarting target')
-
             except LogAndHaltException as e:
                 if self.logger:
                     self.logger.output_log(self.seed, self.fuzzer_data.message_collection, str(e))
@@ -263,7 +260,7 @@ class Mutiny(object):
                 else: exit()
 
             except LogLastAndHaltException as e:
-                print(f'Socket error: were here', file=sys.stderr)
+                print(f'Mutiny LogLast code here', file=sys.stderr)
 
                 if self.logger:
                     if self.seed > self.min_run_number:

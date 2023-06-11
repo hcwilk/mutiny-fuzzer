@@ -18,7 +18,8 @@ class ExceptionProcessor(object):
             print(f'Socket error: {exception.errno}', file=sys.stderr)
             if exception.errno == errno.ECONNREFUSED:
                 # Default to assuming this means server is crashed so we're done
-                print(f'Probably crashed, logging LogLastAndHalt: {exception.errno}', file=sys.stderr)
+                print(f'Probably crashed, logging LogLastAndHalt (and calling logcrash before it exits): {exception.errno}', file=sys.stderr)
+                raise LogCrashException('Crash Detected!!')
                 raise LogLastAndHaltException("Connection refused: Assuming we crashed the server, logging previous run and halting")
                 pass
             elif "timed out" in str(exception):
