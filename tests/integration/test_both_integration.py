@@ -59,7 +59,7 @@ class CampaignIntegrationSuite(object):
             print('unrecognized protocol')
             exit(-1)
 
-                # create Montitor Server object
+        # create Montitor Server object
         server = Server(server_ip, server_port)
         server_thread = threading.Thread(target=server.run)
         server_thread.start()

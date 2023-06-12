@@ -6,6 +6,7 @@ import argparse
 import time
 import psutil
 import os
+import yaml
 import re
 from ping3 import ping
 
@@ -254,26 +255,37 @@ class FileMonitor(Thread):
 
 
 class Agent:
-    def __init__(self, host_ip: str, host_port: int, channel: str, minimal_mode: bool, type: str = 'remote-agent') -> None:
-        # established connection with server and sends initial packed containing channel and type
+    def __init__(self, config_file: str) -> None:
+        with open(config_file, 'r') as file:
+            self.config = yaml.safe_load(file)    
+
+        
         self.conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.conn.connect((host_ip, host_port))
-        self.conn.sendall(str.encode(f'{channel}|{type}'))
+        self.conn.connect((self.config['server']['ip'], self.config['server']['port']))
+        self.conn.sendall(str.encode(f'{self.config["agent"]["channel"]}|{self.config["agent"]["type"]}'))
         self.active = True
-        self.channel = channel
 
-        # creates three threads to be used for monitoring server input, user input, and sending server heartbeats every 5 seconds
-        self.server_heartbeat_thread = Thread(
-            target=self.send_server_heartbeat)
+        self.server_heartbeat_thread = Thread(target=self.send_server_heartbeat)
 
-        self.minimal_mode = minimal_mode
-        self.modules: list[Thread] = []
+        self.modules = []
 
-    def start(self) -> None:
-        self.server_heartbeat_thread.start()
-        for module in self.modules:
-            module.start()
-            offset = ((module.time_interval * 10)//3) / 10
+        for module_config in self.config['modules']:
+            if module_config['type'] == 'ProcessMonitor' and module_config['active'] == True:
+                process = ProcessMonitor(self.monitor_callback, self.kill_callback, 
+                                         module_config['process_name'], 
+                                         module_config['process_id'], time_interval = module_config['time_interval'])
+                self.modules.append(process)
+
+            elif module_config['type'] == 'FileMonitor' and module_config['active'] == True:
+                file = FileMonitor(self.monitor_callback, module_config['filename'], module_config['f_regex'], module_config['time_interval'])
+                self.modules.append(file)
+
+            elif module_config['type'] == 'StatsMonitor':
+                stats = StatsMonitor(self.monitor_callback, module_config['process_name'], 
+                                     module_config['process_id'], module_config['host'], 
+                                     module_config['time_interval'], module_config['health_config'])
+                self.modules.append(stats)
+            offset = ((module_config['time_interval'] * 10)//3) / 10
             time.sleep(offset)
 
     def monitor_callback(self, exception_type: int, exception_info: str) -> None:

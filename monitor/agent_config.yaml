@@ -1,0 +1,27 @@
+server:
+  ip: 127.0.0.1
+  port: 8000
+
+agent:
+  channel: 1
+  minimal_mode: false
+  type: 'remote-agent'
+
+modules:
+  - type: ProcessMonitor
+    process_name: 'process_name_1'
+    process_id: 12345
+    time_interval: 1
+    active: true
+  - type: FileMonitor
+    filename: 'file.log'
+    f_regex: 'regex'
+    time_interval: 1
+    active: false
+  - type: StatsMonitor
+    process_name: 'process_name_2'
+    process_id: 12345
+    host: '127.0.0.1'
+    time_interval: 1
+    health_config: 'some_config'
+    active: true
