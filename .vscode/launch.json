@@ -12,7 +12,7 @@
             "console": "integratedTerminal",
             "justMyCode": true,
             "python": "/Users/cowilkin/Projects/virtual/bin/python",
-            "args": ["tests/assets/campaign_mode_test/campaign_conf.yml","-r","fuzzer_seeds.json"]
+            "args": ["--config", "monitor/agent_config.yaml"]
         }
     ]
 }

@@ -318,18 +318,4 @@ class Agent:
                 module.active = False
 
     
-           
-def main():
-    parser = argparse.ArgumentParser(description='Run an agent.')
-    parser.add_argument('--host_ip', type=str, help='The IP of the host to connect to.')
-    parser.add_argument('--host_port', type=int, help='The port of the host to connect to.')
-    parser.add_argument('--channel', type=str, help='The channel to use.')
-    parser.add_argument('--minimal_mode', type=bool, default=False, help='Whether to use minimal mode.')
-    parser.add_argument('--type', type=str, default='remote-agent', help='The type of the agent.')
-
-    args = parser.parse_args()
-
-    agent = Agent(args.host_ip, args.host_port, args.channel, args.minimal_mode, args.type)
-
-if __name__ == '__main__':
-    main()
+        

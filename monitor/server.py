@@ -37,6 +37,7 @@ class ClientThread(Thread):
         try:
             data = self.conn.recv(1024)
             decoded = data.decode('utf-8').split("|")
+            print(f'first decoded: {decoded}')
             self.channel.append(decoded[0])
             self.type = decoded[1]
         except Exception as e:
@@ -47,10 +48,10 @@ class ClientThread(Thread):
         if self.type != 'mutiny':
             while self.active:
                 try:
-                    self.conn.settimeout(15)
+                    self.conn.settimeout(600)
                     data = self.conn.recv(1024)
                     decoded = data.decode('utf-8')
-                    message = decoded[1:]
+                    print('decoded: ', decoded)
                     if decoded[0] == ':':
                         decoded = decoded[1:]
                         if decoded == 'quit':
@@ -60,20 +61,25 @@ class ClientThread(Thread):
                         if decoded == 'heartbeat':
                             pass
                     elif decoded[0] == '!':
+                        message = decoded[1:]
+
                         print(
                             f"\033[91m[{self.id}] {self.channel} {self.address} ({self.type}): {message}\033[0m")
                         self.exception_callback(
                             message, self.id, self.channel[0])
                     elif decoded[0] == '?':
-                          self.exception_callback(message, self.id, self.channel[0])
+                        message = decoded[1:]
+                          
+                        self.exception_callback(message, self.id, self.channel[0])
                     elif decoded[0] == '#':
+                        message = decoded[1:]
                         self.exception_callback(decoded, self.id, self.channel[0])             
                     else:
                         print(
                             f"[{self.id}] {self.channel} {self.address} ({self.type}): {decoded}")
                 except Exception as e:
                     print(
-                        f"Could not receive data from client {self.id}. Disconnecting.")
+                        f"Could not receive data from client {self.id}. Disconnecting. Heres the exception {e}")
                     self.send_quit()
 
 
@@ -117,6 +123,7 @@ class Server(Thread):
     def run(self) -> None:
         while self.active:
             new_conn, address = self.socket.accept()
+            print(f"New connection from {address}")
             self.connections.append(ClientThread(
                 new_conn, address, self.total_connections, self.add_exception, channel=[]))
             self.total_connections += 1

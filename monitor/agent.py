@@ -23,7 +23,7 @@ class ProcessMonitor(Thread):
 
     # platform-agnostic way to check if a process is running
     def check_process_running(self) -> bool:
-        # conditional based on Darwin or not
+        print('checking process')
         try:
             if self.pid:
                 # Check if a process with the given PID is running
@@ -262,33 +262,44 @@ class Agent:
         
         self.conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.conn.connect((self.config['server']['ip'], self.config['server']['port']))
-        self.conn.sendall(str.encode(f'{self.config["agent"]["channel"]}|{self.config["agent"]["type"]}'))
+        message = f'{self.config["agent"]["channel"]}|{self.config["agent"]["type"]}'
+        print('heres what agent is tryin to send: ', message)
+        self.conn.sendall(str.encode(message))
         self.active = True
+
+        self.minimal_mode = self.config['agent']['minimal_mode']
 
         self.server_heartbeat_thread = Thread(target=self.send_server_heartbeat)
 
         self.modules = []
 
+    def start(self) -> None:
         for module_config in self.config['modules']:
             if module_config['type'] == 'ProcessMonitor' and module_config['active'] == True:
                 process = ProcessMonitor(self.monitor_callback, self.kill_callback, 
-                                         module_config['process_name'], 
-                                         module_config['process_id'], time_interval = module_config['time_interval'])
+                                        module_config['process_name'], 
+                                        module_config['process_id'], time_interval = module_config['time_interval'])
                 self.modules.append(process)
+                process.start()
 
             elif module_config['type'] == 'FileMonitor' and module_config['active'] == True:
                 file = FileMonitor(self.monitor_callback, module_config['filename'], module_config['f_regex'], module_config['time_interval'])
                 self.modules.append(file)
+                file.start()
 
-            elif module_config['type'] == 'StatsMonitor':
+            elif module_config['type'] == 'StatsMonitor' and module_config['active'] == True:
                 stats = StatsMonitor(self.monitor_callback, module_config['process_name'], 
-                                     module_config['process_id'], module_config['host'], 
-                                     module_config['time_interval'], module_config['health_config'])
+                                    module_config['process_id'], module_config['host'], 
+                                    module_config['time_interval'], module_config['health_config'])
                 self.modules.append(stats)
+                stats.start()
+            print('here')
             offset = ((module_config['time_interval'] * 10)//3) / 10
             time.sleep(offset)
 
+
     def monitor_callback(self, exception_type: int, exception_info: str) -> None:
+            print('hitting callback')
 
             try:
                 if exception_type == 0:
@@ -310,6 +321,7 @@ class Agent:
 
 
     def send_server_heartbeat(self) -> None:
+        print('heart')
         while self.active:
             self.conn.sendall(str.encode(":heartbeat"))
             time.sleep(5)
@@ -331,15 +343,13 @@ class Agent:
            
 def main():
     parser = argparse.ArgumentParser(description='Run an agent.')
-    parser.add_argument('--host_ip', type=str, help='The IP of the host to connect to.')
-    parser.add_argument('--host_port', type=int, help='The port of the host to connect to.')
-    parser.add_argument('--channel', type=str, help='The channel to use.')
-    parser.add_argument('--minimal_mode', type=bool, default=False, help='Whether to use minimal mode.')
-    parser.add_argument('--type', type=str, default='remote-agent', help='The type of the agent.')
+    parser.add_argument('--config', type=str, help='Path to the configuration file.')
 
     args = parser.parse_args()
 
-    agent = Agent(args.host_ip, args.host_port, args.channel, args.minimal_mode, args.type)
+    agent = Agent(args.config)
+
+    agent.start()
 
 if __name__ == '__main__':
     main()
