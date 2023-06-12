@@ -44,8 +44,6 @@ class CampaignIntegrationSuite(object):
         }
 
 
-
-
         ports = []
         targets = []
         agent_threads = []

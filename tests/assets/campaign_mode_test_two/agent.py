@@ -131,10 +131,12 @@ class StatsMonitor(Thread):
             self.cpu = cpu_usage
             return  # Skip this check, as we have just set the baseline CPU usage
 
-        if cpu_usage > (self.cpu * self.health_config["cpu_multiplier"]):
+        if cpu_usage > (self.cpu * self.health_config["cpu_multiplier"]) or \
+            cpu_usage < self.cpu//2:
             self.cpu_high_counts += 1
             if self.cpu_high_counts >= 3:
                 # recalibrate what a high CPU usage is after 3 consecutive high CPU usage readings
+                self.callback(3, "CPU usage for {} recalibrated from {} to {}".format(self.name,self.cpu, cpu_usage))
                 self.cpu = cpu_usage
                 self.cpu_high_counts = 0
             return True
@@ -147,6 +149,7 @@ class StatsMonitor(Thread):
         if ping_response > (self.ping * self.health_config["ping_multiplier"]):
             self.ping_high_counts += 1
             if self.ping_high_counts >= 3:
+                self.callback(3, "Ping response time for {} recalibrated from {} to {}".format(self.name,self.ping, ping_response))
                 self.ping = ping_response
                 self.ping_high_counts = 0
             return True
@@ -157,6 +160,7 @@ class StatsMonitor(Thread):
         if memory_info > (self.memory * self.health_config["memory_multiplier"]):
             self.memory_high_counts += 1
             if self.memory_high_counts >= 3:
+                self.callback(3, "Memory usage for {} recalibrated from {} to {}".format(self.name,self.memory, memory_info))
                 self.memory = memory_info
                 self.memory_high_counts = 0
             return True
@@ -197,9 +201,13 @@ class StatsMonitor(Thread):
                         else:
                             self.callback(0, monitor["success_message"])
                         time.sleep(.1)
+                except psutil.NoSuchProcess:
+                    self.callback(2, "Testing for campaign mode")
+
+                    pass  # Ignore this exception. Process monitor will shut this down shortly, no reason to send this to the callback
                 
                 except Exception as e:
-                    print('Likely process has ended, coming from StatsMonitor',e)
+                    print(f'Error coming from StatsMonitor {e}')
                     self.callback(2, "Error in Health monitor")
 
             time.sleep(self.time_interval)
@@ -279,7 +287,9 @@ class Agent:
                         self.conn.sendall(str.encode(exception_info))
                 elif exception_type == 1:
                     message = f"!{exception_info}"
-                    print('sending to mutiny',message)
+                    self.conn.sendall(str.encode(message))
+                elif exception_type == 3:
+                    message = f"?{exception_info}"
                     self.conn.sendall(str.encode(message))
                 else:
                     message = f"#{exception_info}"

@@ -74,3 +74,11 @@ class Monitor(object):
                 print('Mutiny monitor received CPU exception')
                 # Need to properly handle CPU exceptions
                 print('handle CPU exception')
+            elif 'recalibrated' in decoded:
+                print('Mutiny monitor received recalibration exception', file=sys.stderr)
+                exception = MonitorRecalibrationException(decoded)
+                signal_main(MonitorRecalibrationException(exception))
+
+            elif decoded == 'Problem with Monitoring Modules':
+                print('Mutiny monitor received exception from monitoring modules', file=sys.stderr)
+    

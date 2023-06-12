@@ -237,6 +237,15 @@ class Mutiny(object):
                 except AttributeError:
                     pass
 
+            except MonitorRecalibrationException as e:
+                print(f'One monitor health check is recalibrating', file=sys.stderr)
+
+                try:
+                    self.logger.output_log(self.seed, self.fuzzer_data.message_collection, str(e))
+                except AttributeError:
+                    pass
+
+
                 # add more functionality ehre
 
             except AbortCurrentRunException as e:

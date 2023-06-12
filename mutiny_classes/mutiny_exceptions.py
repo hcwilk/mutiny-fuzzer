@@ -20,6 +20,9 @@ class LogCrashException(Exception):
 class CPUFluctuationException(Exception):
     pass
 
+class MonitorRecalibrationException(Exception):
+    pass
+
 # Raise this to indicate that the target log file has been modified
 class TargetLogFileModifiedException(Exception):
     pass

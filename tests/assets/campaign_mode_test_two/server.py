@@ -52,6 +52,7 @@ class ClientThread(Thread):
                     self.conn.settimeout(15)
                     data = self.conn.recv(1024)
                     decoded = data.decode('utf-8')
+                    message = decoded[1:]
                     if decoded[0] == ':':
                         decoded = decoded[1:]
                         if decoded == 'quit':
@@ -61,13 +62,16 @@ class ClientThread(Thread):
                         if decoded == 'heartbeat':
                             pass
                     elif decoded[0] == '!':
-                        message = decoded[1:]
                         print(
                             f"\033[91m[{self.id}] {self.channel} {self.address} ({self.type}): {message}\033[0m")
                         self.exception_callback(
                             message, self.id, self.channel[0])
+                    elif decoded[0] == '?':
+                          print('shipping to mutiny, this should for sure have a question mark', decoded)
+                          self.exception_callback(message, self.id, self.channel[0])
                     elif decoded[0] == '#':
-                        print('Something went wrong with one of the Monitoring Modules',message)                        
+                        print('Something went wrong with one of the Monitoring Modules',message)      
+                        self.exception_callback(decoded, self.id, self.channel[0])             
                     else:
                         print(
                             f"[{self.id}] {self.channel} {self.address} ({self.type}): {decoded}")
@@ -105,11 +109,14 @@ class Server(Thread):
         self.logger.addHandler(handler)
 
     def add_exception(self, exception_info, agent_id, channel):
-        self.logger.error(f'Exception in target {channel}: {exception_info}')
-        for conn in self.connections:
-            if conn.active and conn.type == 'mutiny' and (channel in conn.channel or 'all' in conn.channel):
-                print('this should be going to mutiny')
-                conn.send_exception(exception_info)
+        if exception_info[0] == '#':    
+            self.logger.error(f'Exception in Monitoring Module {channel}: {exception_info}')
+        else:
+
+            self.logger.error(f'Exception in target {channel}: {exception_info}')
+            for conn in self.connections:
+                if conn.active and conn.type == 'mutiny' and (channel in conn.channel or 'all' in conn.channel):
+                    conn.send_exception(exception_info)
 
     def run(self) -> None:
         while self.active:

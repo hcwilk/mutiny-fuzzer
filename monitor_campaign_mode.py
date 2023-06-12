@@ -529,6 +529,11 @@ class CampaignManager(object):
             self.crashes += 1
             self.log_pad.attron(curses.color_pair(self.TextColors.Green))
             exception = str(exception) + ' see {} for details'.format(log_file)
+        if isinstance(exception, MonitorRecalibrationException):
+            print('Campaign Mode Received Target Log File Modified Exception', file=sys.stderr)
+            self.crashes += 1
+            self.log_pad.attron(curses.color_pair(self.TextColors.Cyan))
+            exception = str(exception) + ' see {} for details'.format(log_file)
         if isinstance(exception, ConnectionClosedException):
             self.log_pad.attron(curses.color_pair(self.TextColors.Red))
 
