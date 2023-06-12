@@ -128,3 +128,16 @@ class Server(Thread):
                 conn.send_quit()
         self.active = False
         sys.exit(0)
+
+def main():
+    parser = argparse.ArgumentParser(description='Run a server.')
+    parser.add_argument('--ip', type=str, help='The IP to bind the server to.')
+    parser.add_argument('--port', type=int, help='The port to bind the server to.')
+
+    args = parser.parse_args()
+
+    server = Server(args.ip, args.port)
+    server.start()
+
+if __name__ == '__main__':
+    main()

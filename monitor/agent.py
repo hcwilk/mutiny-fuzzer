@@ -29,10 +29,8 @@ class ProcessMonitor(Thread):
                 subprocess.check_output(
                     'ps -p '+str(self.pid), shell=True)
             else:
-                # Get the PID of the process by name
-                pid = subprocess.check_output(
-                    'pgrep '+self.name, shell=True)
-                if not pid:
+                subprocess.check_output('pidof '+self.name, shell=True)
+                if not self.pid:
                     raise subprocess.CalledProcessError()
         except subprocess.CalledProcessError as e:
             return False
