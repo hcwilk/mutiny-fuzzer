@@ -51,7 +51,6 @@ class ClientThread(Thread):
                     self.conn.settimeout(600)
                     data = self.conn.recv(1024)
                     decoded = data.decode('utf-8')
-                    print('decoded: ', decoded)
                     if decoded[0] == ':':
                         decoded = decoded[1:]
                         if decoded == 'quit':

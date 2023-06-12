@@ -10,7 +10,7 @@ agent:
 modules:
   - type: ProcessMonitor
     process_name: 'process_name_1'
-    process_id: 20000
+    process_id: 24650
     time_interval: 1
     active: True
   - type: FileMonitor
@@ -20,7 +20,7 @@ modules:
     active: False
   - type: StatsMonitor
     process_name: 'process_name_2'
-    process_id: 20000
+    process_id: 24650
     host: '127.0.0.1'
     time_interval: 1
     health_config:

@@ -23,7 +23,7 @@ class ProcessMonitor(Thread):
 
     # platform-agnostic way to check if a process is running
     def check_process_running(self) -> bool:
-        print('checking process')
+        print('process monitor check process running on channel: ', self.name)
         try:
             if self.pid:
                 # Check if a process with the given PID is running
@@ -201,7 +201,7 @@ class StatsMonitor(Thread):
                             self.callback(0, monitor["success_message"])
                         time.sleep(.1)
                 except psutil.NoSuchProcess:
-                    self.callback(2, "Testing for campaign mode")
+                    pass
 
                     pass  # Ignore this exception. Process monitor will shut this down shortly, no reason to send this to the callback
                 
@@ -261,11 +261,11 @@ class Agent:
 
         
         self.conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.conn.connect((self.config['server']['ip'], self.config['server']['port']))
+        self.conn.connect((self.config['agent']['server']['ip'], self.config['agent']['server']['port']))
         message = f'{self.config["agent"]["channel"]}|{self.config["agent"]["type"]}'
-        print('heres what agent is tryin to send: ', message)
         self.conn.sendall(str.encode(message))
         self.active = True
+
 
         self.minimal_mode = self.config['agent']['minimal_mode']
 
@@ -299,7 +299,8 @@ class Agent:
 
 
     def monitor_callback(self, exception_type: int, exception_info: str) -> None:
-            print('hitting callback')
+            
+            print('here is exception type',exception_type)
 
             try:
                 if exception_type == 0:
@@ -321,7 +322,6 @@ class Agent:
 
 
     def send_server_heartbeat(self) -> None:
-        print('heart')
         while self.active:
             self.conn.sendall(str.encode(":heartbeat"))
             time.sleep(5)
@@ -332,7 +332,6 @@ class Agent:
 
     # Here's a version that keeps FileMonitor alive
     def kill_callback(self) -> None:
-        print('kill callback called')
         for module in self.modules:
             # Leave file monitor alive incase useful debug / crash information is logged
             if not isinstance(module, FileMonitor):
