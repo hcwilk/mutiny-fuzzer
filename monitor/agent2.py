@@ -7,6 +7,8 @@ import psutil
 import os
 import yaml
 import re
+import platform
+import json
 
 class ProcessMonitor(Thread):
     def __init__(self, callback, kill_callback, process_name, process_id, time_interval= 5):
@@ -21,7 +23,6 @@ class ProcessMonitor(Thread):
 
     # platform-agnostic way to check if a process is running
     def check_process_running(self):
-        print 'process monitor check process running on channel: ', self.name
         try:
             if self.pid:
                 subprocess.call('ps -p '+str(self.pid), shell=True)
@@ -69,24 +70,14 @@ class StatsMonitor(Thread):
         self.process = psutil.Process(self.pid)
 
 
-        def ping(host):
-            """Ping host and return average response time"""
-            
-            # Option for the number of packets as a function of
-            param = '-n' if platform.system().lower() == 'windows' else '-c'
-            # Building the command. Ex: "ping -c 1 google.com"
-            command = ['ping', param, '1', host]
-
+    
+        
+        # Option without psutil, but not sure if it has all of the necessary functionality AFTER we fetch the pid
+        def get_process_info(pid):
             try:
-                output = subprocess.check_output(command)
-            except Exception:
-                return None
-
-            # Use regex to find the response time
-            match = re.search(r"Average = (\d+)", output)
-            if match:
-                return float(match.group(1))
-            else:
+                with open(os.path.join('/proc', str(pid), 'status')) as f:
+                    return f.read()
+            except IOError:  # process does not exist
                 return None
 
 
@@ -102,7 +93,7 @@ class StatsMonitor(Thread):
 
         # Setting ground truth for CPU, Ping, Memory, and Disk usage
         self.cpu = None
-        self.ping = ping(self.host)
+        self.ping = self.ping_host()
         self.memory = self.process.memory_info().rss
         try:
             self.disk = self.process.io_counters().read_bytes + self.process.io_counters().write_bytes
@@ -132,6 +123,35 @@ class StatsMonitor(Thread):
             },
         ]
 
+    def ping_host(self):
+        """Ping host and return average response time"""
+        
+        # Option for the number of packets as a function of
+        param = '-n' if platform.system().lower() == 'windows' else '-c'
+        # Building the command. Ex: "ping -c 1 google.com"
+        command = ['ping', param, '1', self.host]
+
+        try:
+            output = subprocess.check_output(command)
+        except Exception as e:
+            print 'Error pinging host',e
+            return None
+
+        # Use regex to find the response time
+        patterns = [
+            r"Average = (\d+)",  # Windows
+            r"avg/max/stddev = (\d+\.\d+)/",  # Linux, macOS
+        ]
+
+        for pattern in patterns:
+            match = re.search(pattern, output)
+            if match:
+                return float(match.group(1))
+
+        # This should never hit
+        return None
+
+
     def check_cpu_usage(self):
         cpu_usage = self.process.cpu_percent(interval=1)
         if self.cpu is None:
@@ -146,12 +166,18 @@ class StatsMonitor(Thread):
                 self.callback(3, "CPU usage for {} recalibrated from {} to {}".format(self.name, self.cpu, cpu_usage))
                 self.cpu = cpu_usage
                 self.cpu_high_counts = 0
+            print 'cpu usage is high'
             return True
+        print 'cpu usage is normal'
         return False
 
     # Running locally, this will obviously never throw an error, but it's here for when the host is remote
     def check_ping_response(self):
-        ping_response = self.ping(self.host)
+        ping_response = self.ping_host()
+        if ping_response is None:
+            print 'something went wrong with the ping, check regex matching'
+            # This is a catch for when the regex fails to find the ping response time, not sure why this is failing
+            return False
         if ping_response > (self.ping * self.health_config["ping_multiplier"]):
             self.ping_high_counts += 1
             if self.ping_high_counts >= 3:
@@ -159,7 +185,9 @@ class StatsMonitor(Thread):
                                                                                                ping_response))
                 self.ping = ping_response
                 self.ping_high_counts = 0
+            print 'ping response is high'
             return True
+        print 'ping response is normal'
         return False
 
     def check_memory_usage(self):
@@ -270,8 +298,8 @@ class FileMonitor(Thread):
 
 class Agent:
     def __init__(self, config_file):
-        with open(config_file, 'r') as file:
-            self.config = yaml.load(file)
+        with open(config_file, 'r') as f:
+            self.config = json.load(f)
 
         self.conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.conn.connect((self.config['agent']['server']['ip'], self.config['agent']['server']['port']))
@@ -305,13 +333,11 @@ class Agent:
                                     module_config['time_interval'], module_config['health_config'])
                 self.modules.append(stats)
                 stats.start()
-            print 'here'
             offset = ((module_config['time_interval'] * 10)//3) / 10
             time.sleep(offset)
 
     def monitor_callback(self, exception_type, exception_info):
             
-            print 'here is exception type', exception_type
 
             try:
                 if exception_type == 0:
@@ -325,7 +351,6 @@ class Agent:
                     self.conn.sendall(str.encode(message))
                 else:
                     message = "#{}".format(exception_info)
-                    print 'here is message', message
                     self.conn.sendall(str.encode(message))            
             except Exception as e:
                 print e
@@ -348,6 +373,7 @@ def main():
     parser.add_argument('--config', type=str, help='Path to the configuration file.')
 
     args = parser.parse_args()
+    
 
     agent = Agent(args.config)
 
