@@ -5,10 +5,11 @@ import argparse
 import time
 import psutil
 import os
-import yaml
 import re
 import platform
 import json
+
+## psutil is only required if you want to use the ProcessMonitor class
 
 class ProcessMonitor(Thread):
     def __init__(self, callback, kill_callback, process_name, process_id, time_interval= 5):
