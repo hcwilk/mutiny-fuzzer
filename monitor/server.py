@@ -48,7 +48,7 @@ class ClientThread(Thread):
         if self.type != 'mutiny':
             while self.active:
                 try:
-                    self.conn.settimeout(600)
+                    self.conn.settimeout(10)
                     data = self.conn.recv(1024)
                     decoded = data.decode('utf-8')
                     if decoded[0] == ':':

@@ -210,7 +210,6 @@ class Mutiny(object):
                     print_warning('Mutiny received a resume exception but wasn\'t paused, ignoring and continuing.')
 
             except LogCrashException as e:
-                print('This also should not be in the logfile bruh', file=sys.stderr)
 
 
                 if failure_count == 0:
@@ -230,7 +229,6 @@ class Mutiny(object):
                 was_crash_detected = True
 
             except TargetLogFileModifiedException as e:
-                print(f'Mutiny version of targetlogfile here', file=sys.stderr)
 
                 try:
                     self.logger.output_log(self.seed, self.fuzzer_data.message_collection, str(e))
@@ -238,7 +236,6 @@ class Mutiny(object):
                     pass
 
             except MonitorRecalibrationException as e:
-                print(f'One monitor health check is recalibrating', file=sys.stderr)
 
                 try:
                     self.logger.output_log(self.seed, self.fuzzer_data.message_collection, str(e))
@@ -269,7 +266,6 @@ class Mutiny(object):
                 else: exit()
 
             except LogLastAndHaltException as e:
-                print(f'Mutiny LogLast code here', file=sys.stderr)
 
                 if self.logger:
                     if self.seed > self.min_run_number:
@@ -286,7 +282,6 @@ class Mutiny(object):
                     print_warning("Received LogLastAndHaltException, halting but not logging (quiet mode)")
                 if self.testing: return
                 else:
-                    print(f'Exiting', file=sys.stderr)
 
                     exit()
 
@@ -469,7 +464,6 @@ class Mutiny(object):
         if not self.monitor.queue.empty():
             print_warning('Monitor event detected')
             exception = self.monitor.queue.get()
-            print(f'This is the exception off the queue: {exception}', file=sys.stderr)
             if self.campaign_mode:
                 self.campaign_event_queue.put(exception)
 

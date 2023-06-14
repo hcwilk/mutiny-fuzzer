@@ -518,19 +518,16 @@ class CampaignManager(object):
 
         # This shouldn't be anywhere in the 'help.txt' file now
         if isinstance(exception, LogCrashException):
-            print('Campaign Mode Received Log Crash Exception', file=sys.stderr)
             self.crashes += 1
             self.log_pad.attron(curses.color_pair(self.TextColors.Red))
             exception = str(exception) + ' see {} for details'.format(log_file)
 
         # Probably need to include the regex stuff here as well
         if isinstance(exception, TargetLogFileModifiedException):
-            print('Campaign Mode Received Target Log File Modified Exception', file=sys.stderr)
             self.crashes += 1
             self.log_pad.attron(curses.color_pair(self.TextColors.Green))
             exception = str(exception) + ' see {} for details'.format(log_file)
         if isinstance(exception, MonitorRecalibrationException):
-            print('Campaign Mode Received Target Log File Modified Exception', file=sys.stderr)
             self.crashes += 1
             self.log_pad.attron(curses.color_pair(self.TextColors.Cyan))
             exception = str(exception) + ' see {} for details'.format(log_file)
@@ -541,7 +538,6 @@ class CampaignManager(object):
         if isinstance(exception, HaltException) or \
                 isinstance(exception, LogLastAndHaltException) or \
                 isinstance(exception, LogAndHaltException):
-            print('Campaign mode got halt after connection refused', file=sys.stderr)
             self.log_pad.attron(curses.color_pair(self.TextColors.Magenta))
             exception = str(exception) + ' see {} for details'.format(log_file)
 

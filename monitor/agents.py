@@ -2,7 +2,7 @@ import argparse
 import yaml
 import tempfile
 import os
-from agent import Agent
+from agent3 import Agent
 
 def main():
     parser = argparse.ArgumentParser(description='Run multiple agents.')

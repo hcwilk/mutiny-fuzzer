@@ -12,10 +12,8 @@ class ExceptionProcessor(object):
     def process_exception(self, exception, signal_main = None):
 
         if isinstance(exception, socket.error):
-            print(f'Socket error: {exception.errno}', file=sys.stderr)
             if exception.errno == errno.ECONNREFUSED:
                 # Default to assuming this means server is crashed so we're done
-                print(f'Probably crashed, sleeping so Agent picks up on problem first: {exception.errno}', file=sys.stderr)
 
                 # Sleep for a bit to give the server time to write the log file
                 time.sleep(.1)
@@ -33,7 +31,6 @@ class ExceptionProcessor(object):
             elif "timed out" in str(exception):
                 raise AbortCurrentRunException("Server closed the connection")
             else:
-                print(f'Unknown socket error: {exception.errno}', file=sys.stderr)
                 if exception.errno:
                     raise AbortCurrentRunException("Unknown socket error: %d" % (exception.errno))
                 else:
@@ -41,7 +38,6 @@ class ExceptionProcessor(object):
         elif isinstance(exception, ConnectionClosedException):
             raise AbortCurrentRunException("Server closed connection: %s" % (str(exception)))
         elif exception.__class__ not in MessageProcessorExceptions.all:
-            print(f'Unknown exception received - not Mutiny exception or socket error : {str(exception)}', file=sys.stderr)    
             # Default to logging a crash if we don't recognize the error
             print('Unknown exception received - not Mutiny exception or socket error, backtrace:')
             traceback.print_exc()

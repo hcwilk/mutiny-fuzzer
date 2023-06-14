@@ -127,7 +127,6 @@ class ProcDirector(object):
 
         # Don't override this function
         def signal_crash_detected_on_main(self, exception: Exception):
-            print(f'putting this exception on queue {str(exception)}', file=sys.stderr)
             if not isinstance(exception, Exception):
                 print_error('Invalid monitor behavior - signal_main() must be sent an exception, usually a Mutiny exception.')
                 print(f'Received: {str(exception)}')

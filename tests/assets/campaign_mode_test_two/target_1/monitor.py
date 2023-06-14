@@ -67,7 +67,6 @@ class Monitor(object):
                 signal_main(TargetLogFileModifiedException(exception))
             # Maybe this should be what actually shuts down mutiny, while a conn-refused is just a warning that leaves it running until this is detected
             elif decoded == 'Process has crashed':
-                print(f'This is the agent telling us its gone (this shouldnt show up, Mutiny should already be closed bruh)', file=sys.stderr)
                 exception = LogCrashException('This is Agent telling us its dead')
                 signal_main(LogCrashException(exception))
             elif decoded == 'CPU':
@@ -75,10 +74,10 @@ class Monitor(object):
                 # Need to properly handle CPU exceptions
                 print('handle CPU exception')
             elif 'recalibrated' in decoded:
-                print('Mutiny monitor received recalibration exception', file=sys.stderr)
                 exception = MonitorRecalibrationException(decoded)
                 signal_main(MonitorRecalibrationException(exception))
 
             elif decoded == 'Problem with Monitoring Modules':
-                print('Mutiny monitor received exception from monitoring modules', file=sys.stderr)
+                # handle this
+                pass
     
