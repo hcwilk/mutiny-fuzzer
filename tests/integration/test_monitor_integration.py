@@ -90,7 +90,6 @@ class IntegrationSuite(object):
             target = Target4(proto, self.target_if, target_port - port_decrement)
             targets.append(target)
 
-            print('appended')
 
             
             # Start target.accept_fuzz() in new process instead of thread

@@ -18,7 +18,6 @@ class ClientThread(Thread):
         self.exception_callback = exception_callback
 
     def send_quit(self) -> None:
-        print('turning off client')
         self.active = False
         try:
             self.conn.sendall(':quit'.encode())
@@ -38,7 +37,6 @@ class ClientThread(Thread):
         try:
             data = self.conn.recv(1024)
             decoded = data.decode('utf-8').split("|")
-            print('this is first message from client', decoded)
             self.channel.append(decoded[0])
             self.type = decoded[1]
         except Exception as e:
@@ -67,7 +65,8 @@ class ClientThread(Thread):
                         self.exception_callback(
                             message, self.id, self.channel[0])
                     elif decoded[0] == '#':
-                        print('Something went wrong with one of the Monitoring Modules',message)                        
+                        pass
+                        #* handle here                     
                     else:
                         print(
                             f"[{self.id}] {self.channel} {self.address} ({self.type}): {decoded}")
@@ -109,13 +108,11 @@ class Server(Thread):
         self.logger.error(f'Exception in target {channel}: {exception_info}')
         for conn in self.connections:
             if conn.active and conn.type == 'mutiny' and (channel in conn.channel or 'all' in conn.channel):
-                print('this should be going to mutiny')
                 conn.send_exception(exception_info)
 
     def run(self) -> None:
         while self.active:
             new_conn, address = self.socket.accept()
-            print('new connection')
             self.connections.append(ClientThread(
                 new_conn, address, self.total_connections, self.add_exception, channel=[]))
             self.total_connections += 1

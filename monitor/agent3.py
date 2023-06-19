@@ -23,7 +23,6 @@ class ProcessMonitor(Thread):
 
     # platform-agnostic way to check if a process is running
     def check_process_running(self) -> bool:
-        print('process monitor check process running on channel: ', self.name)
         try:
             if self.pid:
                 # Check if a process with the given PID is running
@@ -56,7 +55,6 @@ class ProcessMonitor(Thread):
 
                 time.sleep(self.time_interval)
         except Exception as e:
-            print('This is the exception',e)
             self.callback(2, "Error in process monitor")
 
 
@@ -293,15 +291,12 @@ class Agent:
                                     module_config['time_interval'], module_config['health_config'])
                 self.modules.append(stats)
                 stats.start()
-            print('here')
             offset = ((module_config['time_interval'] * 10)//3) / 10
             time.sleep(offset)
 
 
     def monitor_callback(self, exception_type: int, exception_info: str) -> None:
             
-            print('here is exception type',exception_type)
-
             try:
                 if exception_type == 0:
                     if not self.minimal_mode:
@@ -314,7 +309,6 @@ class Agent:
                     self.conn.sendall(str.encode(message))
                 else:
                     message = f"#{exception_info}"
-                    print('here is message',message)
                     self.conn.sendall(str.encode(message))            
             except Exception as e:
                 print(e)

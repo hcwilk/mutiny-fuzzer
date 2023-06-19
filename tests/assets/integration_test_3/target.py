@@ -17,7 +17,6 @@ class Target3(MockClient):
             
             # send hello, addr not required since tcp
             result = self.incoming_buffer.pop()
-            print('Client received packet of length: ',len(result))
             if len(result) == 539:
                 # 7th iteration should cause a crash
                 # write to file that monitor_target is reading

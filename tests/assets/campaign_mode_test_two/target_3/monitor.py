@@ -53,7 +53,6 @@ class Monitor(object):
         self.communication_conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.communication_conn.connect((server_ip, server_port))
         self.communication_conn.sendall(str.encode(f"{channel}|mutiny"))
-        print('mutiny connected to monitor server')
 
         while True:
             

@@ -101,7 +101,11 @@ class ProcDirector(object):
             
             # Immediately start monitor and allow it to run until Mutiny stops if enabled
             if self.monitor.is_enabled:
-                self.task = threading.Thread(target=self.monitor_target,args=(self.monitor.monitor_target, target_ip, target_port, self.signal_crash_detected_on_main, channel))
+                # The channel will only be specified during agent/server monitor architecture. There's probably a better way to do this
+                if(channel):
+                    self.task = threading.Thread(target=self.monitor_target,args=(self.monitor.monitor_target, target_ip, target_port, self.signal_crash_detected_on_main, channel))
+                else:
+                    self.task = threading.Thread(target=self.monitor_target,args=(self.monitor.monitor_target, target_ip, target_port, self.signal_crash_detected_on_main))
                 # Daemon thread won't stop main thread from exiting
                 self.task.daemon = True
                 self.task.start()

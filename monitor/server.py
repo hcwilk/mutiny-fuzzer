@@ -110,6 +110,7 @@ class Server(Thread):
         self.logger.addHandler(handler)
 
     def add_exception(self, exception_info, agent_id, channel):
+        
         if exception_info[0] == '#':    
             self.logger.error(f'Exception in Monitoring Module {channel}: {exception_info}')
         else:

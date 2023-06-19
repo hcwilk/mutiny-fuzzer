@@ -84,9 +84,6 @@ class IntegrationSuite(object):
         target_thread.join()
         fuzz_thread.join()
 
-        print('threads')
-        for thread in threading.enumerate():
-            print(thread)
         if target.communication_conn:
             target.communication_conn.close()
         else:
@@ -223,113 +220,6 @@ class IntegrationSuite(object):
         self.passed_tests += 1
         print('ok')
 
-    def test_4(self, target_port, proto, prepped_fuzzer_file):
-
-        ## DOES NOT HAVE RAW SOCKET SUPPORT AT THE MOMENT
-        ## OR SERVER-SIDE FUNCTIONALITY
-        '''
-        test details:
-            - prepped_fuzz: ./tests/assets/integration_test_1/<proto>_prepped.fuzzer
-            - target_host: 127.0.0.1
-            - sleep_time: 0
-            - range: 0-19
-            - loop: None
-            - dump_raw: 0
-            - quiet: False
-            - log_all: False
-            - processor_dir: ./tests/assets/integration_test_1/
-            - failure_threshold: 3
-            - failure_timeout: 5.0
-            - receive_timeout: 3.0
-            - should_perform_test_run 1
-            - port: 7772-7776, unique for each test to avoid 'Address already in use OSError'
-            - source_port: -1
-            - source_ip: 0.0.0.0
-
-            Fuzzes a target until it finds a 'crash' at seed=7, then sends a pause, 
-            sleeps, then sends a resume. Fuzzing stops on seed 10, since a
-            range of 0-10 was specified
-        '''
-
-
-
-        print('test 4: {}'.format(proto))
-        self.total_tests += 1
-        # self.block_print() 
-        # populate args
-
-        server_ip = '127.0.0.1'
-        server_port = 4321
-
-        prepped_fuzzer_files = ['tests/assets/integration_test_4/tcp.fuzzer1', 'tests/assets/integration_test_4/tcp.fuzzer2', 'tests/assets/integration_test_4/tcp.fuzzer3', 'tests/assets/integration_test_4/tcp.fuzzer4']
-
-        # set IP to loopback if L2raw, else set to localhost
-        if proto=='L2raw':
-            self.target_if = gma()
-        else:
-            self.target_if = '127.0.0.1'
-
-        # initialize args for Fuzzing
-        
-        # set up log file
-        log_dir = prepped_fuzzer_file.split('.')[0] + '_logs'
-        fuzz_threads = []
-        targets = []
-        target_processes = []
-        agent_threads = []
-
-
-        # create Montitor Server object
-        server = Server(server_ip, server_port)
-        server_thread = threading.Thread(target=server.run)
-        server_thread.start()
-
-
-
-
-        # Imitate campaign mode and integrate X amount of targets with different PIDs
-        for i in range(4):
-            args = Namespace(prepped_fuzz = prepped_fuzzer_files[i], target_host = self.target_if, sleep_time = 0, range = '0-10', loop = None, dump_raw = None, quiet = False, log_all = False, testing = True, server = False, channel = str(i), server_ip = server_ip, server_port = server_port)
-            port_decrement = 100 * i
-            target = Target4(proto, self.target_if, target_port - port_decrement)
-            targets.append(target)
-            
-            # Start target.accept_fuzz() in new process instead of thread
-            target_process = Process(target=target.accept_fuzz)
-            target_process.start()
-            target_processes.append(target_process)
-            target_process.join(timeout=5)
-            
-
-            agent = Agent(server_ip, server_port, target_process.pid, str(i))
-            agent_thread = threading.Thread(target=agent.start)
-            agent_thread.start()
-            agent_threads.append(agent_thread)
-
-            fuzzer = Mutiny(args)
-            fuzzer.radamsa = os.path.abspath(os.path.join(__file__, '../../../radamsa-0.6/bin/radamsa'))
-            fuzzer.import_custom_processors()
-            fuzzer.debug = False
-
-            fuzz_thread = threading.Thread(target=fuzzer.fuzz)
-            fuzz_thread.start()
-            fuzz_threads.append(fuzz_thread)
-
-
-
-        for i in range(4):
-            fuzz_threads[i].join(timeout=5)
-            agent_threads[i].join(timeout=5)
-        for target_process in target_processes:
-            target_process.join(timeout=5)
-
-        server.shutdown()
-        server_thread.join()
-
-        shutil.rmtree(log_dir)
-        # self.enable_print()
-        self.passed_tests += 1
-        print('ok')
 
     def block_print(self):
         '''
@@ -354,55 +244,42 @@ def main():
     try: # SINGLE CRASH -> PAUSE -> RESUME -> FINISH SPECIFIED RANGE
         # #tcp
         suite.test_1(target_port= 7772, proto = 'tcp', prepped_fuzzer_file = 'tests/assets/integration_test_1/tcp.fuzzer')
-        # # udp 
-        # suite.test_1(target_port= 7773, proto = 'udp', prepped_fuzzer_file = 'tests/assets/integration_test_1/udp.fuzzer')
-        # # tls
-        # suite.test_1(target_port= 7774, proto = 'tls', prepped_fuzzer_file = 'tests/assets/integration_test_1/tls.fuzzer')
+        # udp 
+        suite.test_1(target_port= 7773, proto = 'udp', prepped_fuzzer_file = 'tests/assets/integration_test_1/udp.fuzzer')
+        # tls
+        suite.test_1(target_port= 7774, proto = 'tls', prepped_fuzzer_file = 'tests/assets/integration_test_1/tls.fuzzer')
         # raw
         # suite.test_1(target_port= -1, proto = 'L2raw', prepped_fuzzer_file = 'tests/assets/integration_test_1/raw.fuzzer')
     except Exception as e:
         print(repr(e))
         traceback.print_exc()
 
-    # try: # SINGLE OUTBOUND LINE -> CRASH -> HALT
-    #     #tcp
-    #     suite.test_2(target_port= 7775, proto = 'tcp', prepped_fuzzer_file = 'tests/assets/integration_test_2/tcp.fuzzer')
-    #     # udp 
-    #     suite.test_2(target_port= 7776, proto = 'udp', prepped_fuzzer_file = 'tests/assets/integration_test_2/udp.fuzzer')
-    #     # tls 
-    #     suite.test_2(target_port= 7777, proto = 'tls', prepped_fuzzer_file = 'tests/assets/integration_test_2/tls.fuzzer')
-    #     # raw
-    #     suite.test_2(target_port = -1, proto = 'L2raw', prepped_fuzzer_file = 'tests/assets/integration_test_2/raw.fuzzer')
-    # except Exception as e:
-    #     print(repr(e))
-    #     traceback.print_exc()
+    try: # SINGLE OUTBOUND LINE -> CRASH -> HALT
+        #tcp
+        suite.test_2(target_port= 7775, proto = 'tcp', prepped_fuzzer_file = 'tests/assets/integration_test_2/tcp.fuzzer')
+        # udp 
+        suite.test_2(target_port= 7776, proto = 'udp', prepped_fuzzer_file = 'tests/assets/integration_test_2/udp.fuzzer')
+        # tls 
+        suite.test_2(target_port= 7777, proto = 'tls', prepped_fuzzer_file = 'tests/assets/integration_test_2/tls.fuzzer')
+        # raw
+        # suite.test_2(target_port = -1, proto = 'L2raw', prepped_fuzzer_file = 'tests/assets/integration_test_2/raw.fuzzer')
+    except Exception as e:
+        print(repr(e))
+        traceback.print_exc()
 
-    # try: # SINGLE OUTBOUND LINE -> CRASH -> HALT
-    #     # tcp
-    #     suite.test_3(target_port= 7778, cli_port=52954, proto = 'tcp', prepped_fuzzer_file = 'tests/assets/integration_test_3/tcp.fuzzer')
-    #     # udp 
-    #     suite.test_3(target_port= 7779, cli_port=52955, proto = 'udp', prepped_fuzzer_file = 'tests/assets/integration_test_3/udp.fuzzer')
-    #     # tls 
-    #     suite.test_3(target_port= 7780, cli_port=52956, proto = 'tls', prepped_fuzzer_file = 'tests/assets/integration_test_3/tls.fuzzer')
-    #     # raw
-    #     suite.test_3(target_port = -1, cli_port=-1, proto = 'L2raw', prepped_fuzzer_file = 'tests/assets/integration_test_3/raw.fuzzer')
-    # except Exception as e:
-    #     print(repr(e))
-    #     traceback.print_exc()
+    try: # SINGLE OUTBOUND LINE -> CRASH -> HALT
+        # tcp
+        suite.test_3(target_port= 7778, cli_port=52954, proto = 'tcp', prepped_fuzzer_file = 'tests/assets/integration_test_3/tcp.fuzzer')
+        # udp 
+        suite.test_3(target_port= 7779, cli_port=52955, proto = 'udp', prepped_fuzzer_file = 'tests/assets/integration_test_3/udp.fuzzer')
+        # tls 
+        suite.test_3(target_port= 7780, cli_port=52956, proto = 'tls', prepped_fuzzer_file = 'tests/assets/integration_test_3/tls.fuzzer')
+        # raw
+        suite.test_3(target_port = -1, cli_port=-1, proto = 'L2raw', prepped_fuzzer_file = 'tests/assets/integration_test_3/raw.fuzzer')
+    except Exception as e:
+        print(repr(e))
+        traceback.print_exc()
 
-
-    # try: # SINGLE CRASH -> PAUSE -> RESUME -> FINISH SPECIFIED RANGE
-    #     # #tcp
-    #     suite.test_4(target_port= 7781, proto = 'tcp', prepped_fuzzer_file = 'tests/assets/integration_test_4/tcp.fuzzer')
-    #     # # udp 
-    #     # suite.test_1(target_port= 7782, proto = 'udp', prepped_fuzzer_file = 'tests/assets/integration_test_4/udp.fuzzer')
-    #     # # tls
-    #     # suite.test_1(target_port= 7783, proto = 'tls', prepped_fuzzer_file = 'tests/assets/integration_test_4/tls.fuzzer')
-    #     # raw
-    #     # suite.test_1(target_port= -1, proto = 'L2raw', prepped_fuzzer_file = 'tests/assets/integration_test_4/raw.fuzzer')
-    # except Exception as e:
-    #     print(repr(e))
-    #     traceback.print_exc()
     elapsed_time = time.perf_counter() - start_time
     print(f'Ran {suite.total_tests} tests in {elapsed_time:0.3f}s\n')
 

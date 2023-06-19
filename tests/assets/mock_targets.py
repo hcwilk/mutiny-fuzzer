@@ -52,14 +52,11 @@ class MockServer(object):
 
     def accept_connection(self): 
         if self.proto == 'tcp':
-            print('this hsould be hitting')
             socket_family = socket.AF_INET if '.' in self.listen_if else socket.AF_INET6
             self.listen_conn = socket.socket(socket_family, socket.SOCK_STREAM)
             self.listen_conn.bind((self.listen_if, self.listen_port))
             self.listen_conn.listen()
             self.pid = os.getpid()
-            print("pid: ", self.pid)
-            print('target listening on ', self.listen_if, ':', self.listen_port, ' for tcp connections')
             self.communication_conn = self.listen_conn.accept()[0]
         
         elif self.proto == 'tls':

@@ -292,7 +292,6 @@ class Agent:
                     self.conn.sendall(str.encode(message))
                 else:
                     message = f"#{exception_info}"
-                    print('here is message',message)
                     self.conn.sendall(str.encode(message))            
             except Exception as e:
                 print(e)
@@ -310,7 +309,6 @@ class Agent:
 
     # Here's a version that keeps FileMonitor alive
     def kill_callback(self) -> None:
-        print('kill callback called')
         for module in self.modules:
             # Leave file monitor alive incase useful debug / crash information is logged
             if not isinstance(module, FileMonitor):

@@ -7,7 +7,6 @@ class Target4(MockServer):
     def accept_fuzz(self):
         #TODO: make message_processor.preconnect available, assert its being called
         # accept initial connection
-        print('were here')
         self.accept_connection()
        
         while True:

@@ -51,7 +51,6 @@ class Monitor(object):
 
         # initialize the socket for the agent to connect to
         self.communication_conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        print('mutiny trying to connect to', server_ip, server_port)
         self.communication_conn.connect((server_ip, server_port))
         self.communication_conn.sendall(str.encode(f"{channel}|mutiny"))
 
@@ -59,7 +58,6 @@ class Monitor(object):
             
             data = self.communication_conn.recv(1024)
             decoded = data.decode('utf-8')
-            print('mutiny monitor received', decoded)
             if decoded == 'Log file modified':
                 exception = TargetLogFileModifiedException('Log file modified')
                 signal_main(TargetLogFileModifiedException(exception))
@@ -70,6 +68,5 @@ class Monitor(object):
                 sleep(.05)
                 signal_main(ResumeFuzzingException())
             elif decoded == 'CPU':
-                print('Mutiny monitor received CPU exception')
-                # Need to properly handle CPU exceptions
-                print('handle CPU exception')
+                pass
+                #* Need to properly handle CPU exceptions

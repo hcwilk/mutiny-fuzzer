@@ -79,7 +79,6 @@ class CampaignIntegrationSuite(object):
         for i in range(0, len(targets)):
 
             agent = Agent(server_ip, server_port, str(i), False)
-            print('init with pid',processes[i].pid)
             process = ProcessMonitor(agent.monitor_callback, agent.kill_callback, f'Target {str(i)}', processes[i].pid, time_interval = 1)
             file = FileMonitor(agent.monitor_callback, f'tests/assets/campaign_mode_test_two/target_{i+1}/crash.log')
             stats = StatsMonitor(agent.monitor_callback, f'Target {str(i)}', processes[i].pid, '127.0.0.1', 1, health_config)
@@ -90,7 +89,6 @@ class CampaignIntegrationSuite(object):
             agent_thread = threading.Thread(target=agent.start)
             agent_thread.start()
             agent_threads.append(agent_thread)
-            print('[agent {}] started'.format(i))
 
         
         for i in range(0, len(targets)):

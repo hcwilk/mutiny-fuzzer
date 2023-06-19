@@ -72,7 +72,6 @@ class Monitor(object):
             elif decoded == 'CPU':
                 print('Mutiny monitor received CPU exception')
                 # Need to properly handle CPU exceptions
-                print('handle CPU exception')
             elif 'recalibrated' in decoded:
                 exception = MonitorRecalibrationException(decoded)
                 signal_main(MonitorRecalibrationException(exception))

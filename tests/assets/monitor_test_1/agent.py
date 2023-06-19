@@ -57,7 +57,6 @@ class ProcessMonitor(Thread):
 
                 time.sleep(self.time_interval)
         except Exception as e:
-            print('This is the exception',e)
             self.callback(2, "Error in process monitor")
 
 
@@ -149,7 +148,6 @@ class StatsMonitor(Thread):
                     time.sleep(.1)
                 
                 except Exception as e:
-                    print('Likely process has ended, coming from StatsMonitor',e)
                     self.callback(2, "Error in Health monitor")
 
             time.sleep(self.time_interval)
@@ -218,7 +216,6 @@ class Agent:
         for module in self.modules:
             module.start()
             offset = ((module.time_interval * 10)//3) / 10
-            print('offset',offset)
             time.sleep(offset)
 
     def monitor_callback(self, exception_type: int, exception_info: str) -> None:
@@ -229,15 +226,12 @@ class Agent:
                         self.conn.sendall(str.encode(exception_info))
                 elif exception_type == 1:
                     message = f"!{exception_info}"
-                    print('sending to mutiny',message)
                     self.conn.sendall(str.encode(message))
                 else:
                     message = f"#{exception_info}"
-                    print('here is message',message)
                     self.conn.sendall(str.encode(message))            
             except Exception as e:
                 print(e)
-                print("Error sending exception data to server")
 
 
     def send_server_heartbeat(self) -> None:
@@ -246,7 +240,6 @@ class Agent:
             time.sleep(5)
 
     def kill_callback(self) -> None:
-        print('kill callback called, shutting down channel', self.channel)
         for module in self.modules:
             module.active = False
 
