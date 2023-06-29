@@ -3,6 +3,8 @@ import json
 import tempfile
 import os
 from agent3 import Agent
+from server import Server
+import threading
 
 def main():
     parser = argparse.ArgumentParser(description='Run multiple agents.')
@@ -15,15 +17,25 @@ def main():
 
     agents = config.get('agents', [])
 
-    for agent_config in agents:
+    server_ip = agents[0]["agent"]["server"]["ip"]
+    server_port = agents[0]["agent"]["server"]["port"]
+
+    # Start the server in a separate thread
+    server = Server(server_ip, server_port)
+    server_thread = threading.Thread(target=server.run)
+    server_thread.start()
+
+    # Start all agents
+    for i, agent_config in enumerate(agents):
         # Write agent_config to a temporary json file
         with tempfile.NamedTemporaryFile(mode='w+', suffix='.json', delete=False) as temp:
             json.dump(agent_config, temp)
             temp_filepath = temp.name
 
-        # Instantiate and start the agent
-        agent = Agent(temp_filepath)
-        agent.start()
+        # Instantiate and start the agent in its own thread
+        agent = Agent(temp_filepath, i)
+        agent_thread = threading.Thread(target=agent.start)
+        agent_thread.start()
 
         # Remove the temporary json file
         os.remove(temp_filepath)

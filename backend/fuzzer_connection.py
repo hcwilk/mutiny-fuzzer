@@ -99,19 +99,29 @@ class FuzzerConnection(object):
             response = bytearray(self.connection.recv(read_buf_size))
             self.incoming_buffer.append(response)
         elif self.connection.type == socket.SOCK_RAW:
+            # First we receive a raw Ethernet frame from the network connection
             frame = self.connection.recv(ETH_FRAME_LEN)
-            # Extract a header
+                        
+            # The Ethernet header is the first ETH_HLEN (14) bytes of the frame
             header = frame[:ETH_HLEN]
-            # Extract a payload
+
+            # The Ethernet payload (or data) is everything after the header
             response = frame[ETH_HLEN:]
-            # Unpack an Ethernet header in network byte order
+
+            # We unpack the header (which is in network byte order) to get the destination MAC address,
+            # the source MAC address and the Ethernet protocol type
             dst, src, proto = struct.unpack('!6s6sH', header)
-            # Only care about packets from target and meant for us
+
+            # We only want to process packets that are from the target IP address and destined for
+            # the host's IP address (self.host)
             if bytes_to_eui48(dst)==self.host and bytes_to_eui48(src)==self.source_ip:
+                # If the packet meets our criteria, we append the payload to the incoming buffer
                 self.incoming_buffer.append(response)
             else:
-                # Flags response as 'not important' so it can receive another packet down the road
+                # If the packet does not meet our criteria, we set keep_receiving to True so that
+                # we can continue receiving other packets
                 keep_receiving = True
+
         else:
             response, self.addr = self.connection.recvfrom(read_buf_size)
             self.incoming_buffer.append(bytearray(response))

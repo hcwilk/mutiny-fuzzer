@@ -1,0 +1,86 @@
+{
+    "agents": [
+        {
+            "agent": {
+                "server": {
+                    "ip": "127.0.0.1",
+                    "port": 9876
+                },
+                "channel": 1,
+                "minimal_mode": false,
+                "type": "remote-agent",
+                "modules": [
+                    {
+                        "type": "ProcessMonitor",
+                        "process_name": "Calculator",
+                        "process_id": 93678,
+                        "time_interval": 1,
+                        "active": true
+                    },
+                    {
+                        "type": "FileMonitor",
+                        "filename": "file.log",
+                        "f_regex": "regex",
+                        "time_interval": 1,
+                        "active": false
+                    },
+                    {
+                        "type": "StatsMonitor",
+                        "process_name": "Calculator",
+                        "process_id": 93678,
+                        "host": "127.0.0.1",
+                        "time_interval": 1,
+                        "health_config": {
+                            "cpu_multiplier": 1.75,
+                            "ping_multiplier": 2.5,
+                            "memory_multiplier": 1.3,
+                            "disk_multiplier": 1.2
+                        },
+                        "active": true
+                    }
+                ]
+            }
+        },
+        {
+            "agent": {
+                "server": {
+                    "ip": "127.0.0.1",
+                    "port": 9876
+                },
+                "channel": 2,
+                "minimal_mode": false,
+                "type": "remote-agent",
+                "modules": [
+                    {
+                        "type": "ProcessMonitor",
+                        "process_name": "Notes",
+                        "process_id": 93619,
+                        "time_interval": 1,
+                        "active": true
+                    },
+                    {
+                        "type": "FileMonitor",
+                        "filename": "file_2.log",
+                        "f_regex": "regex",
+                        "time_interval": 1,
+                        "active": false
+                    },
+                    {
+                        "type": "StatsMonitor",
+                        "process_name": "Notes",
+                        "process_id": 93619,
+                        "host": "127.0.0.1",
+                        "time_interval": 1,
+                        "health_config": {
+                            "cpu_multiplier": 1.5,
+                            "ping_multiplier": 2.0,
+                            "memory_multiplier": 1.2,
+                            "disk_multiplier": 1.1
+                        },
+                        "active": false
+                    }
+                ]
+            }
+        }
+    ]
+}

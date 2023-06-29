@@ -253,7 +253,7 @@ class FileMonitor(Thread):
 
 
 class Agent:
-    def __init__(self, config_file: str) -> None:
+    def __init__(self, config_file: str, num) -> None:
         with open(config_file, 'r') as file:
             self.config = json.load(file)    
 
@@ -263,6 +263,8 @@ class Agent:
         message = f'{self.config["agent"]["channel"]}|{self.config["agent"]["type"]}'
         self.conn.sendall(str.encode(message))
         self.active = True
+
+        self.num=num
 
 
         self.minimal_mode = self.config['agent']['minimal_mode']
@@ -281,7 +283,8 @@ class Agent:
                 process.start()
 
             elif module_config['type'] == 'FileMonitor' and module_config['active'] == True:
-                file = FileMonitor(self.monitor_callback, module_config['filename'], module_config['f_regex'], module_config['time_interval'])
+                print('starting file monitor with file: ', f'demo/crash{self.num+1}.log')
+                file = FileMonitor(self.monitor_callback, f'demo/crash{self.num+1}.log')
                 self.modules.append(file)
                 file.start()
 
