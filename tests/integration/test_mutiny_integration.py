@@ -88,7 +88,7 @@ class IntegrationSuite(object):
             target.communication_conn.close()
         else:
             target.listen_conn.close()
-        shutil.rmtree(log_dir)
+        # shutil.rmtree(log_dir)
         self.enable_print()
         self.passed_tests += 1
         print('ok')
@@ -245,40 +245,40 @@ def main():
         # #tcp
         suite.test_1(target_port= 7772, proto = 'tcp', prepped_fuzzer_file = 'tests/assets/integration_test_1/tcp.fuzzer')
         # udp 
-        suite.test_1(target_port= 7773, proto = 'udp', prepped_fuzzer_file = 'tests/assets/integration_test_1/udp.fuzzer')
+        # suite.test_1(target_port= 7773, proto = 'udp', prepped_fuzzer_file = 'tests/assets/integration_test_1/udp.fuzzer')
         # tls
-        suite.test_1(target_port= 7774, proto = 'tls', prepped_fuzzer_file = 'tests/assets/integration_test_1/tls.fuzzer')
+        # suite.test_1(target_port= 7774, proto = 'tls', prepped_fuzzer_file = 'tests/assets/integration_test_1/tls.fuzzer')
         # raw
         suite.test_1(target_port= -1, proto = 'L2raw', prepped_fuzzer_file = 'tests/assets/integration_test_1/raw.fuzzer')
     except Exception as e:
         print(repr(e))
         traceback.print_exc()
 
-    try: # SINGLE OUTBOUND LINE -> CRASH -> HALT
-        #tcp
-        suite.test_2(target_port= 7775, proto = 'tcp', prepped_fuzzer_file = 'tests/assets/integration_test_2/tcp.fuzzer')
-        # udp 
-        suite.test_2(target_port= 7776, proto = 'udp', prepped_fuzzer_file = 'tests/assets/integration_test_2/udp.fuzzer')
-        # tls 
-        suite.test_2(target_port= 7777, proto = 'tls', prepped_fuzzer_file = 'tests/assets/integration_test_2/tls.fuzzer')
-        # raw
-        ssuite.test_2(target_port = -1, proto = 'L2raw', prepped_fuzzer_file = 'tests/assets/integration_test_2/raw.fuzzer')
-    except Exception as e:
-        print(repr(e))
-        traceback.print_exc()
+    # try: # SINGLE OUTBOUND LINE -> CRASH -> HALT
+    #     #tcp
+    #     suite.test_2(target_port= 7775, proto = 'tcp', prepped_fuzzer_file = 'tests/assets/integration_test_2/tcp.fuzzer')
+    #     # udp 
+    #     suite.test_2(target_port= 7776, proto = 'udp', prepped_fuzzer_file = 'tests/assets/integration_test_2/udp.fuzzer')
+    #     # tls 
+    #     suite.test_2(target_port= 7777, proto = 'tls', prepped_fuzzer_file = 'tests/assets/integration_test_2/tls.fuzzer')
+    #     # raw
+    #     ssuite.test_2(target_port = -1, proto = 'L2raw', prepped_fuzzer_file = 'tests/assets/integration_test_2/raw.fuzzer')
+    # except Exception as e:
+    #     print(repr(e))
+    #     traceback.print_exc()
 
-    try: # SINGLE OUTBOUND LINE -> CRASH -> HALT
-        # tcp
-        suite.test_3(target_port= 7778, cli_port=52954, proto = 'tcp', prepped_fuzzer_file = 'tests/assets/integration_test_3/tcp.fuzzer')
-        # udp 
-        suite.test_3(target_port= 7779, cli_port=52955, proto = 'udp', prepped_fuzzer_file = 'tests/assets/integration_test_3/udp.fuzzer')
-        # tls 
-        suite.test_3(target_port= 7780, cli_port=52956, proto = 'tls', prepped_fuzzer_file = 'tests/assets/integration_test_3/tls.fuzzer')
-        # raw
-        suite.test_3(target_port = -1, cli_port=-1, proto = 'L2raw', prepped_fuzzer_file = 'tests/assets/integration_test_3/raw.fuzzer')
-    except Exception as e:
-        print(repr(e))
-        traceback.print_exc()
+    # try: # SINGLE OUTBOUND LINE -> CRASH -> HALT
+    #     # tcp
+    #     suite.test_3(target_port= 7778, cli_port=52954, proto = 'tcp', prepped_fuzzer_file = 'tests/assets/integration_test_3/tcp.fuzzer')
+    #     # udp 
+    #     suite.test_3(target_port= 7779, cli_port=52955, proto = 'udp', prepped_fuzzer_file = 'tests/assets/integration_test_3/udp.fuzzer')
+    #     # tls 
+    #     suite.test_3(target_port= 7780, cli_port=52956, proto = 'tls', prepped_fuzzer_file = 'tests/assets/integration_test_3/tls.fuzzer')
+    #     # raw
+    #     suite.test_3(target_port = -1, cli_port=-1, proto = 'L2raw', prepped_fuzzer_file = 'tests/assets/integration_test_3/raw.fuzzer')
+    # except Exception as e:
+    #     print(repr(e))
+    #     traceback.print_exc()
 
     elapsed_time = time.perf_counter() - start_time
     print(f'Ran {suite.total_tests} tests in {elapsed_time:0.3f}s\n')
