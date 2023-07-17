@@ -80,8 +80,9 @@ class MockServer(object):
             self.communication_conn = socket.socket(socket_family, socket.SOCK_DGRAM)
             self.communication_conn.bind((self.listen_if, self.listen_port))
         else: # raw
+            print("raw", self.listen_if, self.listen_port)
             self.communication_conn = socket.socket(socket.AF_PACKET, socket.SOCK_RAW, 768)
-            self.communication_conn.bind((self.listen_if, 0))
+            self.communication_conn.bind(('eth0', 0))
 
 
     def receive_packet(self, packet_len):
@@ -179,7 +180,7 @@ class MockClient(object):
             self.communication_conn = socket.socket(socket.AF_PACKET, socket.SOCK_RAW, 768)
             if self.proto != 'L2raw' and self.proto != 'raw':
                 self.communication_conn.setsockopt(socket.IPPROTO_IP, socket.IP_HDRINCL, 0)
-            self.communication_conn.bind((self.client_addr, 0))
+            self.communication_conn.bind(('eth0', 0))
 
     def send_packet(self, data):
         if self.communication_conn.type == socket.SOCK_STREAM:

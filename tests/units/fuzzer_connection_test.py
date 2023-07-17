@@ -26,6 +26,7 @@ class TestFuzzerConnection(unittest.TestCase):
 # CONNECTIONS -- CLIENT
 
     def test_FuzzerConnectionInit_tcp_ipv4(self):
+        print('runnings')
         proto = 'tcp'
         mock_if = '127.0.0.1'
         mock_port = 9999

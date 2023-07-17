@@ -249,7 +249,7 @@ def main():
         # tls
         suite.test_1(target_port= 7774, proto = 'tls', prepped_fuzzer_file = 'tests/assets/integration_test_1/tls.fuzzer')
         # raw
-        # suite.test_1(target_port= -1, proto = 'L2raw', prepped_fuzzer_file = 'tests/assets/integration_test_1/raw.fuzzer')
+        suite.test_1(target_port= -1, proto = 'L2raw', prepped_fuzzer_file = 'tests/assets/integration_test_1/raw.fuzzer')
     except Exception as e:
         print(repr(e))
         traceback.print_exc()
@@ -262,7 +262,7 @@ def main():
         # tls 
         suite.test_2(target_port= 7777, proto = 'tls', prepped_fuzzer_file = 'tests/assets/integration_test_2/tls.fuzzer')
         # raw
-        # suite.test_2(target_port = -1, proto = 'L2raw', prepped_fuzzer_file = 'tests/assets/integration_test_2/raw.fuzzer')
+        ssuite.test_2(target_port = -1, proto = 'L2raw', prepped_fuzzer_file = 'tests/assets/integration_test_2/raw.fuzzer')
     except Exception as e:
         print(repr(e))
         traceback.print_exc()
