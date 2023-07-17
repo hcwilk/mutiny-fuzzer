@@ -115,7 +115,7 @@ class FuzzerConnection(object):
             # We only want to process packets that are from the target IP address and destined for
             # the host's IP address (self.host)
             if bytes_to_eui48(dst)==self.host and bytes_to_eui48(src)==self.source_ip:
-                # If the packet meets our criteria, we append the payload to the incoming buffer
+                # If the packet comes from where we expect and is meant for us, we append the payload to the incoming buffer
                 self.incoming_buffer.append(response)
             else:
                 # If the packet does not meet our criteria, we set keep_receiving to True so that
@@ -223,7 +223,7 @@ class FuzzerConnection(object):
             # FIXME: should probably
             self.connection.bind(('eth0',0))
         except OSError as e:
-            print_error(f'''Couldn't bind to {host}''')
+            print_error(f'''Couldn't bind to interface''')
             print_error(f'Raw sockets require a local interface name to bind to instead of a hostname.')
             sys.exit(-1)
 

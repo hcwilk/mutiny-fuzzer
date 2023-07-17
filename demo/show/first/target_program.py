@@ -9,7 +9,7 @@ def main():
             break
         
         else:
-            messages = ["Success!", "Great job!", "You're doing well!", "Keep going!"]
+            messages = ["Success!"]
             print(random.choice(messages))
 
 if __name__ == "__main__":
