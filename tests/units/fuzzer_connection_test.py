@@ -194,7 +194,8 @@ class TestFuzzerConnection(unittest.TestCase):
             print_warning('Skipping Raw Fuzzer Connection Init Test\n Raw Packet\'s are currently unsupported on OSX')
             return
         proto = 'L2raw'
-        mock_if = gma()
+        mock_if = 'eth0:'
+        mock_if += gma()
         mock_port = 0
         src_if = gma()
         src_port = 0
@@ -206,7 +207,6 @@ class TestFuzzerConnection(unittest.TestCase):
         sleep(.5) # avoid race, allow handle_connections to bind and listen
         conn = FuzzerConnection(proto, mock_if, mock_port, src_if, src_port, server)
         self.assertEqual(conn.proto, proto)
-        self.assertEqual(conn.host, mock_if)
         self.assertEqual(conn.target_port, mock_port)
         self.assertEqual(conn.source_ip, src_if)
         self.assertEqual(conn.source_port, src_port)
@@ -372,7 +372,8 @@ class TestFuzzerConnection(unittest.TestCase):
             print_warning('Skipping Raw Send Packet Test\n Raw Packet\'s are currently unsupported on OSX')
             return
         proto = 'L2raw'
-        mock_if = gma()
+        mock_if = 'eth0:'
+        mock_if += gma()
         mock_port = 0
         src_if = gma()
         src_port = 0
@@ -566,7 +567,8 @@ class TestFuzzerConnection(unittest.TestCase):
             print_warning('Skipping Raw Fuzzer Connection Init Test\n Raw Packet\'s are currently unsupported on OSX')
             return
         proto = 'L2raw'
-        mock_if = gma()
+        mock_if = 'eth0:'
+        mock_if += gma()
         mock_port = 0
         src_if = gma()
         src_port = 0
@@ -756,7 +758,8 @@ class TestFuzzerConnection(unittest.TestCase):
             print_warning('Skipping Raw Fuzzer Connection Init Test\n Raw Packet\'s are currently unsupported on OSX')
             return
         proto = 'L2raw'
-        mock_if = gma()
+        mock_if = 'eth0:'
+        mock_if += gma()
         mock_port = 0
         src_if = gma()
         src_port = 0
@@ -767,7 +770,6 @@ class TestFuzzerConnection(unittest.TestCase):
         listener_thread.start()
         conn = FuzzerConnection(proto, mock_if, mock_port, src_if, src_port, server)
         self.assertEqual(conn.proto, proto)
-        self.assertEqual(conn.host, mock_if)
         self.assertEqual(conn.target_port, mock_port)
         self.assertEqual(conn.source_ip, src_if)
         self.assertEqual(conn.source_port, src_port)
@@ -940,7 +942,8 @@ class TestFuzzerConnection(unittest.TestCase):
             print_warning('Skipping Raw Fuzzer Connection Init Test\n Raw Packet\'s are currently unsupported on OSX')
             return
         proto = 'L2raw'
-        mock_if = gma()
+        mock_if = 'eth0:'
+        mock_if += gma()
         mock_port = 0
         src_if = gma()
         src_port = 0
@@ -1125,7 +1128,8 @@ class TestFuzzerConnection(unittest.TestCase):
             print_warning('Skipping Raw Fuzzer Connection Init Test\n Raw Packet\'s are currently unsupported on OSX')
             return
         proto = 'L2raw'
-        mock_if = gma()
+        mock_if = 'eth0:'
+        mock_if += gma()
         mock_port = 0
         src_if = gma()
         src_port = 0

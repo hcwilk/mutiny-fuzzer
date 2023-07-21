@@ -221,7 +221,9 @@ class FuzzerConnection(object):
         try:
             # Hardcoded for now, not sure if this should be an argument in the CLI or an option in the .fuzzer file
             # FIXME: should probably
-            self.connection.bind(('eth0',0))
+            # Set the network interface, then immediately get the respective MAC address of that interface
+            self.connection.bind((self.host,0))
+            self.host = gma()
         except OSError as e:
             print_error(f'''Couldn't bind to interface''')
             print_error(f'Raw sockets require a local interface name to bind to instead of a hostname.')

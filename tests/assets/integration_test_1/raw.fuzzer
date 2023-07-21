@@ -18,7 +18,7 @@ port -1
 # Port number to connect from
 source_port -1
 # Source IP to connect from
-source_ip 2e:b6:c5:a3:37:b3
+source_ip eth0:2e:b6:c5:a3:37:b3
 
 # The actual messages in the conversation
 # Each contains a message to be sent to or from the server, printably-formatted
