@@ -48,7 +48,6 @@ class Monitor(object):
     
     # This function will run asynchronously in a different thread to monitor the host
     def monitor_target(self, server_ip, server_port, signal_main, channel):
-
         # initialize the socket for the agent to connect to
         self.communication_conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.communication_conn.connect((server_ip, server_port))
@@ -68,5 +67,6 @@ class Monitor(object):
                 sleep(.05)
                 signal_main(ResumeFuzzingException())
             elif decoded == 'CPU':
+
                 pass
                 #* Need to properly handle CPU exceptions

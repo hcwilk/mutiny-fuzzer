@@ -54,7 +54,6 @@ class ProcessMonitor(Thread):
         except Exception as e:
             self.callback(2, "Error in process monitor")
 
-
 class StatsMonitor(Thread):
     def __init__(self, callback, process_name: str, process_id: int, host: str, time_interval: float = 5, health_config=None) -> None:
         print("Initializing StatsMonitor")
@@ -246,7 +245,6 @@ class FileMonitor(Thread):
             print(e)
             self.callback(2, "Error in file monitor")
 
-
 class Agent:
     def __init__(self, config_file: str) -> None:
         with open(config_file, 'r') as file:
@@ -328,7 +326,7 @@ class Agent:
     #     for module in self.modules:
     #         module.active = False
 
-    # Here's a version that keeps FileMonitor alive (jsut in case you care about post-mortem logs)
+    # Here's a version that keeps FileMonitor alive (just in case you care about post-mortem logs)
     def kill_callback(self) -> None:
         for module in self.modules:
             # Leave file monitor alive incase useful debug / crash information is logged
@@ -336,7 +334,6 @@ class Agent:
                 print(module)
                 module.active = False
 
-    
            
 def main():
     parser = argparse.ArgumentParser(description='Run an agent.')
