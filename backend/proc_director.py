@@ -87,7 +87,7 @@ class ProcDirector(object):
         self.crash_queue = Event()
     
     class MonitorWrapper(object):
-        def __init__(self, target_ip, target_port, channel, monitor):
+        def __init__(self, target_ip, target_port, channel, monitor=None):
             # This queue is read from the main thread after each fuzz run
             # If it contains an exception, that is passed to the exception processor
             self.queue = queue.SimpleQueue()

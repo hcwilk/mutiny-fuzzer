@@ -43,7 +43,7 @@ class TestMonitorWrapper(unittest.TestCase):
 
     # Test the default monitor bundled with Mutiny - should not crash
     def test_default_monitor(self):
-        wrapper = ProcDirector.MonitorWrapper('127.0.0.1', 2500, monitor.Monitor())
+        wrapper = ProcDirector.MonitorWrapper('127.0.0.1', 2500, monitor.Monitor(), False)
         self.assertTrue(wrapper.queue.empty())
         
     # Test a monitor that sends "crash" immediately
