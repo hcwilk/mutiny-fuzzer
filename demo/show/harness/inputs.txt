@@ -11,6 +11,9 @@ place
 thing
 one
 body
-where
-whateveryoudonttypethis
+wherr
 goodday
+goodbye
+goodnight
+goodmorning
+goodafternoon

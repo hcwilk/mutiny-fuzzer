@@ -1,0 +1,15 @@
+number
+keypad
+keyboard
+screen
+mac
+macintosh
+coffee
+earth
+nature
+fire
+water
+earth
+air
+whateveryoudonttypethis
+

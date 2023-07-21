@@ -1,7 +1,6 @@
 import socket
 from threading import Thread
 import subprocess
-import sys
 import argparse
 import time
 import psutil
@@ -29,10 +28,13 @@ class ProcessMonitor(Thread):
                 subprocess.check_output(
                     'ps -p '+str(self.pid), shell=True)
             else:
+                # Check if a process with the given name is running (if no PID is given)
                 subprocess.check_output('pidof '+self.name, shell=True)
                 if not self.pid:
                     raise subprocess.CalledProcessError()
         except subprocess.CalledProcessError as e:
+            # If there's any error, we can assume the process is not running
+            #*# Not sure if we want to filter for specific errors here
             return False
         else:
             return True
@@ -48,15 +50,9 @@ class ProcessMonitor(Thread):
                     # Should kill the rest of the modules (no reason to be monitoring vitals if it's dead)
                     self.kill_callback()
 
-                    # self.terminated_counts += 1
-                    # # If the process has terminated 3 times in a row, we'll assume it's not coming back and shut down this module
-                    # if self.terminated_counts > 3:
-                    #     self.active = False
-
                 time.sleep(self.time_interval)
         except Exception as e:
             self.callback(2, "Error in process monitor")
-
 
 class StatsMonitor(Thread):
     def __init__(self, callback, process_name: str, process_id: int, host: str, time_interval: float = 5, health_config=None) -> None:
@@ -74,6 +70,8 @@ class StatsMonitor(Thread):
         self.disk_high_counts = 0
         self.process = psutil.Process(self.pid)
 
+        # This configuration will come from an 'agent.json' or 'agents.json' file
+        # These are the default values (can easily be changed, I really have no context as to what these values should be)
         if health_config is None:
             health_config = {
                 "cpu_multiplier": 1.1,
@@ -119,9 +117,7 @@ class StatsMonitor(Thread):
     },
 ]
 
-        
-        # let these be default, let user input to change them
-
+    
     def check_cpu_usage(self) -> bool:
         cpu_usage = self.process.cpu_percent(interval=1)
         if self.cpu is None:
@@ -199,8 +195,6 @@ class StatsMonitor(Thread):
                             self.callback(0, monitor["success_message"])
                         time.sleep(.1)
                 except psutil.NoSuchProcess:
-                    pass
-
                     pass  # Ignore this exception. Process monitor will shut this down shortly, no reason to send this to the callback
                 
                 except Exception as e:
@@ -240,7 +234,7 @@ class FileMonitor(Thread):
                         if self.regex.search(data):
                             self.callback(
                                 1, f"Error logged in log file ({self.regex})")
-                            # clear log file
+                            # Uncomment if you want to clear log file after it's been modified
                             open(self.filename, 'w').close()    
                         else:
                             self.callback(0, "No error logged in log file")
@@ -251,13 +245,13 @@ class FileMonitor(Thread):
             print(e)
             self.callback(2, "Error in file monitor")
 
-
 class Agent:
     def __init__(self, config_file: str) -> None:
         with open(config_file, 'r') as file:
             self.config = json.load(file)    
 
-        
+        # Initialize connection the Monitor Server
+        #*# This does make the connection one-way, meaning we have to have the IP and port of the monitor server before this is run
         self.conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.conn.connect((self.config['agent']['server']['ip'], self.config['agent']['server']['port']))
         message = f'{self.config["agent"]["channel"]}|{self.config["agent"]["type"]}'
@@ -272,6 +266,7 @@ class Agent:
         self.modules = []
 
     def start(self) -> None:
+        # There's probably a better way to do this, but this is what reads in the config file and set's the contstants that deal with the modules abvoe
         for module_config in self.config['agent']['modules']:
             if module_config['type'] == 'ProcessMonitor' and module_config['active'] == True:
                 process = ProcessMonitor(self.monitor_callback, self.kill_callback, 
@@ -298,22 +293,27 @@ class Agent:
 
     def monitor_callback(self, exception_type: int, exception_info: str) -> None:
             
-            try:
-                if exception_type == 0:
-                    if not self.minimal_mode:
-                        self.conn.sendall(str.encode(exception_info))
-                elif exception_type == 1:
-                    message = f"!{exception_info}"
-                    self.conn.sendall(str.encode(message))
-                elif exception_type == 3:
-                    message = f"?{exception_info}"
-                    self.conn.sendall(str.encode(message))
-                else:
-                    message = f"#{exception_info}"
-                    self.conn.sendall(str.encode(message))            
-            except Exception as e:
-                print(e)
-                print("Error sending exception data to server")
+        # This is just the funciton that reports info back to the monitor server
+        try:
+            # If everything is normal
+            if exception_type == 0:
+                if not self.minimal_mode:
+                    self.conn.sendall(str.encode(exception_info))
+            # If the agent is reporting some abnormality
+            elif exception_type == 1:
+                message = "!{}".format(exception_info)
+                self.conn.sendall(str.encode(message))
+            # If the agent is reporting a recalibration
+            elif exception_type == 3:
+                message = "?{}".format(exception_info)
+                self.conn.sendall(str.encode(message))
+            # (This will always be two, but just in case) If the agent is reporting an error with itself (not the target)
+            else:
+                message = "#{}".format(exception_info)
+                self.conn.sendall(str.encode(message))            
+        except Exception as e:
+            print(e)
+            print("Error sending exception data to server")
 
 
     def send_server_heartbeat(self) -> None:
@@ -321,11 +321,12 @@ class Agent:
             self.conn.sendall(str.encode(":heartbeat"))
             time.sleep(5)
 
+    # This version just shuts down everything
     # def kill_callback(self) -> None:
     #     for module in self.modules:
     #         module.active = False
 
-    # Here's a version that keeps FileMonitor alive
+    # Here's a version that keeps FileMonitor alive (just in case you care about post-mortem logs)
     def kill_callback(self) -> None:
         for module in self.modules:
             # Leave file monitor alive incase useful debug / crash information is logged
@@ -333,7 +334,6 @@ class Agent:
                 print(module)
                 module.active = False
 
-    
            
 def main():
     parser = argparse.ArgumentParser(description='Run an agent.')

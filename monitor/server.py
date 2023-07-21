@@ -4,15 +4,22 @@ import argparse
 import sys
 import logging
 
+"""
+This file is what will spawn the Monitor Server. It sits in between the agent and its corresponding mutiny client.
+
+In this file, you're able to log from a centralied location, and also send exceptions to the mutiny client.
+"""
 
 class ClientThread(Thread):
-
     def __init__(self, connection: socket.socket, address, id: int, exception_callback, type: str = "", channel: list[str] = []) -> None:
         Thread.__init__(self)
         self.conn = connection
         self.address = address
         self.id = id
+
+        # This value will be 'mutiny' for mutiny clients, and 'agent' for agent clients
         self.type = type
+
         self.channel = channel
         self.active = True
         self.exception_callback = exception_callback
@@ -25,6 +32,7 @@ class ClientThread(Thread):
             print(e)
             print("Could not send :quit signal")
 
+    # This is the function that forwards exceptions to the mutiny client
     def send_exception(self, exception_info: str) -> None:
         try:
             self.conn.sendall(exception_info.encode())
@@ -37,7 +45,6 @@ class ClientThread(Thread):
         try:
             data = self.conn.recv(1024)
             decoded = data.decode('utf-8').split("|")
-            print(f'first decoded: {decoded}')
             self.channel.append(decoded[0])
             self.type = decoded[1]
         except Exception as e:
@@ -45,6 +52,7 @@ class ClientThread(Thread):
             print(
                 "New client could not be created. Data must be sent in the form of {channel}|{type}")
             self.send_quit()
+
         if self.type != 'mutiny':
             while self.active:
                 try:

@@ -9,6 +9,7 @@ import re
 import platform
 import json
 
+
 ## psutil is only required if you want to use the ProcessMonitor class
 
 class ProcessMonitor(Thread):
@@ -26,12 +27,16 @@ class ProcessMonitor(Thread):
     def check_process_running(self):
         try:
             if self.pid:
+                # Check if a process with the given PID is running
                 subprocess.call('ps -p '+str(self.pid), shell=True)
             else:
+                # Check if a process with the given name is running (if no PID is given)
                 subprocess.call('pidof '+self.name, shell=True)
                 if not self.pid:
                     raise subprocess.CalledProcessError()
         except subprocess.CalledProcessError as e:
+            # If there's any error, we can assume the process is not running
+            #*# Not sure if we want to filter for specific errors here
             return False
         else:
             return True
@@ -44,10 +49,11 @@ class ProcessMonitor(Thread):
                     self.callback(0, "{} is running".format(self.name))
                 else:
                     self.callback(1, "Process has crashed")
+                    # Should kill the rest of the modules (no reason to be monitoring vitals if it's dead)
+
                     self.kill_callback()
                 time.sleep(self.time_interval)
         except Exception as e:
-            print 'This is the exception',e
             self.callback(2, "Error in process monitor")
 
 
@@ -73,7 +79,7 @@ class StatsMonitor(Thread):
 
     
         
-        # Option without psutil, but not sure if it has all of the necessary functionality AFTER we fetch the pid
+        # To be used in case we don't have access to psutil (has not been tested so not sure if the following modules would function the same)
         def get_process_info(pid):
             try:
                 with open(os.path.join('/proc', str(pid), 'status')) as f:
@@ -81,7 +87,8 @@ class StatsMonitor(Thread):
             except IOError:  # process does not exist
                 return None
 
-
+        # This configuration will come from an 'agent.json' or 'agents.json' file
+        # These are the default values (can easily be changed, I really have no context as to what these values should be)
         if health_config is None:
             health_config = {
                 "cpu_multiplier": 1.1,
@@ -96,6 +103,7 @@ class StatsMonitor(Thread):
         self.cpu = None
         self.ping = self.ping_host()
         self.memory = self.process.memory_info().rss
+        # No easy way to fetch Disk Usage (which is really just I/O usage) in platform-agnostic setting, so we'll ignore it if there's an error
         try:
             self.disk = self.process.io_counters().read_bytes + self.process.io_counters().write_bytes
         except AttributeError:
@@ -124,13 +132,16 @@ class StatsMonitor(Thread):
             },
         ]
 
+    
+    # Had to manually define this in python2
     def ping_host(self):
         """Ping host and return average response time"""
         
-        # Option for the number of packets as a function of
+        # Option for the number of packets as a function of the OS
         param = '-n' if platform.system().lower() == 'windows' else '-c'
         # Building the command. Ex: "ping -c 1 google.com"
         command = ['ping', param, '1', self.host]
+
 
         try:
             output = subprocess.check_output(command)
@@ -143,7 +154,7 @@ class StatsMonitor(Thread):
             r"Average = (\d+)",  # Windows
             r"avg/max/stddev = (\d+\.\d+)/",  # Linux, macOS
         ]
-
+        # Not the most efficient way to do this, but it works
         for pattern in patterns:
             match = re.search(pattern, output)
             if match:
@@ -167,9 +178,7 @@ class StatsMonitor(Thread):
                 self.callback(3, "CPU usage for {} recalibrated from {} to {}".format(self.name, self.cpu, cpu_usage))
                 self.cpu = cpu_usage
                 self.cpu_high_counts = 0
-            print 'cpu usage is high'
             return True
-        print 'cpu usage is normal'
         return False
 
     # Running locally, this will obviously never throw an error, but it's here for when the host is remote
@@ -285,7 +294,7 @@ class FileMonitor(Thread):
                         if self.regex.search(data):
                             self.callback(
                                 1, "Error logged in log file ({})".format(self.regex.pattern))
-                            # clear log file
+                            # Uncomment if you want to clear log file after it's been modified
                             open(self.filename, 'w').close()
                         else:
                             self.callback(0, "No error logged in log file")
@@ -302,6 +311,8 @@ class Agent:
         with open(config_file, 'r') as f:
             self.config = json.load(f)
 
+        # Initialize connection the Monitor Server
+        #*# This does make the connection one-way, meaning we have to have the IP and port of the monitor server before this is run
         self.conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.conn.connect((self.config['agent']['server']['ip'], self.config['agent']['server']['port']))
         message = '{}|{}'.format(self.config["agent"]["channel"], self.config["agent"]["type"])
@@ -315,6 +326,8 @@ class Agent:
         self.modules = []
 
     def start(self):
+
+        # There's probably a better way to do this, but this is what reads in the config file and set's the contstants that deal with the modules abvoe
         for module_config in self.config['agent']['modules']:
             if module_config['type'] == 'ProcessMonitor' and module_config['active'] == True:
                 process = ProcessMonitor(self.monitor_callback, self.kill_callback, 
@@ -339,23 +352,27 @@ class Agent:
 
     def monitor_callback(self, exception_type, exception_info):
             
-
-            try:
-                if exception_type == 0:
-                    if not self.minimal_mode:
-                        self.conn.sendall(str.encode(exception_info))
-                elif exception_type == 1:
-                    message = "!{}".format(exception_info)
-                    self.conn.sendall(str.encode(message))
-                elif exception_type == 3:
-                    message = "?{}".format(exception_info)
-                    self.conn.sendall(str.encode(message))
-                else:
-                    message = "#{}".format(exception_info)
-                    self.conn.sendall(str.encode(message))            
-            except Exception as e:
-                print e
-                print "Error sending exception data to server"
+        # This is just the funciton that reports info back to the monitor server
+        try:
+            # If everything is normal
+            if exception_type == 0:
+                if not self.minimal_mode:
+                    self.conn.sendall(str.encode(exception_info))
+            # If the agent is reporting some abnormality
+            elif exception_type == 1:
+                message = "!{}".format(exception_info)
+                self.conn.sendall(str.encode(message))
+            # If the agent is reporting a recalibration
+            elif exception_type == 3:
+                message = "?{}".format(exception_info)
+                self.conn.sendall(str.encode(message))
+            # (This will always be two, but just in case) If the agent is reporting an error with itself (not the target)
+            else:
+                message = "#{}".format(exception_info)
+                self.conn.sendall(str.encode(message))            
+        except Exception as e:
+            print e
+            print "Error sending exception data to server"
 
     def send_server_heartbeat(self):
         while self.active:

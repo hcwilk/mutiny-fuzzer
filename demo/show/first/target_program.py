@@ -2,7 +2,7 @@ import random
 
 def main():
     while True:
-        user_input = raw_input("Enter your input: ")  # use raw_input in Python 2
+        user_input = input("Enter your input: ")
         
         if user_input == 'whateveryoudodonttypethis':
             print("CRASHED!")
