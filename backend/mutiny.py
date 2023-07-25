@@ -343,7 +343,7 @@ class Mutiny(object):
             if message.is_outbound():
                 self._send_fuzz_session_message(message_num, message, test_run) if not self.server else self._receive_fuzz_session_message(message_num, message)
             else: 
-                self._receive_fuzz_session_message(message_num, message) if not self.server else self._send_fuzz_session_message(message_num, message, self.seed)
+                self._receive_fuzz_session_message(message_num, message) if not self.server else self._send_fuzz_session_message(message_num, message, test_run)
 
             if self.logger != None:  
                 self.logger.set_highest_message_number(message_num)
@@ -395,8 +395,7 @@ class Mutiny(object):
             test_run(bool): whether or not we are in a test run, if we are, dont fuzz
         '''
         # Primarily used for deciding how to handle preFuzz/preSend callbacks
-
-        print('sending a message from Mutiny', message.get_original_message())
+        
         message_has_subcomponents = len(message.subcomponents) > 1
 
         # Get original subcomponents for outbound callback only once
@@ -423,6 +422,7 @@ class Mutiny(object):
             # Now run the fuzzer for each fuzzed subcomponent
             self._fuzz_subcomponents(message)
 
+
         # Fuzzing has now been done if this message is fuzzed
         # Always call preSend() regardless for subcomponents if there are any
         if message_has_subcomponents:
@@ -433,10 +433,10 @@ class Mutiny(object):
                 actual_subcomponents = [subcomponent.get_altered_byte_array() for subcomponent in message.subcomponents]
                 pre_send = self.message_processor.pre_send_subcomponent_process(subcomponent.get_altered_byte_array(), MessageProcessorExtraParams(message_num, subcomponent_num, subcomponent.is_fuzzed, original_subcomponents, actual_subcomponents))
                 subcomponent.set_altered_byte_array(pre_send)
+                
         # Always let the user make any final modifications pre-send, fuzzed or not
         actual_subcomponents = [subcomponent.get_altered_byte_array() for subcomponent in message.subcomponents]
         byte_array_to_send = self.message_processor.pre_send_process(message.get_altered_message(), MessageProcessorExtraParams(message_num, -1, message.is_fuzzed, original_subcomponents, actual_subcomponents))
-
         if self.dump_raw:
             loc = os.path.join(self.dump_dir,"%d-outbound-seed-%d"%(message_num, self.dump_raw))
             if message.is_fuzzed:
@@ -448,8 +448,6 @@ class Mutiny(object):
         if self.debug:
             print("\tSent: %s" % (byte_array_to_send))
             print("\tRaw Bytes: %s" % (Message.serialize_byte_array(byte_array_to_send)))
-        print('original message', message.get_original_message())
-        print('altered', message.get_altered_message())
 
 
 
