@@ -329,7 +329,7 @@ class Mutiny(object):
         except AttributeError:
             pass
 
-        # create a connection to the target process
+        # create a new connection to the target process ( we only want to do this if we're a client. Doesn't make sense to bind to a random port if we're funcitoning as a server)
         if not self.server:
             self.connection = FuzzerConnection(self.fuzzer_data.proto, self.target_host, self.fuzzer_data.target_port, self.fuzzer_data.source_ip, self.fuzzer_data.source_port, self.server,None)
         
