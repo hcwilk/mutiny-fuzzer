@@ -5,7 +5,7 @@ import os
 from agent3 import Agent
 import threading
 
-# This script is meant to help compile multiple
+# This script is meant to help compile multiple agents without having to make a json file
 
 def create_agent_config_interactively():
     print("Configuring Server")
@@ -24,8 +24,8 @@ def create_agent_config_interactively():
         minimal_mode = input("Minimal mode (yes/no): ").lower() == 'yes'
         agent_type = 'remote-agent'
 
-        process_name = input("Enter common process name: ")
-        process_id = int(input("Enter common process id: "))
+        process_id = int(input("Enter PID of target process: "))
+        process_name = input("Enter name of target process: ")
 
         num_modules = int(input("Enter the number of modules for this agent: "))
         for j in range(num_modules):
@@ -36,7 +36,7 @@ def create_agent_config_interactively():
                 "S": "StatsMonitor"
             }[input("Enter module type (P for ProcessMonitor/F for FileMonitor/S for StatsMonitor): ")]
             if module_type == "ProcessMonitor":
-                time_interval = int(input("Enter time interval: "))
+                time_interval = int(input("Enter time interval (how often this module will check the target):"))
                 active = True
                 modules.append({
                     "type": module_type,
@@ -48,7 +48,7 @@ def create_agent_config_interactively():
             elif module_type == "FileMonitor":
                 filename = input("Enter filename: ")
                 f_regex = input("Enter file regex: ")
-                time_interval = int(input("Enter time interval: "))
+                time_interval = int(input("Enter time interval (how often this module will check the target):"))
                 active = True
                 modules.append({
                     "type": module_type,
@@ -58,8 +58,8 @@ def create_agent_config_interactively():
                     "active": active
                 })
             elif module_type == "StatsMonitor":
-                host = input("Enter host: ")
-                time_interval = int(input("Enter time interval: "))
+                host = '127.0.0.1'
+                time_interval = int(input("Enter time interval (how often this module will check the target):"))
                 health_config = {
                     "cpu_multiplier": float(input("Enter cpu_multiplier: ")),
                     "ping_multiplier": float(input("Enter ping_multiplier: ")),
@@ -105,7 +105,7 @@ def main():
     else:
         config = create_agent_config_interactively()
         save_path = input("Enter a filename to save this configuration for future use: ")
-        with open(save_path, 'w') as f:
+        with open(f"{save_path}.json", 'w') as f:
             json.dump(config, f)
 
     server = config.get('server')
