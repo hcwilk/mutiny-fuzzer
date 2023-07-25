@@ -147,6 +147,7 @@ class MockClient(object):
             self.communication_conn = socket.socket(socket_family, socket.SOCK_STREAM)
             self.communication_conn.bind((self.client_addr, self.client_port))
             self.communication_conn.connect((self.target_addr, self.target_port))
+            print('cleint is connected')
         elif self.proto == 'tls':
         
             socket_family = socket.AF_INET if f'.' in self.client_addr else socket.AF_INET6
@@ -203,6 +204,7 @@ class MockClient(object):
         if self.communication_conn.type == socket.SOCK_STREAM:
             response = self.communication_conn.recv(packet_len)
             self.incoming_buffer.append(bytearray(response))
+            print('this is what client received', response)
             return response
         elif self.communication_conn.type == socket.SOCK_RAW:
             frame = self.communication_conn.recv(ETH_FRAME_LEN)
@@ -223,3 +225,8 @@ class MockClient(object):
             self.incoming_buffer.append(bytearray(response))
 
             return response
+        
+    def reconnect(self, new_port):
+        self.communication_conn.close()
+        self.client_port = new_port
+        self.connect()

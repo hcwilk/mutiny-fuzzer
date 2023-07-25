@@ -337,6 +337,8 @@ class Mutiny(object):
         message_num = 0   
         for message_num in range(0, len(self.fuzzer_data.message_collection.messages)):
             message = self.fuzzer_data.message_collection.messages[message_num]
+
+            print('this is the message Im trying to send', message)
             # Go ahead and revert any fuzzing or messageprocessor changes before proceeding
             message.reset_altered_message()
             if message.is_outbound():
