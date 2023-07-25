@@ -20,7 +20,9 @@ class ClientThread(Thread):
         # This value will be 'mutiny' for mutiny clients, and 'agent' for agent clients
         self.type = type
 
+        # This is what delineates the different agent->mutiny connections
         self.channel = channel
+
         self.active = True
         self.exception_callback = exception_callback
 
@@ -69,14 +71,10 @@ class ClientThread(Thread):
                             pass
                     elif decoded[0] == '!':
                         message = decoded[1:]
-
-                        print(
-                            f"\033[91m[{self.id}] {self.channel} {self.address} ({self.type}): {message}\033[0m")
-                        self.exception_callback(
-                            message, self.id, self.channel[0])
+                        print(f"\033[91m[{self.id}] {self.channel} {self.address} ({self.type}): {message}\033[0m")
+                        self.exception_callback(message, self.id, self.channel[0])
                     elif decoded[0] == '?':
                         message = decoded[1:]
-                          
                         self.exception_callback(message, self.id, self.channel[0])
                     elif decoded[0] == '#':
                         message = decoded[1:]
@@ -102,7 +100,7 @@ class Server(Thread):
 
         self.active = True
 
-          # Create a logger
+        # Create a logger
         self.logger = logging.getLogger('ServerLogger')
         self.logger.setLevel(logging.ERROR)  # Log only error and above
 
