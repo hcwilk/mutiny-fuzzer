@@ -4,19 +4,13 @@ import shutil
 import traceback
 import os
 import threading
-from multiprocessing import Process
 import sys
-
-
 sys.path.append('../mutiny-fuzzer')
 from tests.assets.mock_targets import MockServer
 from getmac import get_mac_address as gma
 from tests.assets.integration_test_1.target import Target1
 from tests.assets.integration_test_2.target import Target2
 from tests.assets.integration_test_3.target import Target3
-from tests.assets.monitor_test_1.target import Target4
-from tests.assets.monitor_test_1.agent import Agent
-from tests.assets.monitor_test_1.server import Server
 from backend.mutiny import Mutiny
 # Integration test to simulate a complete interaction between a target 
 # and mutiny in order to evaluate the stability of the fuzzer as a whole.
@@ -83,12 +77,11 @@ class IntegrationSuite(object):
         fuzz_thread.start() # connect to target and begin fuzzing
         target_thread.join()
         fuzz_thread.join()
-
         if target.communication_conn:
             target.communication_conn.close()
         else:
             target.listen_conn.close()
-        # shutil.rmtree(log_dir)
+        shutil.rmtree(log_dir)
         self.enable_print()
         self.passed_tests += 1
         print('ok')
@@ -193,7 +186,7 @@ class IntegrationSuite(object):
             cli_if = '127.0.0.1'
 
         
-        args = Namespace(prepped_fuzz = prepped_fuzzer_file, source_ip = cli_if, source_port = cli_port, target_host = self.target_if, sleep_time = 0, range = '0-10', loop = None, dump_raw = None, quiet = False, log_all = False, testing = False, server = True)
+        args = Namespace(prepped_fuzz = prepped_fuzzer_file, source_ip = cli_if, source_port = cli_port, target_host = self.target_if, sleep_time = 0, range = '0-10', loop = None, dump_raw = None, quiet = False, log_all = False, testing = True, server = True)
         log_dir = prepped_fuzzer_file.split('.')[0] + '_logs'
         # stand up target client
         target = Target3(proto, cli_if, cli_port, self.target_if, target_port)
@@ -220,7 +213,6 @@ class IntegrationSuite(object):
         self.passed_tests += 1
         print('ok')
 
-
     def block_print(self):
         '''
         Redirect mutiny stdout to /dev/null 
@@ -243,11 +235,11 @@ def main():
     suite = IntegrationSuite()
     # try: # SINGLE CRASH -> PAUSE -> RESUME -> FINISH SPECIFIED RANGE
     #     # #tcp
-    #     suite.test_1(target_port= 7772, proto = 'tcp', prepped_fuzzer_file = 'tests/assets/integration_test_1/tcp.fuzzer')
-    #     # udp 
-    #     suite.test_1(target_port= 7773, proto = 'udp', prepped_fuzzer_file = 'tests/assets/integration_test_1/udp.fuzzer')
-    #     # tls
-    #     suite.test_1(target_port= 7774, proto = 'tls', prepped_fuzzer_file = 'tests/assets/integration_test_1/tls.fuzzer')
+    #     # suite.test_1(target_port= 7772, proto = 'tcp', prepped_fuzzer_file = 'tests/assets/integration_test_1/tcp.fuzzer')
+    #     # # udp 
+    #     # suite.test_1(target_port= 7773, proto = 'udp', prepped_fuzzer_file = 'tests/assets/integration_test_1/udp.fuzzer')
+    #     # # tls
+    #     # suite.test_1(target_port= 7774, proto = 'tls', prepped_fuzzer_file = 'tests/assets/integration_test_1/tls.fuzzer')
     #     # raw
     #     suite.test_1(target_port= -1, proto = 'L2raw', prepped_fuzzer_file = 'tests/assets/integration_test_1/raw.fuzzer')
     # except Exception as e:
@@ -279,7 +271,6 @@ def main():
     except Exception as e:
         print(repr(e))
         traceback.print_exc()
-
     elapsed_time = time.perf_counter() - start_time
     print(f'Ran {suite.total_tests} tests in {elapsed_time:0.3f}s\n')
 

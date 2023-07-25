@@ -5,6 +5,8 @@ import os
 from agent3 import Agent
 import threading
 
+# This script is meant to help compile multiple
+
 def create_agent_config_interactively():
     print("Configuring Server")
     server_ip = input("Enter server IP: ")
@@ -35,7 +37,7 @@ def create_agent_config_interactively():
             }[input("Enter module type (P for ProcessMonitor/F for FileMonitor/S for StatsMonitor): ")]
             if module_type == "ProcessMonitor":
                 time_interval = int(input("Enter time interval: "))
-                active = input("Is the module active (yes/no): ").lower() == 'yes'
+                active = True
                 modules.append({
                     "type": module_type,
                     "process_name": process_name,
@@ -43,7 +45,37 @@ def create_agent_config_interactively():
                     "time_interval": time_interval,
                     "active": active
                 })
-            # ... rest of module configurations ...
+            elif module_type == "FileMonitor":
+                filename = input("Enter filename: ")
+                f_regex = input("Enter file regex: ")
+                time_interval = int(input("Enter time interval: "))
+                active = True
+                modules.append({
+                    "type": module_type,
+                    "filename": filename,
+                    "f_regex": f_regex,
+                    "time_interval": time_interval,
+                    "active": active
+                })
+            elif module_type == "StatsMonitor":
+                host = input("Enter host: ")
+                time_interval = int(input("Enter time interval: "))
+                health_config = {
+                    "cpu_multiplier": float(input("Enter cpu_multiplier: ")),
+                    "ping_multiplier": float(input("Enter ping_multiplier: ")),
+                    "memory_multiplier": float(input("Enter memory_multiplier: ")),
+                    "disk_multiplier": float(input("Enter disk_multiplier: "))
+                }
+                active = True
+                modules.append({
+                    "type": module_type,
+                    "process_name": process_name,
+                    "process_id": process_id,
+                    "host": host,
+                    "time_interval": time_interval,
+                    "health_config": health_config,
+                    "active": active
+                })
 
         agent = {
             "agent": {

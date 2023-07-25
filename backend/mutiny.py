@@ -338,7 +338,6 @@ class Mutiny(object):
         for message_num in range(0, len(self.fuzzer_data.message_collection.messages)):
             message = self.fuzzer_data.message_collection.messages[message_num]
 
-            print('this is the message Im trying to send', message)
             # Go ahead and revert any fuzzing or messageprocessor changes before proceeding
             message.reset_altered_message()
             if message.is_outbound():
@@ -371,8 +370,10 @@ class Mutiny(object):
         
         self.message_processor.post_receive_process(data, MessageProcessorExtraParams(message_num, -1, False, [message_byte_array], [data]))
 
-        if self.debug:
-            print("\tReceived: %s" % (data))
+
+
+        # if self.debug:
+        print("\tReceived: %s" % (data))
     
         if data == message_byte_array:
             print("\tReceived expected response")
@@ -394,6 +395,8 @@ class Mutiny(object):
             test_run(bool): whether or not we are in a test run, if we are, dont fuzz
         '''
         # Primarily used for deciding how to handle preFuzz/preSend callbacks
+
+        print('sending a message from Mutiny', message.get_original_message())
         message_has_subcomponents = len(message.subcomponents) > 1
 
         # Get original subcomponents for outbound callback only once
@@ -445,6 +448,9 @@ class Mutiny(object):
         if self.debug:
             print("\tSent: %s" % (byte_array_to_send))
             print("\tRaw Bytes: %s" % (Message.serialize_byte_array(byte_array_to_send)))
+        print('original message', message.get_original_message())
+        print('altered', message.get_altered_message())
+
 
 
     def _fuzz_subcomponents(self, message):
