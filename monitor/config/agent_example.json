@@ -17,7 +17,7 @@
             },
             {
                 "type": "FileMonitor",
-                "filename": "file.log",
+				"filename": "C:/Users/colei/Projects/mutiny-fuzzer/tests/assets/campaign_mode_test_two/target_1/crash.log",
                 "f_regex": "regex",
                 "time_interval": 1,
                 "active": false

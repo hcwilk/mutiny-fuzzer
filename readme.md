@@ -220,3 +220,32 @@ Once you have this file, you can run the image using this command
 docker run -it -v /path/to/tcp-or-fuzzer:/mutiny/tcp-or-fuzzer <name_of_image>
 ```
 
+
+## Monitor Server / Agent Architecture
+
+This architecture change is meant to help security researchers manage multiple instances of Mutiny at once. Before, if someone wanted to fuzz multiple targets at once, they were forced to manage separate terminal instances for each target, and the logs were all in separate places. This new architecture allows for a single monitor server to manage multiple agents, and the logs are all stored in a single place. Below, we will go over the architecture of the monitor server, agent, and the custom 'Monitor' class and how they work together
+
+### Agent
+
+The agent is a python script that is designed to be run on the target host. It's designed to be attached to a process or file on the target machine, and then based on it's specific configuration, report that information back to the monitor server. It comes with three modules that can be used to monitor the target host: 
+
+#### Process Monitor
+
+This module just monitors the PID of the process and reports back whenever it crashes. This is compatible with both Python2 and 3, and it requires no additional dependencies.
+
+#### File Monitor
+
+This module monitors a file on the target host, and reports back whenever the file is modified. It can also take a regex as an argument, and will only report back if the regex matches the contents of the file. This is also compatible with both Python2 and 3, and it requires no additional dependencies.
+
+#### Health Monitor
+
+The Health Monitor is responsible for monitoring the health of the target host. It does this by reporting ping response time, CPU usage, memory usage, and disk space back to the monitor server. It can also take a threshold as an argument, and will report back if any of the values exceed that threshold. Lastly, it's able to recalibrate it's thresholds in case the process in inherently very volatile in these statistics. 
+
+Unlike the other two modules, this one is only compatible with Python3, and it requires a couple libraries to be installed on the target host.
+
+### Monitor Server
+THe monitor server acts as the communication point between all of the Mutiny instances and all of their respective agents on the target. It manages these communication threads with channels, but it also has the capability to manage multiple agents at once. This is especially useful if you're looking to monitor parent and child processes, allowing the children to adequately react to the parent crashing.
+
+### Custom Monitor Class
+The custom Monitor class is a class that is used to connect with the Monitor Server from the Mutiny instance. It does this over a TCP connection, and it's able to receive any messages from the Agent that it's connected with. Within this class, you're able to customize how Mutiny reacts to certain messages it receives from its agent. For example, if you're monitoring a process that's known to have a very volatile CPU usage, you might chose to ignore or just log these messages from the Health Monitor of the Agent. However, if another process is typically very static, these spikes will be much more important information. You could chose to stop Mutiny and triage what caused the spike
+

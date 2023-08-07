@@ -235,7 +235,8 @@ class FileMonitor(Thread):
                             self.callback(
                                 1, f"Error logged in log file ({self.regex})")
                             # Uncomment if you want to clear log file after it's been modified
-                            open(self.filename, 'w').close()    
+							# Only works if you have write permission (which you likely wont)
+                            # open(self.filename, 'w').close()    
                         else:
                             self.callback(0, "No error logged in log file")
                 else:

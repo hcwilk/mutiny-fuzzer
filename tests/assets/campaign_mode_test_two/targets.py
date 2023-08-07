@@ -25,6 +25,7 @@ class Target1(MockServer):
                 print('[target 1] error: illegal memory access')
                 if(len(result) == 118):
                     print(f'[target 1] error: will now crash. Here shte input: {result}')    
+                    
                     if self.communication_conn.type == socket.SOCK_STREAM:
                         self.listen_conn.close()
                     self.communication_conn.close()
